@@ -2,10 +2,11 @@ import os
 import json
 from enum import unique
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, NamedTuple
 from urllib.parse import urlparse
 
 from kakaowork.consts import StrEnum
+from kakaowork.exceptions import InvalidBlock
 
 
 @unique
@@ -20,6 +21,7 @@ class BlockType(StrEnum):
     SECTION = "section"
     CONTEXT = "context"
     LABEL = "label"
+    INPUT = "input"
 
 
 @unique
@@ -45,6 +47,12 @@ class HeaderStyle(StrEnum):
     YELLOW = 'yellow'
 
 
+@unique
+class BlockKitType(StrEnum):
+    MESSAGE = 'message'
+    MODAL = 'modal'
+
+
 def json_default(value: Any) -> Any:
     if isinstance(value, Block):
         return value.to_dict()
@@ -64,16 +72,16 @@ class Block(ABC):
     def __repr__(self):
         return str(self)
 
-    @abstractmethod
-    def validate(self) -> bool:
-        raise NotImplementedError()
-
     def to_dict(self) -> Dict[str, Any]:
         block_vars = {key: value for key, value in self.block_vars.items() if value is not None}
         return dict(type=self.block_type, **block_vars)
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), default=json_default)
+
+    @abstractmethod
+    def validate(self) -> bool:
+        raise NotImplementedError()
 
 
 class TextBlock(Block):
@@ -111,7 +119,7 @@ class ImageLinkBlock(Block):
     def url(self) -> str:
         return self.block_vars['url']
 
-    def validate(self):
+    def validate(self) -> bool:
         if not self.url:
             return False
         o = urlparse(self.url)
@@ -161,7 +169,7 @@ class ButtonBlock(Block):
     def value(self) -> str:
         return self.block_vars['value']
 
-    def validate(self):
+    def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
             return False
         if not self.style:
@@ -327,3 +335,163 @@ class LabelBlock(Block):
         if self.markdown is None:
             return False
         return True
+
+
+class InputBlock(Block):
+    def __init__(self, *, name: str, required: Optional[bool] = False, placeholder: Optional[str] = None):
+        super().__init__(block_type=BlockType.INPUT)
+        self.block_vars = {
+            'name': name,
+            'required': required or False,
+            'placeholder': placeholder,
+        }
+
+    @property
+    def name(self) -> str:
+        return self.block_vars['name']
+
+    @property
+    def required(self) -> Optional[bool]:
+        return self.block_vars['required']
+
+    @property
+    def placeholder(self) -> Optional[str]:
+        return self.block_vars['placeholder']
+
+    def validate(self) -> bool:
+        if not self.name:
+            return False
+        return True
+
+
+class SelectBlockOption(NamedTuple):
+    text: str
+    value: str
+
+
+class SelectBlock(Block):
+    def __init__(self, *, name: str, options: List[SelectBlockOption], required: Optional[bool] = False, placeholder: Optional[str] = None):
+        super().__init__(block_type=BlockType.INPUT)
+        self.block_vars = {
+            'name': name,
+            'options': options,
+            'required': required or False,
+            'placeholder': placeholder,
+        }
+
+    @property
+    def name(self) -> str:
+        return self.block_vars['name']
+
+    @property
+    def options(self) -> List[SelectBlockOption]:
+        return self.block_vars['options']
+
+    @property
+    def required(self) -> Optional[bool]:
+        return self.block_vars['required']
+
+    @property
+    def placeholder(self) -> Optional[str]:
+        return self.block_vars['placeholder']
+
+    def validate(self) -> bool:
+        if not self.name:
+            return False
+        if not self.options:
+            return False
+        return True
+
+
+class BlockKitBuilder:
+    __slot__ = ('kit_type', 'kit_vars')
+
+    def __init__(self, *, kit_type: BlockKitType):
+        self.kit_type = kit_type
+        self.reset()
+
+    def reset(self):
+        self.kit_vars: Dict[str, Any] = {
+            'blocks': [],
+        }
+
+    @property
+    def text(self) -> str:
+        if self.kit_type != BlockKitType.MESSAGE:
+            raise ValueError("It can be set only for message type")
+        return self.kit_vars['text'] if 'text' in self.kit_vars else ''
+
+    @text.setter
+    def text(self, value: str):
+        if self.kit_type != BlockKitType.MESSAGE:
+            raise ValueError("It can be set only for message type")
+        self.kit_vars['text'] = value
+
+    @property
+    def title(self) -> str:
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        return self.kit_vars['title'] if 'title' in self.kit_vars else ''
+
+    @title.setter
+    def title(self, value: str):
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        self.kit_vars['title'] = value
+
+    @property
+    def accept(self) -> str:
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        return self.kit_vars['accept'] if 'accept' in self.kit_vars else ''
+
+    @accept.setter
+    def accept(self, value: str):
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        self.kit_vars['accept'] = value
+
+    @property
+    def decline(self) -> str:
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        return self.kit_vars['decline'] if 'decline' in self.kit_vars else ''
+
+    @decline.setter
+    def decline(self, value: str):
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        self.kit_vars['decline'] = value
+
+    @property
+    def value(self) -> str:
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        return self.kit_vars['value'] if 'value' in self.kit_vars else ''
+
+    @value.setter
+    def value(self, value: str):
+        if self.kit_type != BlockKitType.MODAL:
+            raise ValueError("It can be set only for modal type")
+        self.kit_vars['value'] = value
+
+    @property
+    def blocks(self) -> List[Block]:
+        return self.kit_vars['blocks'] if 'blocks' in self.kit_vars and self.kit_vars['blocks'] else []
+
+    @blocks.setter
+    def blocks(self, value: List[Block]):
+        self.kit_vars['blocks'] = []
+        for item in value:
+            self.add_block(item)
+
+    def add_block(self, block: Block):
+        if not block.validate():
+            raise InvalidBlock()
+        self.kit_vars['blocks'].append(block)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {key: value for key, value in self.kit_vars.items() if value is not None}
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), default=json_default)

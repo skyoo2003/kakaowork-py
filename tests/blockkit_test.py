@@ -1,8 +1,11 @@
+import pytest
+
 from kakaowork.blockkit import (
     BlockType,
     ButtonStyle,
     ButtonActionType,
     HeaderStyle,
+    BlockKitType,
     TextBlock,
     ImageLinkBlock,
     ButtonBlock,
@@ -13,6 +16,7 @@ from kakaowork.blockkit import (
     SectionBlock,
     ContextBlock,
     LabelBlock,
+    BlockKitBuilder,
 )
 
 
@@ -188,9 +192,7 @@ def test_header_block_to_json():
 
 def test_action_block_properties():
     button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-    block = ActionBlock(
-        elements=[button],
-    )
+    block = ActionBlock(elements=[button])
     assert block.block_type == BlockType.ACTION
     assert block.elements == [button]
 
@@ -203,9 +205,7 @@ def test_action_block_validate():
 
 def test_action_block_to_dict():
     button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-    block = ActionBlock(
-        elements=[button],
-    )
+    block = ActionBlock(elements=[button])
     assert block.to_dict() == {
         "type": "action",
         "elements": [button],
@@ -214,9 +214,7 @@ def test_action_block_to_dict():
 
 def test_action_block_to_json():
     button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-    block = ActionBlock(
-        elements=[button],
-    )
+    block = ActionBlock(elements=[button])
     assert block.to_json() == '{"type": "action", "elements": [{"type": "button", "text": "hello", "style": "default"}]}'
 
 
@@ -293,10 +291,8 @@ def test_section_block_to_json():
         content=content,
         accessory=accessory,
     )
-    expected_json = (
-        '{"type": "section", "content": {"type": "text", "text": "hello", "markdown": false},'
-        ' "accessory": {"type": "image_link", "url": "http://localhost/image.png"}}'
-    )
+    expected_json = ('{"type": "section", "content": {"type": "text", "text": "hello", "markdown": false},'
+                     ' "accessory": {"type": "image_link", "url": "http://localhost/image.png"}}')
     assert block.to_json() == expected_json
 
 
@@ -339,10 +335,8 @@ def test_context_block_to_json():
         content=content,
         image=image,
     )
-    expected_json = (
-        '{"type": "context", "content": {"type": "text", "text": "hello", "markdown": false},'
-        ' "image": {"type": "image_link", "url": "http://localhost/image.png"}}'
-    )
+    expected_json = ('{"type": "context", "content": {"type": "text", "text": "hello", "markdown": false},'
+                     ' "image": {"type": "image_link", "url": "http://localhost/image.png"}}')
     assert block.to_json() == expected_json
 
 
@@ -354,4 +348,93 @@ def test_label_block_properties():
 
 
 def test_label_block_validate():
-    pass
+    assert LabelBlock(text="", markdown=False).validate() is False
+    assert LabelBlock(text="a" * 201, markdown=False).validate() is False
+    assert LabelBlock(text="hello", markdown=True).validate() is True
+
+
+def test_label_block_to_dict():
+    block = LabelBlock(text="hello", markdown=True)
+    assert block.to_dict() == {
+        "type": "label",
+        "text": "hello",
+        "markdown": True,
+    }
+
+
+def test_label_block_to_json():
+    block = LabelBlock(text="hello", markdown=True)
+    assert block.to_json() == '{"type": "label", "text": "hello", "markdown": true}'
+
+
+def test_blockkit_builder_message_properties():
+    builder = BlockKitBuilder(kit_type=BlockKitType.MESSAGE)
+    assert builder.kit_type == BlockKitType.MESSAGE
+    assert builder.kit_vars == {'blocks': []}
+
+    divider = DividerBlock()
+    builder.text = 'hello'
+    builder.blocks = [divider]
+    assert builder.kit_vars == {
+        'text': 'hello',
+        'blocks': [divider],
+    }
+    assert builder.text == 'hello'
+    assert builder.blocks == [divider]
+
+    with pytest.raises(ValueError):
+        builder.title = 'title'
+    assert 'title' not in builder.kit_vars
+
+    with pytest.raises(ValueError):
+        builder.accept = 'ok'
+    assert 'accept' not in builder.kit_vars
+
+    with pytest.raises(ValueError):
+        builder.decline = 'cancel'
+    assert 'decline' not in builder.kit_vars
+
+    with pytest.raises(ValueError):
+        builder.value = 'value'
+    assert 'value' not in builder.kit_vars
+
+
+def test_blockkit_builder_modal_properties():
+    builder = BlockKitBuilder(kit_type=BlockKitType.MODAL)
+    assert builder.kit_type == BlockKitType.MODAL
+    assert builder.kit_vars == {'blocks': []}
+
+    divider = DividerBlock()
+    builder.title = 'title'
+    builder.accept = 'ok'
+    builder.decline = 'cancel'
+    builder.value = 'value'
+    builder.blocks = [divider]
+    assert builder.kit_vars == {
+        'title': 'title',
+        'accept': 'ok',
+        'decline': 'cancel',
+        'value': 'value',
+        'blocks': [divider],
+    }
+    assert builder.title == 'title'
+    assert builder.accept == 'ok'
+    assert builder.decline == 'cancel'
+    assert builder.value == 'value'
+    assert builder.blocks == [divider]
+
+    with pytest.raises(ValueError):
+        builder.text = 'hello'
+    assert 'text' not in builder.kit_vars
+
+
+def test_blockkit_builder_add_block():
+    divider = DividerBlock()
+
+    builder = BlockKitBuilder(kit_type=BlockKitType.MESSAGE)
+    builder.add_block(divider)
+    assert builder.blocks == [divider]
+
+    builder = BlockKitBuilder(kit_type=BlockKitType.MODAL)
+    builder.add_block(divider)
+    assert builder.blocks == [divider]
