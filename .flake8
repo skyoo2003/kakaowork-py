@@ -1,0 +1,13 @@
+[flake8]
+max-line-length=160
+exclude =
+    .git
+    __pycache__
+    build
+    dist
+    .venv
+    .tox
+    .mypy_cache
+    .pytest_cache
+    .vscode
+    .github
