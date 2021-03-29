@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+/.vscode/
+/.mypy_cache/
+/.pytest_cache/
+/.idea/
+/.tox/
+/.report/
+/.coverage

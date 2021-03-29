@@ -1,0 +1,93 @@
+[tool.poetry]
+name = "kakaowork"
+version = "0.1.0"
+description = "Kakaowork Python client"
+authors = ["Sung-Kyu Yoo <skyoo2003@gmail.com>"]
+readme = "README.md"
+homepage = "https://github.com/skyoo2003/kakaowork-py"
+repository = "https://github.com/skyoo2003/kakaowork-py"
+keywords = ["kakaowork"]
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.11.1"
+towncrier = "^19.2.0"
+pytest = "^6.2.2"
+pytest-cov = "^2.11.1"
+pytest-mock = "^3.5.1"
+yapf = "^0.31.0"
+flake8 = "^3.9.0"
+mypy = "^0.812"
+coverage = "^5.5"
+tox = "^3.23.0"
+sphinx = "^3.5.3"
+
+[tool.poetry.scripts]
+kakaowork = "kakaowork.__main__:main"
+
+[tool.pytest.ini_options]
+minversion = "5.3"
+testpaths = ["tests"]
+addopts = "--cov=kakaowork --cov-report=html --cov-report=xml"
+faulthandler_timeout = 10
+
+[tool.coverage.run]
+source = ["kakaowork"]
+
+[tool.coverage.report]
+ignore_errors = true
+omit = ["*/tests/*"]
+
+[tool.coverage.html]
+directory = ".report/html"
+
+[tool.coverage.xml]
+output = ".report/coverage.xml"
+
+[tool.towncrier]
+package = "kakaowork"
+filename = "CHANGELOG.rst"
+directory = "news"
+issue_format = "`#{issue} <https://github.com/skyoo2003/kakaowork-py/issues/{issue}>`_"
+title_format = "{version} ({project_date})"
+
+    [[tool.towncrier.type]]
+    directory = "breaking"
+    name = "Breaking Changes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "feature"
+    name = "New Features"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "enhancement"
+    name = "Enhancement"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "bugfix"
+    name = "Bug Fixes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "deprecation"
+    name = "Deprecation"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "removal"
+    name = "Removal"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "doc"
+    name = "Documentation"
+    showcontent = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
