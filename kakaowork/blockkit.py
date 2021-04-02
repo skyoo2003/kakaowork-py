@@ -22,6 +22,7 @@ class BlockType(StrEnum):
     CONTEXT = "context"
     LABEL = "label"
     INPUT = "input"
+    SELECT = "select"
 
 
 @unique
@@ -53,6 +54,11 @@ class BlockKitType(StrEnum):
     MODAL = 'modal'
 
 
+class SelectBlockOption(NamedTuple):
+    text: str
+    value: str
+
+
 def json_default(value: Any) -> Any:
     if isinstance(value, Block):
         return value.to_dict()
@@ -60,8 +66,6 @@ def json_default(value: Any) -> Any:
 
 
 class Block(ABC):
-    __slots__ = ('block_type', 'block_vars')
-
     def __init__(self, *, block_type: BlockType):
         self.block_type = block_type
         self.block_vars: Dict[str, Any] = {}
@@ -338,6 +342,8 @@ class LabelBlock(Block):
 
 
 class InputBlock(Block):
+    max_len_placeholder = 50
+
     def __init__(self, *, name: str, required: Optional[bool] = False, placeholder: Optional[str] = None):
         super().__init__(block_type=BlockType.INPUT)
         self.block_vars = {
@@ -361,17 +367,17 @@ class InputBlock(Block):
     def validate(self) -> bool:
         if not self.name:
             return False
+        if self.placeholder and len(self.placeholder) > self.max_len_placeholder:
+            return False
         return True
 
 
-class SelectBlockOption(NamedTuple):
-    text: str
-    value: str
-
-
 class SelectBlock(Block):
+    max_len_options = 30
+    max_len_placeholder = 50
+
     def __init__(self, *, name: str, options: List[SelectBlockOption], required: Optional[bool] = False, placeholder: Optional[str] = None):
-        super().__init__(block_type=BlockType.INPUT)
+        super().__init__(block_type=BlockType.SELECT)
         self.block_vars = {
             'name': name,
             'options': options,
@@ -398,14 +404,14 @@ class SelectBlock(Block):
     def validate(self) -> bool:
         if not self.name:
             return False
-        if not self.options:
+        if not self.options or len(self.options) > self.max_len_options:
+            return False
+        if self.placeholder and len(self.placeholder) > self.max_len_placeholder:
             return False
         return True
 
 
 class BlockKitBuilder:
-    __slot__ = ('kit_type', 'kit_vars')
-
     def __init__(self, *, kit_type: BlockKitType):
         self.kit_type = kit_type
         self.reset()
