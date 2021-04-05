@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional, List
 from urllib3 import PoolManager
 
 from kakaowork.consts import (
+    LIMIT,
     BASE_URL,
     BASE_PATH_USERS,
     BASE_PATH_CONVERSATIONS,
@@ -48,8 +49,8 @@ class Kakaowork:
             )
             return UserResponse.from_json(r.data)
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = 10) -> UserListResponse:
-            fields = {'cursor': cursor} if cursor else {'limit': limit}
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> UserListResponse:
+            fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': limit or LIMIT}
             r = self.client.http.request(
                 'GET',
                 f'{self.client.base_url}{self.base_path}.list',
@@ -89,7 +90,7 @@ class Kakaowork:
             self.base_path = base_path
 
         def open(self, user_ids: List[int]) -> ConversationResponse:
-            payload = {'user_id': user_ids[0]} if len(user_ids) == 1 else {'user_ids': user_ids}
+            payload: Dict[str, Any] = {'user_id': user_ids[0]} if len(user_ids) == 1 else {'user_ids': user_ids}
             r = self.client.http.request(
                 'POST',
                 f'{self.client.base_url}{self.base_path}.open',
