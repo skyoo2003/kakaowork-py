@@ -14,7 +14,7 @@ python = "^3.6.1"
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.11.1"
 towncrier = "^19.2.0"
-pytest = "^6.2.2"
+pytest = "^6.2.3"
 pytest-cov = "^2.11.1"
 pytest-mock = "^3.5.1"
 yapf = "^0.31.0"
