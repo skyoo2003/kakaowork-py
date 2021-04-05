@@ -25,7 +25,7 @@ class ErrorField(NamedTuple):
 
 
 class UserField(NamedTuple):
-    user_id: str
+    id: str
     space_id: str
     name: str
     nickname: Optional[str]
@@ -41,10 +41,24 @@ class UserField(NamedTuple):
     vacation_end_time: Optional[datetime]
 
 
+class ConversationField(NamedTuple):
+    id: str
+    type: str
+    users_count: int
+    avatar_url: Optional[str]
+    name: Optional[str]
+
+
 class BaseResponse(ABC):
     def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None):
         self.success = success or False
         self.error = error
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return str(self)
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
@@ -57,7 +71,7 @@ class BaseResponse(ABC):
         }
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
+    def from_json(cls, value: Union[str, bytes]):
         json_str = value.decode('utf-8') if isinstance(value, bytes) else value
         json_data = json.loads(json_str)
         return cls(**json_data)
@@ -68,17 +82,11 @@ class UserResponse(BaseResponse):
         super().__init__(success=success, error=error)
         self.user = user
 
-    def __str__(self):
-        return self.to_json()
-
-    def __repr__(self):
-        return str(self)
-
     def to_dict(self):
         return dict(user=self.user, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+    def from_json(cls, value: Union[str, bytes]):
         return super().from_json(value)
 
 
@@ -93,15 +101,41 @@ class UserListResponse(BaseResponse):
         self.cursor = cursor
         self.users = users
 
-    def __str__(self):
-        return self.to_json()
-
-    def __repr__(self):
-        return str(self)
-
     def to_dict(self):
         return dict(users=self.users, cursor=self.cursor, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserListResponse':
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class ConversationResponse(BaseResponse):
+    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, conversation: ConversationField):
+        super().__init__(success=success, error=error)
+        self.conversation = conversation
+
+    def to_dict(self):
+        return dict(conversation=self.conversation, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class ConversationListResponse(BaseResponse):
+    def __init__(self,
+                 *,
+                 success: Optional[bool] = None,
+                 error: Optional[ErrorField] = None,
+                 cursor: Optional[str] = None,
+                 conversations: Optional[List[ConversationField]] = None):
+        super().__init__(success=success, error=error)
+        self.cursor = cursor
+        self.conversations = conversations
+
+    def to_dict(self):
+        return dict(conversations=self.conversations, cursor=self.cursor, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
         return super().from_json(value)

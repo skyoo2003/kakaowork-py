@@ -1,17 +1,20 @@
 import json
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from urllib3 import PoolManager
 
 from kakaowork.consts import (
     BASE_URL,
     BASE_PATH_USERS,
+    BASE_PATH_CONVERSATIONS,
 )
 from kakaowork.models import (
     BaseResponse,
     UserResponse,
     UserListResponse,
+    ConversationResponse,
+    ConversationListResponse,
 )
 
 
@@ -76,6 +79,55 @@ class Kakaowork:
             r = self.client.http.request(
                 'POST',
                 f'{self.client.base_url}{self.base_path}.set_vacation_time',
+                body=json.dumps(payload).encode('utf-8'),
+            )
+            return BaseResponse.from_json(r.data)
+
+    class Conversations:
+        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
+            self.client = client
+            self.base_path = base_path
+
+        def open(self, user_ids: List[int]) -> ConversationResponse:
+            payload = {'user_id': user_ids[0]} if len(user_ids) == 1 else {'user_ids': user_ids}
+            r = self.client.http.request(
+                'POST',
+                f'{self.client.base_url}{self.base_path}.open',
+                body=json.dumps(payload).encode('utf-8'),
+            )
+            return ConversationResponse.from_json(r.data)
+
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = 10) -> ConversationListResponse:
+            fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
+            r = self.client.http.request(
+                'GET',
+                f'{self.client.base_url}{self.base_path}.list',
+                fields=fields,
+            )
+            return ConversationListResponse.from_json(r.data)
+
+        def users(self, conversation_id: int) -> UserListResponse:
+            r = self.client.http.request(
+                'GET',
+                f'{self.client.base_url}{self.base_path}.users',
+                fields={'conversation_id': conversation_id},
+            )
+            return UserListResponse.from_json(r.data)
+
+        def invite(self, conversation_id: int, user_ids: List[int]) -> BaseResponse:
+            payload = {'conversation_id': conversation_id, 'user_ids': user_ids}
+            r = self.client.http.request(
+                'POST',
+                f'{self.client.base_url}{self.base_path}.invite',
+                body=json.dumps(payload).encode('utf-8'),
+            )
+            return BaseResponse.from_json(r.data)
+
+        def kick(self, conversation_id: int, user_ids: List[int]) -> BaseResponse:
+            payload = {'conversation_id': conversation_id, 'user_ids': user_ids}
+            r = self.client.http.request(
+                'POST',
+                f'{self.client.base_url}{self.base_path}.kick',
                 body=json.dumps(payload).encode('utf-8'),
             )
             return BaseResponse.from_json(r.data)
