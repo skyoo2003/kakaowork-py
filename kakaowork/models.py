@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional, NamedTuple, Union, Any, Dict, List
 
 from kakaowork.consts import StrEnum
+from kakaowork.blockkit import Block
 
 
 class ErrorCode(StrEnum):
@@ -17,6 +18,27 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
+
+
+class ColorTone(StrEnum):
+    LIGHT = 'light'
+    DARK = 'dark'
+
+
+class ProfileNameFormat(StrEnum):
+    NAME_ONLY = 'name_only'
+    NAME_NICKNAME = 'name_nickname'
+    NICKNAME_NAME = 'nickname_name'
+
+
+class ProfilePositionFormat(StrEnum):
+    POSITION = 'position'
+    RESPONSIBILITY = 'responsibility'
+
+
+class BotStatus(StrEnum):
+    ACTIVATED = 'activated'
+    DEACTIVATED = 'deactivated'
 
 
 class ErrorField(NamedTuple):
@@ -47,6 +69,46 @@ class ConversationField(NamedTuple):
     users_count: int
     avatar_url: Optional[str]
     name: Optional[str]
+
+
+class MessageField(NamedTuple):
+    id: str
+    text: str
+    user_id: str
+    conversation_id: int
+    send_time: datetime
+    update_time: datetime
+    blocks: Optional[Block]
+
+
+class DepartmentField(NamedTuple):
+    id: str
+    space_id: str
+    name: str
+    code: str
+    user_count: int
+    has_child: Optional[bool]
+    depth: Optional[int]
+    user_ids: Optional[List[int]]
+    leader_ids: Optional[List[int]]
+    ancestry: Optional[str]
+
+
+class SpaceField(NamedTuple):
+    id: str
+    kakaoi_org_id: str
+    name: str
+    color_code: str
+    color_tone: ColorTone
+    permitted_ext: List[str]
+    profile_name_format: ProfileNameFormat
+    profile_position_format: ProfilePositionFormat
+    logo_url: str
+
+
+class BotField(NamedTuple):
+    title: str
+    status: BotStatus
 
 
 class BaseResponse(ABC):
@@ -135,6 +197,64 @@ class ConversationListResponse(BaseResponse):
 
     def to_dict(self):
         return dict(conversations=self.conversations, cursor=self.cursor, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class MessageResponse(BaseResponse):
+    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, message: Optional[MessageField] = None):
+        super().__init__(success=success, error=error)
+        self.message = message
+
+    def to_dict(self):
+        return dict(message=self.message, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class DepartmentListResponse(BaseResponse):
+    def __init__(self,
+                 *,
+                 success: Optional[bool] = None,
+                 error: Optional[ErrorField] = None,
+                 cursor: Optional[str] = None,
+                 departments: Optional[List[DepartmentField]] = None):
+        super().__init__(success=success, error=error)
+        self.cursor = cursor
+        self.departments = departments
+
+    def to_dict(self):
+        return dict(departments=self.departments, cursor=self.cursor, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class SpaceResponse(BaseResponse):
+    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, space: Optional[SpaceField] = None):
+        super().__init__(success=success, error=error)
+        self.space = space
+
+    def to_dict(self):
+        return dict(space=self.space, **super().to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]):
+        return super().from_json(value)
+
+
+class BotResponse(BaseResponse):
+    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, bot: Optional[BotField] = None):
+        super().__init__(success=success, error=error)
+        self.bot = bot
+
+    def to_dict(self):
+        return dict(bot=self.bot, **super().to_dict())
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]):

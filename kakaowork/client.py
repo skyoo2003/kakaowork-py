@@ -9,6 +9,10 @@ from kakaowork.consts import (
     BASE_URL,
     BASE_PATH_USERS,
     BASE_PATH_CONVERSATIONS,
+    BASE_PATH_MESSAGES,
+    BASE_PATH_DEPARTMENTS,
+    BASE_PATH_SPACES,
+    BASE_PATH_BOTS,
 )
 from kakaowork.models import (
     BaseResponse,
@@ -16,7 +20,12 @@ from kakaowork.models import (
     UserListResponse,
     ConversationResponse,
     ConversationListResponse,
+    MessageResponse,
+    DepartmentListResponse,
+    SpaceResponse,
+    BotResponse,
 )
+from kakaowork.blockkit import Block
 
 
 class Kakaowork:
@@ -132,6 +141,62 @@ class Kakaowork:
                 body=json.dumps(payload).encode('utf-8'),
             )
             return BaseResponse.from_json(r.data)
+
+    class Messages:
+        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_MESSAGES):
+            self.client = client
+            self.base_path = base_path
+
+        def send(self, conversation_id: int, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            payload = {
+                'conversation_id': conversation_id,
+                'text': text,
+                'blocks': blocks or [],
+            }
+            r = self.client.http.request(
+                'POST',
+                f'{self.client.base_url}{self.base_path}.send',
+                body=json.dumps(payload).encode('utf-8'),
+            )
+            return MessageResponse.from_json(r.data)
+
+    class Departments:
+        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
+            self.client = client
+            self.base_path = base_path
+
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = 10) -> DepartmentListResponse:
+            fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
+            r = self.client.http.request(
+                'GET',
+                f'{self.client.base_url}{self.base_path}.list',
+                fields=fields,
+            )
+            return DepartmentListResponse.from_json(r.data)
+
+    class Spaces:
+        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_SPACES):
+            self.client = client
+            self.base_path = base_path
+
+        def info(self) -> SpaceResponse:
+            r = self.client.http.request(
+                'GET',
+                f'{self.client.base_url}{self.base_path}.info',
+            )
+            return SpaceResponse.from_json(r.data)
+
+    class Bots:
+        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_BOTS):
+            self.client = client
+            self.base_path = base_path
+
+        def info(self) -> BotResponse:
+            r = self.client.http.request(
+                'GET',
+                f'{self.client.base_url}{self.base_path}.info',
+            )
+            return BotResponse.from_json(r.data)
 
     def __init__(self, *, app_key: str, base_url: Optional[str] = BASE_URL):
         self.app_key = app_key
