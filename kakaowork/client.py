@@ -213,3 +213,23 @@ class Kakaowork:
     @property
     def users(self) -> Users:
         return self.Users(self)
+
+    @property
+    def conversations(self) -> Conversations:
+        return self.Conversations(self)
+
+    @property
+    def messages(self) -> Messages:
+        return self.Messages(self)
+
+    @property
+    def departments(self) -> Departments:
+        return self.Departments(self)
+
+    @property
+    def spaces(self) -> Spaces:
+        return self.Spaces(self)
+
+    @property
+    def bots(self) -> Bots:
+        return self.Bots(self)

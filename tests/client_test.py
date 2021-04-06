@@ -15,3 +15,8 @@ class TestKakaowork:
             'Content-Type': 'application/json; charset=utf-8',
         }
         assert isinstance(c.users, Kakaowork.Users)
+        assert isinstance(c.conversations, Kakaowork.Conversations)
+        assert isinstance(c.messages, Kakaowork.Messages)
+        assert isinstance(c.departments, Kakaowork.Departments)
+        assert isinstance(c.spaces, Kakaowork.Spaces)
+        assert isinstance(c.bots, Kakaowork.Bots)
