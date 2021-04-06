@@ -26,7 +26,7 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
-	rm -rf dist/ *.egg-info
+	rm -rf dist *.egg-info .mypy_cache .pytest_cache .report .tox .coverage
 
 update-changelog:
 	poetry run towncrier --yes
