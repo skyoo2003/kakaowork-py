@@ -6,12 +6,21 @@ on:
     - master
     paths:
     - "**/*.py"
+    - ".flake8"
+    - ".mypy.ini"
+    - ".style.yapf"
+    - "pyproject.toml"
+    - "poetry.lock"
   pull_request:
     branches:
     - master
     paths:
     - "**/*.py"
-
+    - ".flake8"
+    - ".mypy.ini"
+    - ".style.yapf"
+    - "pyproject.toml"
+    - "poetry.lock"
 jobs:
   build:
     runs-on: ubuntu-latest
