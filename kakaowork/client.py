@@ -30,7 +30,7 @@ from kakaowork.blockkit import Block
 
 class Kakaowork:
     class Users:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_USERS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_USERS):
             self.client = client
             self.base_path = base_path
 
@@ -94,7 +94,7 @@ class Kakaowork:
             return BaseResponse.from_json(r.data)
 
     class Conversations:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
             self.client = client
             self.base_path = base_path
 
@@ -143,7 +143,7 @@ class Kakaowork:
             return BaseResponse.from_json(r.data)
 
     class Messages:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_MESSAGES):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_MESSAGES):
             self.client = client
             self.base_path = base_path
 
@@ -161,7 +161,7 @@ class Kakaowork:
             return MessageResponse.from_json(r.data)
 
     class Departments:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
             self.client = client
             self.base_path = base_path
 
@@ -175,7 +175,7 @@ class Kakaowork:
             return DepartmentListResponse.from_json(r.data)
 
     class Spaces:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_SPACES):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_SPACES):
             self.client = client
             self.base_path = base_path
 
@@ -187,7 +187,7 @@ class Kakaowork:
             return SpaceResponse.from_json(r.data)
 
     class Bots:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_BOTS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_BOTS):
             self.client = client
             self.base_path = base_path
 
