@@ -2,11 +2,11 @@ import os
 import json
 from enum import unique
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, NamedTuple
+from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
 from urllib.parse import urlparse
 
 from kakaowork.consts import StrEnum
-from kakaowork.exceptions import InvalidBlock
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType
 
 
 @unique
@@ -23,6 +23,35 @@ class BlockType(StrEnum):
     LABEL = "label"
     INPUT = "input"
     SELECT = "select"
+
+    @classmethod
+    def block_cls(cls, block_type: Union[str, 'BlockType']) -> Type['Block']:
+        bt = cls(block_type) if isinstance(block_type, str) else block_type
+        if bt == cls.TEXT:
+            return TextBlock
+        elif bt == cls.IMAGE_LINK:
+            return ImageLinkBlock
+        elif bt == cls.BUTTON:
+            return ButtonBlock
+        elif bt == cls.DIVIDER:
+            return DividerBlock
+        elif bt == cls.HEADER:
+            return HeaderBlock
+        elif bt == cls.ACTION:
+            return ActionBlock
+        elif bt == cls.DESCRIPTION:
+            return DescriptionBlock
+        elif bt == cls.SECTION:
+            return SectionBlock
+        elif bt == cls.CONTEXT:
+            return ContextBlock
+        elif bt == cls.LABEL:
+            return LabelBlock
+        elif bt == cls.INPUT:
+            return InputBlock
+        elif bt == cls.SELECT:
+            return SelectBlock
+        raise InvalidBlockType()
 
 
 @unique
