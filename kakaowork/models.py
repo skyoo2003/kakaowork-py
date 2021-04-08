@@ -1,10 +1,11 @@
 import json
-from abc import ABC, abstractmethod
+from abc import ABC, abstractclassmethod
 from datetime import datetime
 from typing import Optional, NamedTuple, Union, Any, Dict, List
 
 from kakaowork.consts import StrEnum
-from kakaowork.blockkit import Block
+from kakaowork.blockkit import Block, BlockType
+from kakaowork.utils import text2dict, exist_kv
 
 
 class ErrorCode(StrEnum):
@@ -18,6 +19,11 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
+
+
+class ConversationType(StrEnum):
+    DM = 'dm'
+    GROUP = 'group'
 
 
 class ColorTone(StrEnum):
@@ -46,8 +52,14 @@ class ErrorField(NamedTuple):
     message: str
 
 
+class UserIdentificationField(NamedTuple):
+    type: str
+    value: str
+
+
 class UserField(NamedTuple):
     id: str
+    identifications: List[UserIdentificationField]
     space_id: str
     name: str
     nickname: Optional[str]
@@ -62,13 +74,31 @@ class UserField(NamedTuple):
     vacation_start_time: Optional[datetime]
     vacation_end_time: Optional[datetime]
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+        return cls(**dict(
+            value,
+            identifications=[UserIdentificationField(**item) for item in value['identifications']],
+            work_start_time=datetime.fromtimestamp(value['work_start_time']) if exist_kv('work_start_time', value) else None,
+            work_end_time=datetime.fromtimestamp(value['work_end_time']) if exist_kv('work_end_time', value) else None,
+            vacation_start_time=datetime.fromtimestamp(value['vacation_start_time']) if exist_kv('vacation_start_time', value) else None,
+            vacation_end_time=datetime.fromtimestamp(value['vacation_end_time']) if exist_kv('vacation_end_time', value) else None,
+        ))
+
 
 class ConversationField(NamedTuple):
     id: str
-    type: str
+    type: ConversationType
     users_count: int
     avatar_url: Optional[str]
     name: Optional[str]
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
+        return cls(**dict(
+            value,
+            type=ConversationType(value['type']),
+        ))
 
 
 class MessageField(NamedTuple):
@@ -79,6 +109,18 @@ class MessageField(NamedTuple):
     send_time: datetime
     update_time: datetime
     blocks: Optional[Block]
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':
+        blocks = []
+        for kv in value['blocks']:
+            block_cls = BlockType.block_cls(kv['type'])
+            block = block_cls(**{key: value for key, value in kv.items() if key != 'type'})
+            blocks.append(block)
+        return cls(**dict(
+            value,
+            blocks=blocks,
+        ))
 
 
 class DepartmentField(NamedTuple):
@@ -125,7 +167,6 @@ class BaseResponse(ABC):
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
 
-    @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         return {
             'success': self.success,
@@ -133,10 +174,9 @@ class BaseResponse(ABC):
         }
 
     @classmethod
+    @abstractclassmethod
     def from_json(cls, value: Union[str, bytes]):
-        json_str = value.decode('utf-8') if isinstance(value, bytes) else value
-        json_data = json.loads(json_str)
-        return cls(**json_data)
+        raise NotImplementedError()
 
 
 class UserResponse(BaseResponse):
@@ -148,8 +188,13 @@ class UserResponse(BaseResponse):
         return dict(user=self.user, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+        data = text2dict(value)
+        r = cls(**dict(
+            data,
+            user=UserField.from_dict(data['user']) if exist_kv('user', data) else None,
+        ))
+        return r
 
 
 class UserListResponse(BaseResponse):
@@ -167,8 +212,13 @@ class UserListResponse(BaseResponse):
         return dict(users=self.users, cursor=self.cursor, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'UserListResponse':
+        data = text2dict(value)
+        r = cls(**dict(
+            data,
+            users=[UserField.from_dict(node) for node in data['users']] if exist_kv('users', data) else None,
+        ))
+        return r
 
 
 class ConversationResponse(BaseResponse):
@@ -180,8 +230,11 @@ class ConversationResponse(BaseResponse):
         return dict(conversation=self.conversation, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'ConversationResponse':
+        data = text2dict(value)
+        conversation = ConversationField(**data['conversation']) if 'conversation' in data else None
+        r = cls(**dict(data, conversation=conversation))
+        return r
 
 
 class ConversationListResponse(BaseResponse):
@@ -199,8 +252,11 @@ class ConversationListResponse(BaseResponse):
         return dict(conversations=self.conversations, cursor=self.cursor, **super().to_dict())
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'ConversationListResponse':
+        data = text2dict(value)
+        conversations = [ConversationField(**node) for node in data['conversations']] if 'conversations' in data else None
+        r = cls(**dict(data, conversations=conversations))
+        return r
 
 
 class MessageResponse(BaseResponse):
