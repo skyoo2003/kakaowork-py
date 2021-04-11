@@ -1,73 +1,103 @@
 import os
-import sys
-from argparse import ArgumentParser, _SubParsersAction
-from typing import Type
+from typing import Optional
 
+import click
+
+from kakaowork.consts import StrEnum
 from kakaowork.client import Kakaowork
 
 
-class CLI:
-    def __init__(self: 'CLI'):
-        self.parser = ArgumentParser(
-            prog='kakaowork',
-            description='Kakaowork CLI',
-        )
-        self.parser.add_argument('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'), help='')
-        self.parser.add_argument('-o', '--output', default=None, choices=['json', 'yaml'], help='')
+class CommonOptions:
+    def __init__(self):
+        self.app_key: str = ''
 
-        self.subparsers = self.parser.add_subparsers(dest='command')
-        self._create_users_parser()
-        self._create_conversations_parser()
-        self._create_messages_parser()
-        self._create_departments_parser()
-        self._create_spaces_parser()
-        self._create_bots_parser()
 
-    def _create_users_parser(self):
-        users_parser = self.subparsers.add_parser(name='users')
-        users_verb_parser = users_parser.add_subparsers(dest='verb')
+@click.group(name='kakaowork')
+@click.pass_context
+@click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'))
+def cli(ctx, app_key):
+    ctx.ensure_object(CommonOptions)
+    ctx.obj.app_key = app_key
+    pass
 
-        users_list_parser = users_verb_parser.add_parser(name='list', help="Show a list of details of users belonging to the workspace")
-        users_list_parser.add_argument('-n', '--size', type=int, default=10, help="A page size")
 
-        users_find_parser = users_verb_parser.add_parser(name='find', help='Show details of a user by identifier (ID, Email, Mobile)')
-        users_set_parser = users_verb_parser.add_parser(name='set', help="Change the user's status (working time, vacation time)")
+@cli.group()
+@click.pass_context
+def users(ctx):
+    pass
 
-    def _create_conversations_parser(self):
-        conversations_parser = self.subparsers.add_parser(name='conversations')
-        conversations_verb_parser = conversations_parser.add_subparsers(dest='verb')
-        conversations_open_parser = conversations_verb_parser.add_parser(name='open')
-        conversations_list_parser = conversations_verb_parser.add_parser(name='list')
-        conversations_users_parser = conversations_verb_parser.add_parser(name='users')
-        conversations_invite_parser = conversations_verb_parser.add_parser(name='invite')
-        conversations_kick_parser = conversations_verb_parser.add_parser(name='kick')
 
-    def _create_messages_parser(self):
-        messages_parser = self.subparsers.add_parser(name='messages')
-        messages_verb_parser = messages_parser.add_subparsers(dest='verb')
-        messages_send_parser = messages_verb_parser.add_parser(name='send')
+@users.command(name='list', help="Show a list of details of users belonging to the workspace")
+def users_list():
+    pass
 
-    def _create_departments_parser(self):
-        departments_parser = self.subparsers.add_parser(name='departments')
-        departments_verb_parser = departments_parser.add_subparsers(dest='verb')
-        departments_list_parser = departments_verb_parser.add_parser(name='list')
 
-    def _create_spaces_parser(self):
-        spaces_parser = self.subparsers.add_parser(name='spaces')
-        spaces_verb_parser = spaces_parser.add_subparsers(dest='verb')
-        spaces_info_parser = spaces_verb_parser.add_parser(name='info')
+@users.command(name='find', help="Show details of a user by identifier (ID, Email, Mobile)")
+def users_find():
+    pass
 
-    def _create_bots_parser(self):
-        bots_parser = self.subparsers.add_parser(name='bots')
-        bots_verb_parser = bots_parser.add_subparsers(dest='verb')
-        bots_info_parser = bots_verb_parser.add_parser(name='info')
 
-    def run(self):
-        args = self.parser.parse_args()
-        if not args.app_key:
-            sys.exit("No app key")
-        client = Kakaowork(app_key=args.app_key)
-        print(args)
-        if args.command == 'users':
-            r = getattr(client.users, args.verb)()
-            print(r)
+@users.command(name='set', help="Change the user's status (working time, vacation time)")
+def users_set():
+    pass
+
+
+@cli.group()
+def conversations():
+    pass
+
+
+def conversations_open():
+    pass
+
+
+def conversations_list():
+    pass
+
+
+def conversations_users():
+    pass
+
+
+def conversations_invite():
+    pass
+
+
+def conversations_kick():
+    pass
+
+
+@cli.group()
+def messages():
+    pass
+
+
+def messages_send():
+    pass
+
+
+@cli.group()
+def departments():
+    pass
+
+
+def departments_list():
+    pass
+
+
+@cli.group()
+def spaces():
+    pass
+
+
+def spaces_info():
+    pass
+
+
+@cli.group()
+def bots():
+    pass
+
+
+def bots_info():
+    pass
