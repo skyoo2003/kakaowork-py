@@ -1,8 +1,8 @@
-from kakaowork.command import cli, CommonOptions
+from kakaowork.command import cli, CLIOptions
 
 
 def main():
-    cli(obj=CommonOptions())
+    cli(obj=CLIOptions())
 
 
 if __name__ == '__main__':

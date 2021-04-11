@@ -7,7 +7,7 @@ from kakaowork.consts import StrEnum
 from kakaowork.client import Kakaowork
 
 
-class CommonOptions:
+class CLIOptions:
     def __init__(self):
         self.app_key: str = ''
 
@@ -16,7 +16,7 @@ class CommonOptions:
 @click.pass_context
 @click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'))
 def cli(ctx, app_key):
-    ctx.ensure_object(CommonOptions)
+    ctx.ensure_object(CLIOptions)
     ctx.obj.app_key = app_key
     pass
 
