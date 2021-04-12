@@ -23,7 +23,7 @@ flake8 = "^3.9.0"
 mypy = "^0.812"
 coverage = "^5.5"
 tox = "^3.23.0"
-sphinx = "^3.5.3"
+sphinx = "^3.5.4"
 
 [tool.poetry.scripts]
 kakaowork = "kakaowork.__main__:main"
