@@ -34,7 +34,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def info(self, user_id: str) -> UserResponse:
+        def info(self, user_id: int) -> UserResponse:
             r = self.client.http.request(
                 'GET',
                 f'{self.client.base_url}{self.base_path}.info',
@@ -67,7 +67,7 @@ class Kakaowork:
             )
             return UserListResponse.from_json(r.data)
 
-        def set_work_time(self, *, user_id: str, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
+        def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
                 'user_id': user_id,
                 'work_start_time': work_start_time.strftime('%s'),
@@ -80,9 +80,8 @@ class Kakaowork:
             )
             return BaseResponse.from_json(r.data)
 
-        def set_vacation_time(self, *, user_id: str, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
+        def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
-                'user_id': user_id,
                 'vacation_start_time': vacation_start_time.strftime('%s'),
                 'vacation_end_time': vacation_end_time.strftime('%s'),
             }

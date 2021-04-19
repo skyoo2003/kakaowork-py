@@ -52,7 +52,7 @@ class ErrorField(NamedTuple):
     message: str
 
     @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+    def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
         return cls(**dict(
             value,
             code=ErrorCode(value['code']) if exist_kv('code', value) else None,
@@ -145,7 +145,7 @@ class DepartmentField(NamedTuple):
     ancestry: Optional[str] = None
 
     @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+    def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
         return cls(**dict(value))
 
 
@@ -161,7 +161,7 @@ class SpaceField(NamedTuple):
     logo_url: str
 
     @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':
+    def from_dict(cls, value: Dict[str, Any]) -> 'SpaceField':
         return cls(**dict(
             value,
             color_tone=ColorTone(value['color_tone']),

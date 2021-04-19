@@ -6,7 +6,12 @@ import click
 
 from kakaowork.consts import StrEnum
 from kakaowork.client import Kakaowork
-from kakaowork.models import BaseResponse
+from kakaowork.models import (
+    BaseResponse,
+    UserListResponse,
+    ConversationListResponse,
+    DepartmentListResponse,
+)
 
 
 class CLIOptions:
@@ -46,7 +51,7 @@ def users_list(ctx: click.Context, limit: int):
     if not r.success:
         return _echo(ctx, r)
 
-    def _generate_output(resp: BaseResponse):
+    def _generate_output(resp: UserListResponse):
         yield resp.to_plain()
         while resp.cursor is not None:
             resp = client.users.list(cursor=resp.cursor)
@@ -129,7 +134,7 @@ def conversations_list(ctx: click.Context, limit: int):
     if not r.success:
         return _echo(ctx, r)
 
-    def _generate_output(resp: BaseResponse):
+    def _generate_output(resp: ConversationListResponse):
         yield resp.to_plain()
         while resp.cursor is not None:
             resp = client.conversations.list(cursor=resp.cursor)
@@ -177,11 +182,11 @@ def messages(ctx: click.Context):
 
 @messages.command(name='send')
 @click.pass_context
-@click.argument('conversation_id', type=str)
+@click.argument('conversation_id', type=int)
 @click.argument('text', type=str)
 # TODO: block should be one of jsonable or key=value with space deplimiter
 # @click.option('-b', '--block', 'blocks', multiple=True)
-def messages_send(ctx: click.Context, conversation_id: str, text: str):
+def messages_send(ctx: click.Context, conversation_id: int, text: str):
     opts: CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text)
     _echo(ctx, r)
@@ -203,7 +208,7 @@ def departments_list(ctx: click.Context, limit: int):
     if not r.success:
         return _echo(ctx, r)
 
-    def _generate_output(resp: BaseResponse):
+    def _generate_output(resp: DepartmentListResponse):
         yield resp.to_plain()
         while resp.cursor is not None:
             resp = client.departments.list(cursor=resp.cursor)
