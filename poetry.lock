@@ -696,7 +696,7 @@ cli = ["click"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "b97ff45277484cc836cf260b7365d6e87f72c6b4189fd612ac1c4be0c6609694"
+content-hash = "ba4b7d9f3bb41e8d1bf84647224435326927f6ce661ec2318fa89534d3b76b99"
 
 [metadata.files]
 alabaster = [

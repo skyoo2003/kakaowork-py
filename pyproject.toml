@@ -14,17 +14,17 @@ urllib3 = "^1.26.4"
 click = { version = "^7.1.2", optional = true }
 
 [tool.poetry.dev-dependencies]
-pre-commit = "^2.11.1"
+pre-commit = "^2.12.1"
 towncrier = "^21.3.0"
 pytest = "^6.2.3"
 pytest-cov = "^2.11.1"
 pytest-mock = "^3.5.1"
 yapf = "^0.31.0"
-flake8 = "^3.9.0"
+flake8 = "^3.9.1"
 mypy = "^0.812"
 coverage = "^5.5"
 tox = "^3.23.0"
-sphinx = "^3.5.3"
+sphinx = "^3.5.4"
 
 [tool.poetry.extras]
 cli = ['click']
