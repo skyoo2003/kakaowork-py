@@ -7,7 +7,7 @@ setup:
 
 install:
 	poetry check
-	poetry install
+	poetry install -E cli
 
 test:
 	poetry run pytest -v -s $(filter-out $@, $(MAKECMDGOALS))

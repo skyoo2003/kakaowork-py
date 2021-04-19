@@ -98,7 +98,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def open(self, user_ids: List[int]) -> ConversationResponse:
+        def open(self, *, user_ids: List[int]) -> ConversationResponse:
             payload: Dict[str, Any] = {'user_id': user_ids[0]} if len(user_ids) == 1 else {'user_ids': user_ids}
             r = self.client.http.request(
                 'POST',
@@ -116,28 +116,27 @@ class Kakaowork:
             )
             return ConversationListResponse.from_json(r.data)
 
-        def users(self, conversation_id: int) -> UserListResponse:
+        def users(self, *, conversation_id: int) -> UserListResponse:
             r = self.client.http.request(
                 'GET',
-                f'{self.client.base_url}{self.base_path}.users',
-                fields={'conversation_id': conversation_id},
+                f'{self.client.base_url}{self.base_path}/{conversation_id}/users',
             )
             return UserListResponse.from_json(r.data)
 
-        def invite(self, conversation_id: int, user_ids: List[int]) -> BaseResponse:
-            payload = {'conversation_id': conversation_id, 'user_ids': user_ids}
+        def invite(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
+            payload = {'user_ids': user_ids}
             r = self.client.http.request(
                 'POST',
-                f'{self.client.base_url}{self.base_path}.invite',
+                f'{self.client.base_url}{self.base_path}/{conversation_id}/invite',
                 body=json.dumps(payload).encode('utf-8'),
             )
             return BaseResponse.from_json(r.data)
 
-        def kick(self, conversation_id: int, user_ids: List[int]) -> BaseResponse:
-            payload = {'conversation_id': conversation_id, 'user_ids': user_ids}
+        def kick(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
+            payload = {'user_ids': user_ids}
             r = self.client.http.request(
                 'POST',
-                f'{self.client.base_url}{self.base_path}.kick',
+                f'{self.client.base_url}{self.base_path}/{conversation_id}/kick',
                 body=json.dumps(payload).encode('utf-8'),
             )
             return BaseResponse.from_json(r.data)
@@ -147,7 +146,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def send(self, conversation_id: int, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+        def send(self, *, conversation_id: int, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
             payload = {
                 'conversation_id': conversation_id,
                 'text': text,

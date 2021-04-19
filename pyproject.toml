@@ -11,7 +11,7 @@ keywords = ["kakaowork"]
 [tool.poetry.dependencies]
 python = "^3.6.1"
 urllib3 = "^1.26.4"
-click = "^7.1.2"
+click = { version = "^7.1.2", optional = true }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.11.1"
@@ -25,6 +25,9 @@ mypy = "^0.812"
 coverage = "^5.5"
 tox = "^3.23.0"
 sphinx = "^3.5.3"
+
+[tool.poetry.extras]
+cli = ['click']
 
 [tool.poetry.scripts]
 kakaowork = "kakaowork.__main__:main"
