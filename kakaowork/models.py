@@ -59,10 +59,9 @@ class UserIdentificationField(NamedTuple):
 
 class UserField(NamedTuple):
     id: str
-    identifications: List[UserIdentificationField]
     space_id: str
     name: str
-    identifications: Optional[List[Dict[str, Any]]] = None
+    identifications: Optional[List[UserIdentificationField]] = None
     nickname: Optional[str] = None
     avatar_url: Optional[str] = None
     department: Optional[str] = None
@@ -79,7 +78,7 @@ class UserField(NamedTuple):
     def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
         return cls(**dict(
             value,
-            identifications=[UserIdentificationField(**item) for item in value['identifications']],
+            identifications=[UserIdentificationField(**item) for item in value['identifications']] if exist_kv('identifications', value) else None,
             work_start_time=datetime.fromtimestamp(value['work_start_time']) if exist_kv('work_start_time', value) else None,
             work_end_time=datetime.fromtimestamp(value['work_end_time']) if exist_kv('work_end_time', value) else None,
             vacation_start_time=datetime.fromtimestamp(value['vacation_start_time']) if exist_kv('vacation_start_time', value) else None,
@@ -179,10 +178,9 @@ class BaseResponse(ABC):
 
     def to_plain(self) -> str:
         if self.error:
-            error = ErrorField(**self.error) if isinstance(self.error, dict) else self.error
             return '\n'.join([
-                f'Error Code:\t{error.code}',
-                f'Message:\t{error.message}',
+                f'Error Code:\t{self.error.code}',
+                f'Message:\t{self.error.message}',
             ])
         return 'OK'
 
@@ -202,20 +200,19 @@ class UserResponse(BaseResponse):
 
     def to_plain(self):
         if self.user:
-            user = UserField(**self.user) if isinstance(self.user, dict) else self.user
             return '\n'.join([
-                f'ID:\t{user.id}',
-                f'Name:\t{user.name}',
-                f'Nickname:\t{user.nickname}',
-                f'Department:\t{user.department}',
-                f'Position:\t{user.position}',
-                f'Responsibility:\t{user.responsibility}',
-                f'Tels:\t{user.tels}',
-                f'Mobiles:\t{user.mobiles}',
-                f'Work start time:\t{user.work_start_time}',
-                f'Work end time:\t{user.work_end_time}',
-                f'Vacation start time:\t{user.vacation_start_time}',
-                f'Vacation end time:\t{user.vacation_end_time}',
+                f'ID:\t{self.user.id}',
+                f'Name:\t{self.user.name}',
+                f'Nickname:\t{self.user.nickname}',
+                f'Department:\t{self.user.department}',
+                f'Position:\t{self.user.position}',
+                f'Responsibility:\t{self.user.responsibility}',
+                f'Tels:\t{self.user.tels}',
+                f'Mobiles:\t{self.user.mobiles}',
+                f'Work start time:\t{self.user.work_start_time}',
+                f'Work end time:\t{self.user.work_end_time}',
+                f'Vacation start time:\t{self.user.vacation_start_time}',
+                f'Vacation end time:\t{self.user.vacation_end_time}',
             ])
         return super().to_plain()
 
@@ -247,9 +244,6 @@ class UserListResponse(BaseResponse):
         if self.users:
             outs = []
             for user in self.users:
-                print(user)
-                if isinstance(user, dict):
-                    user = UserField(**user)
                 out = '\n'.join([
                     f'ID:\t{user.id}',
                     f'Name:\t{user.name}',
@@ -291,12 +285,11 @@ class ConversationResponse(BaseResponse):
 
     def to_plain(self):
         if self.conversation:
-            conversation = ConversationField(**self.conversation) if isinstance(self.conversation, dict) else self.conversation
             return '\n'.join([
-                f'ID:\t{conversation.id}',
-                f'Type:\t{conversation.type}',
-                f'Name:\t{conversation.name}',
-                f'Avatar URL:\t{conversation.avatar_url}',
+                f'ID:\t{self.conversation.id}',
+                f'Type:\t{self.conversation.type}',
+                f'Name:\t{self.conversation.name}',
+                f'Avatar URL:\t{self.conversation.avatar_url}',
             ])
         return super().to_plain()
 
@@ -326,8 +319,6 @@ class ConversationListResponse(BaseResponse):
         if self.conversations:
             outs = []
             for conversation in self.conversations:
-                if isinstance(conversation, dict):
-                    conversation = ConversationField(**conversation)
                 out = '\n'.join([
                     f'ID:\t{conversation.id}',
                     f'Type:\t{conversation.type}',
@@ -356,14 +347,13 @@ class MessageResponse(BaseResponse):
 
     def to_plain(self):
         if self.message:
-            message = MessageField(**self.message) if isinstance(self.message, dict) else self.message
             return '\n'.join([
-                f'ID:\t{message.id}',
-                f'Conversation ID:\t{message.conversation_id}',
-                f'Send time:\t{message.send_time}',
-                f'Update time:\t{message.update_time}',
-                f'Text:\t{message.text}',
-                f'Blocks:\t{len(message.blocks) if message.blocks else "-"}',
+                f'ID:\t{self.message.id}',
+                f'Conversation ID:\t{self.message.conversation_id}',
+                f'Send time:\t{self.message.send_time}',
+                f'Update time:\t{self.message.update_time}',
+                f'Text:\t{self.message.text}',
+                f'Blocks:\t{len(self.message.blocks) if self.message.blocks else "-"}',
             ])
         return super().to_plain()
 
@@ -390,8 +380,6 @@ class DepartmentListResponse(BaseResponse):
         if self.departments:
             outs = []
             for department in self.departments:
-                if isinstance(department, dict):
-                    department = DepartmentField(**department)
                 out = '\n'.join([
                     f'ID:\t\t{department.id}',
                     f'Name:\t\t{department.name}',
@@ -417,17 +405,16 @@ class SpaceResponse(BaseResponse):
 
     def to_plain(self) -> str:
         if self.space:
-            space = SpaceField(**self.space) if isinstance(self.space, dict) else self.space
             return '\n'.join([
-                f'ID:\t{space.id}',
-                f'OrgID:\t{space.kakaoi_org_id}',
-                f'Name:\t{space.name}',
-                f'Color code:\t{space.color_code}',
-                f'Color tone:\t{space.color_tone}',
-                f'Permitted ext:\t{space.permitted_ext}',
-                f'Profile name format:\t{space.profile_name_format}',
-                f'Profile position format:\t{space.profile_position_format}',
-                f'Logo URL:\t{space.logo_url}',
+                f'ID:\t{self.space.id}',
+                f'OrgID:\t{self.space.kakaoi_org_id}',
+                f'Name:\t{self.space.name}',
+                f'Color code:\t{self.space.color_code}',
+                f'Color tone:\t{self.space.color_tone}',
+                f'Permitted ext:\t{self.space.permitted_ext}',
+                f'Profile name format:\t{self.space.profile_name_format}',
+                f'Profile position format:\t{self.space.profile_position_format}',
+                f'Logo URL:\t{self.space.logo_url}',
             ])
         return super().to_plain()
 
@@ -446,11 +433,10 @@ class BotResponse(BaseResponse):
 
     def to_plain(self) -> str:
         if self.info:
-            info = BotField(**self.info) if isinstance(self.info, dict) else self.info
             return '\n'.join([
-                f'ID:\t{info.bot_id}',
-                f'Name:\t{info.title}',
-                f'Status:\t{info.status}'
+                f'ID:\t{self.info.bot_id}',
+                f'Name:\t{self.info.title}',
+                f'Status:\t{self.info.status}'
             ])
         return super().to_plain()
 
