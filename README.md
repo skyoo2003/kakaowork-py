@@ -24,6 +24,12 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install kakaowo
 pip install kakaowork
 ```
 
+If you want to use CLI, install with the extras 'cli'
+
+```bash
+pip install kakaowork[cli]
+```
+
 ## Usage
 
 ```python
