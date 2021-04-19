@@ -1,8 +1,12 @@
-from kakaowork.command import cli, CLIOptions
+import sys
 
 
 def main():
-    cli(obj=CLIOptions())
+    try:
+        from kakaowork.command import cli, CLIOptions
+        cli(obj=CLIOptions())
+    except ImportError:
+        sys.exit('Does not support CLI')
 
 
 if __name__ == '__main__':
