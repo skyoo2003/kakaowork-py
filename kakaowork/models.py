@@ -3,7 +3,7 @@ from abc import ABC, abstractclassmethod
 from datetime import datetime
 from typing import Optional, NamedTuple, Union, Any, Dict, List
 
-from kakaowork.consts import StrEnum
+from kakaowork.consts import StrEnum, KST
 from kakaowork.blockkit import Block, BlockType
 from kakaowork.utils import text2dict, exist_kv
 
@@ -86,10 +86,10 @@ class UserField(NamedTuple):
         return cls(**dict(
             value,
             identifications=[UserIdentificationField(**item) for item in value['identifications']] if exist_kv('identifications', value) else None,
-            work_start_time=datetime.fromtimestamp(value['work_start_time']) if exist_kv('work_start_time', value) else None,
-            work_end_time=datetime.fromtimestamp(value['work_end_time']) if exist_kv('work_end_time', value) else None,
-            vacation_start_time=datetime.fromtimestamp(value['vacation_start_time']) if exist_kv('vacation_start_time', value) else None,
-            vacation_end_time=datetime.fromtimestamp(value['vacation_end_time']) if exist_kv('vacation_end_time', value) else None,
+            work_start_time=datetime.fromtimestamp(value['work_start_time'], tz=KST) if exist_kv('work_start_time', value) else None,
+            work_end_time=datetime.fromtimestamp(value['work_end_time'], tz=KST) if exist_kv('work_end_time', value) else None,
+            vacation_start_time=datetime.fromtimestamp(value['vacation_start_time'], tz=KST) if exist_kv('vacation_start_time', value) else None,
+            vacation_end_time=datetime.fromtimestamp(value['vacation_end_time'], tz=KST) if exist_kv('vacation_end_time', value) else None,
         ))
 
 

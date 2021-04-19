@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
+from kakaowork.consts import KST
 from kakaowork.models import (
     UserIdentificationField,
     UserField,
@@ -43,10 +44,10 @@ class TestUserField:
         assert user.responsibility == 'leader'
         assert user.space_id == '123'
         assert user.tels == []
-        assert user.vacation_end_time == datetime(2021, 4, 8, 22, 39, 30)
-        assert user.vacation_start_time == datetime(2021, 4, 8, 22, 39, 30)
-        assert user.work_end_time == datetime(2021, 4, 8, 22, 39, 30)
-        assert user.work_start_time == datetime(2021, 4, 8, 22, 39, 30)
+        assert user.vacation_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert user.vacation_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert user.work_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert user.work_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
 
 
 class TestConversationField:
