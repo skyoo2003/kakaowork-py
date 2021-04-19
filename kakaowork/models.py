@@ -51,6 +51,13 @@ class ErrorField(NamedTuple):
     code: ErrorCode
     message: str
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+        return cls(**dict(
+            value,
+            code=ErrorCode(value['code']) if exist_kv('code', value) else None,
+        ))
+
 
 class UserIdentificationField(NamedTuple):
     type: str
@@ -137,6 +144,10 @@ class DepartmentField(NamedTuple):
     leader_ids: Optional[List[int]] = None
     ancestry: Optional[str] = None
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+        return cls(**dict(value))
+
 
 class SpaceField(NamedTuple):
     id: int
@@ -149,11 +160,25 @@ class SpaceField(NamedTuple):
     profile_position_format: ProfilePositionFormat
     logo_url: str
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':
+        return cls(**dict(
+            value,
+            color_tone=ColorTone(value['color_tone']),
+        ))
+
 
 class BotField(NamedTuple):
     bot_id: int
     title: str
     status: BotStatus
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'BotField':
+        return cls(**dict(
+            value,
+            status=BotStatus(value['status']),
+        ))
 
 
 class BaseResponse(ABC):
@@ -185,9 +210,12 @@ class BaseResponse(ABC):
         return 'OK'
 
     @classmethod
-    @abstractclassmethod
-    def from_json(cls, value: Union[str, bytes]):
-        raise NotImplementedError()
+    def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
+        data = text2dict(value)
+        return cls(**dict(
+            data,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+        ))
 
 
 class UserResponse(BaseResponse):
@@ -221,6 +249,7 @@ class UserResponse(BaseResponse):
         data = text2dict(value)
         r = cls(**dict(
             data,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
             user=UserField.from_dict(data['user']) if exist_kv('user', data) else None,
         ))
         return r
@@ -260,19 +289,16 @@ class UserListResponse(BaseResponse):
                 ])
                 outs.append(out)
             return ('\n' + '-' * 30 + '\n').join(outs)
-            return '\n'.join([
-                f'Users:\t{self.users}'
-            ])
         return super().to_plain()
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'UserListResponse':
         data = text2dict(value)
-        r = cls(**dict(
+        return cls(**dict(
             data,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
             users=[UserField.from_dict(node) for node in data['users']] if exist_kv('users', data) else None,
         ))
-        return r
 
 
 class ConversationResponse(BaseResponse):
@@ -296,9 +322,11 @@ class ConversationResponse(BaseResponse):
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'ConversationResponse':
         data = text2dict(value)
-        conversation = ConversationField(**data['conversation']) if 'conversation' in data else None
-        r = cls(**dict(data, conversation=conversation))
-        return r
+        return cls(**dict(
+            data,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            conversation=ConversationField.from_dict(data['conversation']) if 'conversation' in data else None,
+        ))
 
 
 class ConversationListResponse(BaseResponse):
@@ -332,9 +360,10 @@ class ConversationListResponse(BaseResponse):
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'ConversationListResponse':
         data = text2dict(value)
-        conversations = [ConversationField(**node) for node in data['conversations']] if 'conversations' in data else None
-        r = cls(**dict(data, conversations=conversations))
-        return r
+        return cls(**dict(
+            data,
+            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+        ))
 
 
 class MessageResponse(BaseResponse):
@@ -358,8 +387,12 @@ class MessageResponse(BaseResponse):
         return super().to_plain()
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'MessageResponse':
+        data = text2dict(value)
+        return cls(**dict(
+            data,
+            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+        ))
 
 
 class DepartmentListResponse(BaseResponse):
@@ -392,7 +425,11 @@ class DepartmentListResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+        data = text2dict(value)
+        return cls(**dict(
+            data,
+            departments=[DepartmentField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+        ))
 
 
 class SpaceResponse(BaseResponse):
@@ -419,8 +456,12 @@ class SpaceResponse(BaseResponse):
         return super().to_plain()
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'SpaceResponse':
+        data = text2dict(value)
+        return cls(**dict(
+            data,
+            space=[SpaceField.from_dict(node) for node in data['space']] if 'space' in data else None,
+        ))
 
 
 class BotResponse(BaseResponse):
@@ -441,5 +482,9 @@ class BotResponse(BaseResponse):
         return super().to_plain()
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        return super().from_json(value)
+    def from_json(cls, value: Union[str, bytes]) -> 'BotResponse':
+        data = text2dict(value)
+        return cls(**dict(
+            data,
+            space=[SpaceField.from_dict(node) for node in data['space']] if 'space' in data else None,
+        ))
