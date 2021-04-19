@@ -10,7 +10,7 @@ class StrEnum(str, Enum):
 
 LIMIT = 10
 
-BASE_URL = 'api.kakaowork.com'
+BASE_URL = 'https://api.kakaowork.com'
 BASE_PATH_USERS = '/v1/users'
 BASE_PATH_CONVERSATIONS = '/v1/conversations'
 BASE_PATH_MESSAGES = '/v1/messages'
