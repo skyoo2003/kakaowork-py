@@ -1,1 +1,0 @@
-Returns an error if CLI is not supported
