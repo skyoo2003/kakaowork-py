@@ -4,7 +4,19 @@ class KakaoworkError(Exception):
     """
 
 
+class InvalidBlockType(KakaoworkError):
+    """
+    Invalid block type
+    """
+
+
 class InvalidBlock(KakaoworkError):
     """
     Invalid block
+    """
+
+
+class NoValueError(KakaoworkError):
+    """
+    No value error
     """

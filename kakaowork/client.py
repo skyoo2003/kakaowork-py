@@ -30,11 +30,11 @@ from kakaowork.blockkit import Block
 
 class Kakaowork:
     class Users:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_USERS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_USERS):
             self.client = client
             self.base_path = base_path
 
-        def info(self, user_id: str) -> UserResponse:
+        def info(self, user_id: int) -> UserResponse:
             r = self.client.http.request(
                 'GET',
                 f'{self.client.base_url}{self.base_path}.info',
@@ -67,7 +67,7 @@ class Kakaowork:
             )
             return UserListResponse.from_json(r.data)
 
-        def set_work_time(self, user_id: str, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
+        def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
                 'user_id': user_id,
                 'work_start_time': work_start_time.strftime('%s'),
@@ -80,9 +80,8 @@ class Kakaowork:
             )
             return BaseResponse.from_json(r.data)
 
-        def set_vacation_time(self, user_id: str, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
+        def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
-                'user_id': user_id,
                 'vacation_start_time': vacation_start_time.strftime('%s'),
                 'vacation_end_time': vacation_end_time.strftime('%s'),
             }
@@ -94,7 +93,7 @@ class Kakaowork:
             return BaseResponse.from_json(r.data)
 
     class Conversations:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
             self.client = client
             self.base_path = base_path
 
@@ -142,7 +141,7 @@ class Kakaowork:
             return BaseResponse.from_json(r.data)
 
     class Messages:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_MESSAGES):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_MESSAGES):
             self.client = client
             self.base_path = base_path
 
@@ -160,7 +159,7 @@ class Kakaowork:
             return MessageResponse.from_json(r.data)
 
     class Departments:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
             self.client = client
             self.base_path = base_path
 
@@ -174,7 +173,7 @@ class Kakaowork:
             return DepartmentListResponse.from_json(r.data)
 
     class Spaces:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_SPACES):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_SPACES):
             self.client = client
             self.base_path = base_path
 
@@ -186,7 +185,7 @@ class Kakaowork:
             return SpaceResponse.from_json(r.data)
 
     class Bots:
-        def __init__(self, client: 'Kakaowork', base_path: Optional[str] = BASE_PATH_BOTS):
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_BOTS):
             self.client = client
             self.base_path = base_path
 

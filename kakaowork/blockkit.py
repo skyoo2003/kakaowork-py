@@ -2,11 +2,11 @@ import os
 import json
 from enum import unique
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, NamedTuple
+from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
 from urllib.parse import urlparse
 
 from kakaowork.consts import StrEnum
-from kakaowork.exceptions import InvalidBlock
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType
 
 
 @unique
@@ -23,6 +23,35 @@ class BlockType(StrEnum):
     LABEL = "label"
     INPUT = "input"
     SELECT = "select"
+
+    @classmethod
+    def block_cls(cls, block_type: Union[str, 'BlockType']) -> Type['Block']:
+        bt = cls(block_type) if isinstance(block_type, str) else block_type
+        if bt == cls.TEXT:
+            return TextBlock
+        elif bt == cls.IMAGE_LINK:
+            return ImageLinkBlock
+        elif bt == cls.BUTTON:
+            return ButtonBlock
+        elif bt == cls.DIVIDER:
+            return DividerBlock
+        elif bt == cls.HEADER:
+            return HeaderBlock
+        elif bt == cls.ACTION:
+            return ActionBlock
+        elif bt == cls.DESCRIPTION:
+            return DescriptionBlock
+        elif bt == cls.SECTION:
+            return SectionBlock
+        elif bt == cls.CONTEXT:
+            return ContextBlock
+        elif bt == cls.LABEL:
+            return LabelBlock
+        elif bt == cls.INPUT:
+            return InputBlock
+        elif bt == cls.SELECT:
+            return SelectBlock
+        raise InvalidBlockType()
 
 
 @unique
@@ -75,6 +104,15 @@ class Block(ABC):
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Block):
+            return False
+        if self.block_type != value.block_type:
+            return False
+        if self.block_vars != value.block_vars:
+            return False
+        return True
 
     def to_dict(self) -> Dict[str, Any]:
         block_vars = {key: value for key, value in self.block_vars.items() if value is not None}
@@ -424,61 +462,61 @@ class BlockKitBuilder:
     @property
     def text(self) -> str:
         if self.kit_type != BlockKitType.MESSAGE:
-            raise ValueError("It can be set only for message type")
+            raise InvalidBlockType("It can be set only for message type")
         return self.kit_vars['text'] if 'text' in self.kit_vars else ''
 
     @text.setter
     def text(self, value: str):
         if self.kit_type != BlockKitType.MESSAGE:
-            raise ValueError("It can be set only for message type")
+            raise InvalidBlockType("It can be set only for message type")
         self.kit_vars['text'] = value
 
     @property
     def title(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['title'] if 'title' in self.kit_vars else ''
 
     @title.setter
     def title(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['title'] = value
 
     @property
     def accept(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['accept'] if 'accept' in self.kit_vars else ''
 
     @accept.setter
     def accept(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['accept'] = value
 
     @property
     def decline(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['decline'] if 'decline' in self.kit_vars else ''
 
     @decline.setter
     def decline(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['decline'] = value
 
     @property
     def value(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['value'] if 'value' in self.kit_vars else ''
 
     @value.setter
     def value(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['value'] = value
 
     @property

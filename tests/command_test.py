@@ -56,7 +56,7 @@ class TestDepartmentsCommand:
 
         res = cli_runner.invoke(departments, ['list'])
         assert res.exit_code == 1
-        assert res.output == 'Error Code:\tunauthorized\nMessage:\tmessage\n'
+        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
 
 
 class TestSpacesCommand:
@@ -93,7 +93,7 @@ class TestSpacesCommand:
 
         res = cli_runner.invoke(spaces, ['info'])
         assert res.exit_code == 1
-        assert res.output == 'Error Code:\tunauthorized\nMessage:\tmessage\n'
+        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
 
 
 class TestBotsCommand:
@@ -117,4 +117,4 @@ class TestBotsCommand:
 
         res = cli_runner.invoke(bots, ['info'])
         assert res.exit_code == 1
-        assert res.output == 'Error Code:\tunauthorized\nMessage:\tmessage\n'
+        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
