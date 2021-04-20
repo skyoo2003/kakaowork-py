@@ -105,7 +105,7 @@ class Block(ABC):
     def __repr__(self):
         return str(self)
 
-    def __eq__(self, value: 'Block') -> bool:
+    def __eq__(self, value: object) -> bool:
         if not isinstance(value, Block):
             return False
         if self.block_type != value.block_type:

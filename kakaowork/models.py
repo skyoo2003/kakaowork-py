@@ -256,7 +256,9 @@ class BaseResponse(ABC, object):
     def __repr__(self):
         return str(self)
 
-    def __eq__(self, value: 'BaseResponse') -> bool:
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, BaseResponse):
+            return False
         return self.to_dict() == value.to_dict()
 
     def to_json(self) -> str:
