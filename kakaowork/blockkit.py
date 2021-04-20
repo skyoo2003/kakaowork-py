@@ -105,6 +105,15 @@ class Block(ABC):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, value: 'Block') -> bool:
+        if not isinstance(value, Block):
+            return False
+        if self.block_type != value.block_type:
+            return False
+        if self.block_vars != value.block_vars:
+            return False
+        return True
+
     def to_dict(self) -> Dict[str, Any]:
         block_vars = {key: value for key, value in self.block_vars.items() if value is not None}
         return dict(type=self.block_type, **block_vars)
@@ -453,61 +462,61 @@ class BlockKitBuilder:
     @property
     def text(self) -> str:
         if self.kit_type != BlockKitType.MESSAGE:
-            raise ValueError("It can be set only for message type")
+            raise InvalidBlockType("It can be set only for message type")
         return self.kit_vars['text'] if 'text' in self.kit_vars else ''
 
     @text.setter
     def text(self, value: str):
         if self.kit_type != BlockKitType.MESSAGE:
-            raise ValueError("It can be set only for message type")
+            raise InvalidBlockType("It can be set only for message type")
         self.kit_vars['text'] = value
 
     @property
     def title(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['title'] if 'title' in self.kit_vars else ''
 
     @title.setter
     def title(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['title'] = value
 
     @property
     def accept(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['accept'] if 'accept' in self.kit_vars else ''
 
     @accept.setter
     def accept(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['accept'] = value
 
     @property
     def decline(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['decline'] if 'decline' in self.kit_vars else ''
 
     @decline.setter
     def decline(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['decline'] = value
 
     @property
     def value(self) -> str:
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         return self.kit_vars['value'] if 'value' in self.kit_vars else ''
 
     @value.setter
     def value(self, value: str):
         if self.kit_type != BlockKitType.MODAL:
-            raise ValueError("It can be set only for modal type")
+            raise InvalidBlockType("It can be set only for modal type")
         self.kit_vars['value'] = value
 
     @property

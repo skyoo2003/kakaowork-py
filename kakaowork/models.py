@@ -5,7 +5,14 @@ from typing import Optional, NamedTuple, Union, Any, Dict, List
 
 from kakaowork.consts import StrEnum, KST
 from kakaowork.blockkit import Block, BlockType
+from kakaowork.exceptions import NoValueError
 from kakaowork.utils import text2dict, exist_kv
+
+
+def json_default(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return int(value.timestamp())
+    raise TypeError('not JSON serializable')
 
 
 class ErrorCode(StrEnum):
@@ -51,8 +58,13 @@ class ErrorField(NamedTuple):
     code: ErrorCode
     message: str
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(
             value,
             code=ErrorCode(value['code']) if exist_kv('code', value) else None,
@@ -62,6 +74,15 @@ class ErrorField(NamedTuple):
 class UserIdentificationField(NamedTuple):
     type: str
     value: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
+        if not value:
+            raise NoValueError('No value to type cast')
+        return cls(**dict(value))
 
 
 class UserField(NamedTuple):
@@ -81,11 +102,19 @@ class UserField(NamedTuple):
     vacation_start_time: Optional[datetime] = None
     vacation_end_time: Optional[datetime] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            self._asdict(),
+            identifications=[uid.to_dict() for uid in self.identifications] if self.identifications else None,
+        )
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(
             value,
-            identifications=[UserIdentificationField(**item) for item in value['identifications']] if exist_kv('identifications', value) else None,
+            identifications=[UserIdentificationField.from_dict(item) for item in value['identifications']] if exist_kv('identifications', value) else None,
             work_start_time=datetime.fromtimestamp(value['work_start_time'], tz=KST) if exist_kv('work_start_time', value) else None,
             work_end_time=datetime.fromtimestamp(value['work_end_time'], tz=KST) if exist_kv('work_end_time', value) else None,
             vacation_start_time=datetime.fromtimestamp(value['vacation_start_time'], tz=KST) if exist_kv('vacation_start_time', value) else None,
@@ -100,8 +129,13 @@ class ConversationField(NamedTuple):
     avatar_url: Optional[str] = None
     name: Optional[str] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(
             value,
             type=ConversationType(value['type']),
@@ -115,17 +149,30 @@ class MessageField(NamedTuple):
     conversation_id: int
     send_time: datetime
     update_time: datetime
-    blocks: Optional[Block] = None
+    blocks: Optional[List[Block]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            self._asdict(),
+            blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
+        )
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':
-        blocks = []
-        for kv in value['blocks']:
-            block_cls = BlockType.block_cls(kv['type'])
-            block = block_cls(**{key: value for key, value in kv.items() if key != 'type'})
-            blocks.append(block)
+        if not value:
+            raise NoValueError('No value to type cast')
+
+        blocks: Optional[List[Block]] = None
+        if exist_kv('blocks', value):
+            blocks = []
+            for kv in value['blocks']:
+                block_cls = BlockType.block_cls(kv['type'])
+                block = block_cls(**{key: value for key, value in kv.items() if key != 'type'})
+                blocks.append(block)
         return cls(**dict(
             value,
+            send_time=datetime.fromtimestamp(value['send_time'], tz=KST) if exist_kv('send_time', value) else None,
+            update_time=datetime.fromtimestamp(value['update_time'], tz=KST) if exist_kv('update_time', value) else None,
             blocks=blocks,
         ))
 
@@ -144,8 +191,13 @@ class DepartmentField(NamedTuple):
     leader_ids: Optional[List[int]] = None
     ancestry: Optional[str] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(value))
 
 
@@ -160,11 +212,18 @@ class SpaceField(NamedTuple):
     profile_position_format: ProfilePositionFormat
     logo_url: str
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'SpaceField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(
             value,
             color_tone=ColorTone(value['color_tone']),
+            profile_name_format=ProfileNameFormat(value['profile_name_format']),
+            profile_position_format=ProfilePositionFormat(value['profile_position_format']),
         ))
 
 
@@ -173,17 +232,22 @@ class BotField(NamedTuple):
     title: str
     status: BotStatus
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'BotField':
+        if not value:
+            raise NoValueError('No value to type cast')
         return cls(**dict(
             value,
             status=BotStatus(value['status']),
         ))
 
 
-class BaseResponse(ABC):
+class BaseResponse(ABC, object):
     def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None):
-        self.success = success or False
+        self.success = success if success is not None else True
         self.error = error
 
     def __str__(self):
@@ -192,19 +256,22 @@ class BaseResponse(ABC):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, value: 'BaseResponse') -> bool:
+        return self.to_dict() == value.to_dict()
+
     def to_json(self) -> str:
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), default=json_default)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             'success': self.success,
-            'error': self.error,
+            'error': self.error.to_dict() if self.error else None,
         }
 
     def to_plain(self) -> str:
         if self.error:
             return '\n'.join([
-                f'Error Code:\t{self.error.code}',
+                f'Error code:\t{self.error.code}',
                 f'Message:\t{self.error.message}',
             ])
         return 'OK'
@@ -223,10 +290,13 @@ class UserResponse(BaseResponse):
         super().__init__(success=success, error=error)
         self.user = user
 
-    def to_dict(self):
-        return dict(user=self.user, **super().to_dict())
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            user=self.user.to_dict() if self.user else None,
+        )
 
-    def to_plain(self):
+    def to_plain(self) -> str:
         if self.user:
             return '\n'.join([
                 f'ID:\t{self.user.id}',
@@ -266,10 +336,14 @@ class UserListResponse(BaseResponse):
         self.cursor = cursor
         self.users = users
 
-    def to_dict(self):
-        return dict(users=self.users, cursor=self.cursor, **super().to_dict())
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            cursor=self.cursor,
+            users=[u.to_dict() for u in self.users] if self.users else None,
+        )
 
-    def to_plain(self):
+    def to_plain(self) -> str:
         if self.users:
             outs = []
             for user in self.users:
@@ -306,10 +380,13 @@ class ConversationResponse(BaseResponse):
         super().__init__(success=success, error=error)
         self.conversation = conversation
 
-    def to_dict(self):
-        return dict(conversation=self.conversation, **super().to_dict())
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            conversation=self.conversation.to_dict() if self.conversation else None,
+        )
 
-    def to_plain(self):
+    def to_plain(self) -> str:
         if self.conversation:
             return '\n'.join([
                 f'ID:\t{self.conversation.id}',
@@ -325,7 +402,7 @@ class ConversationResponse(BaseResponse):
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            conversation=ConversationField.from_dict(data['conversation']) if 'conversation' in data else None,
+            conversation=ConversationField.from_dict(data['conversation']) if exist_kv('conversation', data) else None,
         ))
 
 
@@ -340,10 +417,14 @@ class ConversationListResponse(BaseResponse):
         self.cursor = cursor
         self.conversations = conversations
 
-    def to_dict(self):
-        return dict(conversations=self.conversations, cursor=self.cursor, **super().to_dict())
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            cursor=self.cursor,
+            conversations=[c.to_dict() for c in self.conversations] if self.conversations else None,
+        )
 
-    def to_plain(self):
+    def to_plain(self) -> str:
         if self.conversations:
             outs = []
             for conversation in self.conversations:
@@ -362,7 +443,8 @@ class ConversationListResponse(BaseResponse):
         data = text2dict(value)
         return cls(**dict(
             data,
-            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if exist_kv('conversations', data) else None,
         ))
 
 
@@ -372,7 +454,10 @@ class MessageResponse(BaseResponse):
         self.message = message
 
     def to_dict(self):
-        return dict(message=self.message, **super().to_dict())
+        return dict(
+            super().to_dict(),
+            message=self.message.to_dict() if self.message else None,
+        )
 
     def to_plain(self):
         if self.message:
@@ -391,7 +476,8 @@ class MessageResponse(BaseResponse):
         data = text2dict(value)
         return cls(**dict(
             data,
-            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            message=MessageField.from_dict(data['message']) if exist_kv('message', data) else None,
         ))
 
 
@@ -407,7 +493,11 @@ class DepartmentListResponse(BaseResponse):
         self.departments = departments
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(departments=self.departments, cursor=self.cursor, **super().to_dict())
+        return dict(
+            super().to_dict(),
+            cursor=self.cursor,
+            departments=[d.to_dict() for d in self.departments] if self.departments else None,
+        )
 
     def to_plain(self) -> str:
         if self.departments:
@@ -428,7 +518,8 @@ class DepartmentListResponse(BaseResponse):
         data = text2dict(value)
         return cls(**dict(
             data,
-            departments=[DepartmentField.from_dict(node) for node in data['conversations']] if 'conversations' in data else None,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            departments=[DepartmentField.from_dict(node) for node in data['departments']] if exist_kv('departments', data) else None,
         ))
 
 
@@ -438,7 +529,10 @@ class SpaceResponse(BaseResponse):
         self.space = space
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(space=self.space, **super().to_dict())
+        return dict(
+            super().to_dict(),
+            space=self.space.to_dict() if self.space else None,
+        )
 
     def to_plain(self) -> str:
         if self.space:
@@ -460,7 +554,8 @@ class SpaceResponse(BaseResponse):
         data = text2dict(value)
         return cls(**dict(
             data,
-            space=[SpaceField.from_dict(node) for node in data['space']] if 'space' in data else None,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            space=SpaceField.from_dict(data['space']) if exist_kv('space', data) else None,
         ))
 
 
@@ -470,7 +565,10 @@ class BotResponse(BaseResponse):
         self.info = info
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(info=self.info, **super().to_dict())
+        return dict(
+            super().to_dict(),
+            info=self.info.to_dict() if self.info else None,
+        )
 
     def to_plain(self) -> str:
         if self.info:
@@ -486,5 +584,6 @@ class BotResponse(BaseResponse):
         data = text2dict(value)
         return cls(**dict(
             data,
-            space=[SpaceField.from_dict(node) for node in data['space']] if 'space' in data else None,
+            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
+            info=BotField.from_dict(data['info']) if exist_kv('info', data) else None,
         ))

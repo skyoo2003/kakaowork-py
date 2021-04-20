@@ -21,6 +21,7 @@ from kakaowork.blockkit import (
     SelectBlock,
     BlockKitBuilder,
 )
+from kakaowork.exceptions import InvalidBlockType
 
 
 class TestTextBlock:
@@ -451,19 +452,19 @@ class TestBlockKitBuilder:
         assert builder.text == 'hello'
         assert builder.blocks == [divider]
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidBlockType):
             builder.title = 'title'
         assert 'title' not in builder.kit_vars
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidBlockType):
             builder.accept = 'ok'
         assert 'accept' not in builder.kit_vars
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidBlockType):
             builder.decline = 'cancel'
         assert 'decline' not in builder.kit_vars
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidBlockType):
             builder.value = 'value'
         assert 'value' not in builder.kit_vars
 
@@ -491,7 +492,7 @@ class TestBlockKitBuilder:
         assert builder.value == 'value'
         assert builder.blocks == [divider]
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidBlockType):
             builder.text = 'hello'
         assert 'text' not in builder.kit_vars
 

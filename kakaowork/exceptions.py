@@ -14,3 +14,9 @@ class InvalidBlock(KakaoworkError):
     """
     Invalid block
     """
+
+
+class NoValueError(KakaoworkError):
+    """
+    No value error
+    """
