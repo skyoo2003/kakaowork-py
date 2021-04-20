@@ -9,3 +9,5 @@ from kakaowork.client import Kakaowork
 from kakaowork.models import (ErrorCode, ColorTone, ProfileNameFormat, ProfilePositionFormat, BotStatus, ErrorField, UserField, ConversationField, MessageField,
                               DepartmentField, SpaceField, BotField, BaseResponse, UserResponse, UserListResponse, ConversationResponse,
                               ConversationListResponse, MessageResponse, DepartmentListResponse, SpaceResponse, BotResponse)
+
+__version__ = '0.1.2'
