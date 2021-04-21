@@ -3,6 +3,10 @@ name = "kakaowork"
 version = "0.1.2"
 description = "Kakaowork Python client"
 authors = ["Sung-Kyu Yoo <skyoo2003@gmail.com>"]
+license = "MIT"
+packages = [
+    { include = "kakaowork" }
+]
 readme = "README.md"
 homepage = "https://github.com/skyoo2003/kakaowork-py"
 repository = "https://github.com/skyoo2003/kakaowork-py"
