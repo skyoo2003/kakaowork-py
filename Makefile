@@ -1,4 +1,4 @@
-.PHONY: all setup install test test-watch lint typecheck build clean update-changelog
+.PHONY: all setup install test lint typecheck build clean docs update-changelog
 
 all: install test lint typecheck
 
@@ -27,6 +27,9 @@ clean:
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 	rm -rf dist *.egg-info .mypy_cache .pytest_cache .report .tox .coverage
+
+docs:
+	poetry run make clean html -C docs
 
 update-changelog:
 	poetry run towncrier --yes
