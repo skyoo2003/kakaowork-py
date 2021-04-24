@@ -59,7 +59,7 @@ class Kakaowork:
             return UserResponse.from_json(r.data)
 
         def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> UserListResponse:
-            fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': limit or LIMIT}
+            fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',
                 f'{self.client.base_url}{self.base_path}.list',
@@ -70,8 +70,8 @@ class Kakaowork:
         def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
                 'user_id': user_id,
-                'work_start_time': work_start_time.strftime('%s'),
-                'work_end_time': work_end_time.strftime('%s'),
+                'work_start_time': int(work_start_time.strftime('%s')),
+                'work_end_time': int(work_end_time.strftime('%s')),
             }
             r = self.client.http.request(
                 'POST',
@@ -82,8 +82,9 @@ class Kakaowork:
 
         def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
-                'vacation_start_time': vacation_start_time.strftime('%s'),
-                'vacation_end_time': vacation_end_time.strftime('%s'),
+                'user_id': user_id,
+                'vacation_start_time': int(vacation_start_time.strftime('%s')),
+                'vacation_end_time': int(vacation_end_time.strftime('%s')),
             }
             r = self.client.http.request(
                 'POST',
@@ -106,7 +107,7 @@ class Kakaowork:
             )
             return ConversationResponse.from_json(r.data)
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = 10) -> ConversationListResponse:
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> ConversationListResponse:
             fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',
@@ -163,7 +164,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = 10) -> DepartmentListResponse:
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> DepartmentListResponse:
             fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',

@@ -162,9 +162,8 @@ class MessageField(NamedTuple):
         if not value:
             raise NoValueError('No value to type cast')
 
-        blocks: Optional[List[Block]] = None
+        blocks: List[Block] = []
         if exist_kv('blocks', value):
-            blocks = []
             for kv in value['blocks']:
                 block_cls = BlockType.block_cls(kv['type'])
                 block = block_cls(**{key: value for key, value in kv.items() if key != 'type'})
