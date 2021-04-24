@@ -337,7 +337,6 @@ class TestKakaoworkConversations:
         assert ret.error is None
 
 
-
 class TestKakaoworkMessages:
     client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
