@@ -1,6 +1,12 @@
 Kakaowork 0.1.3 (2021-04-26)
 ============================
 
+Enhancement
+-----------
+
+- Update imports in __init__.py (`#29 <https://github.com/skyoo2003/kakaowork-py/issues/29>`_)
+
+
 Bug Fixes
 ---------
 
