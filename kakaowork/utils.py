@@ -31,4 +31,3 @@ def to_kst(timestamp: Union[int, datetime]) -> datetime:
         else:
             return timestamp.astimezone(KST)
     raise ValueError('Unsupported timestamp type')
-
