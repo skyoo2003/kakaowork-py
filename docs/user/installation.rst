@@ -18,4 +18,4 @@ Install from Github
 
 .. code-block:: sh
 
-  $ pip install git+https://github.com/skyoo2003/kakaowork-py@v0.1.2#egg=kakaowork
+  $ pip install git+https://github.com/skyoo2003/kakaowork-py#egg=kakaowork
