@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 
 import pytest
+from pytz import utc
 
-from kakaowork.consts import KST
 from kakaowork.exceptions import NoValueError
 from kakaowork.blockkit import (
     BlockType,
@@ -33,6 +33,7 @@ from kakaowork.models import (
     SpaceResponse,
     BotResponse,
 )
+from kakaowork.utils import to_kst
 
 
 class TestErrorField:
@@ -97,10 +98,10 @@ class TestUserField:
         assert user.responsibility == 'leader'
         assert user.space_id == '123'
         assert user.tels == []
-        assert user.vacation_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.vacation_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.work_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.work_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert user.vacation_end_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
+        assert user.vacation_start_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
+        assert user.work_end_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
+        assert user.work_start_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
 
 
 class TestConversationField:
@@ -144,8 +145,8 @@ class TestMessageField:
         assert message.text == 'msg'
         assert message.user_id == '1'
         assert message.conversation_id == 1
-        assert message.send_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert message.update_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert message.send_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
+        assert message.update_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
         assert message.blocks == [TextBlock(text='block', markdown=False)]
 
 
@@ -294,10 +295,10 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserResponse(success=True, user=user)
         assert r.success is True
@@ -324,18 +325,17 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserResponse(success=True, user=user)
         assert r.to_json() == (
             '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}'
-        )
+            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
 
     def test_user_response_to_plain(self):
         r = UserResponse()
@@ -357,17 +357,16 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserResponse(success=True, user=user)
         assert r.to_plain() == (
             "ID:\t1234\nName:\tname\nNickname:\tnickname\nDepartment:\tdep\nPosition:\tposition\nResponsibility:\tresp\nTels:\t[]\nMobiles:\t[]\n"
             "Work start time:\t2021-04-08 22:39:30+09:00\nWork end time:\t2021-04-08 22:39:30+09:00\n"
-            "Vacation start time:\t2021-04-08 22:39:30+09:00\nVacation end time:\t2021-04-08 22:39:30+09:00"
-        )
+            "Vacation start time:\t2021-04-08 22:39:30+09:00\nVacation end time:\t2021-04-08 22:39:30+09:00")
 
     def test_user_response_from_json(self):
         assert UserResponse.from_json('{"success": false, "error": null, "user": null}') == UserResponse(success=False, error=None, user=None)
@@ -389,17 +388,15 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
-        json_str = (
-            '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
-            '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
-            '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}'
-        )
+        json_str = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
+                    '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
+                    '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
+                    '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
         assert UserResponse.from_json(json_str) == UserResponse(success=True, error=None, user=user)
 
 
@@ -430,10 +427,10 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.success is True
@@ -461,18 +458,17 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_json() == (
             '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}'
-        )
+            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
 
     def test_user_list_response_to_plain(self):
         r = UserListResponse()
@@ -494,17 +490,16 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_plain() == (
             "ID:\t1234\nName:\tname\nNickname:\tnickname\nDepartment:\tdep\nPosition:\tposition\nResponsibility:\tresp\nTels:\t[]\nMobiles:\t[]\n"
             "Work start time:\t2021-04-08 22:39:30+09:00\nWork end time:\t2021-04-08 22:39:30+09:00\n"
-            "Vacation start time:\t2021-04-08 22:39:30+09:00\nVacation end time:\t2021-04-08 22:39:30+09:00"
-        )
+            "Vacation start time:\t2021-04-08 22:39:30+09:00\nVacation end time:\t2021-04-08 22:39:30+09:00")
 
     def test_user_list_response_from_json(self):
         assert UserListResponse.from_json('{"success": true, "error": null, "cursor": null, "users": null}') == UserListResponse(success=True,
@@ -529,17 +524,15 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
-        json_str = (
-            '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
-            '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
-            '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-            '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}'
-        )
+        json_str = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+                    '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
+                    '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
+                    '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
         assert UserListResponse.from_json(json_str) == UserListResponse(success=True, error=None, cursor=None, users=[user])
 
 
@@ -584,10 +577,8 @@ class TestConversationResponse:
             avatar_url='http://localhost/image.png',
         )
         r = ConversationResponse(success=True, conversation=conversation)
-        assert r.to_json() == (
-            '{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
-            '"avatar_url": "http://localhost/image.png", "name": "name"}}'
-        )
+        assert r.to_json() == ('{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
+                               '"avatar_url": "http://localhost/image.png", "name": "name"}}')
 
     def test_conversation_response_to_plain(self):
         r = ConversationResponse()
@@ -608,8 +599,9 @@ class TestConversationResponse:
         assert r.to_plain() == 'ID:\t1\nType:\tdm\nName:\tname\nAvatar URL:\thttp://localhost/image.png'
 
     def test_conversation_response_from_json(self):
-        assert ConversationResponse.from_json('{"success": true, "error": null, "conversation": null}') == ConversationResponse(
-            success=True, error=None, conversation=None)
+        assert ConversationResponse.from_json('{"success": true, "error": null, "conversation": null}') == ConversationResponse(success=True,
+                                                                                                                                error=None,
+                                                                                                                                conversation=None)
 
         error = ErrorField(code=ErrorCode.API_NOT_FOUND, message='api not found')
         assert ConversationResponse.from_json(
@@ -623,10 +615,8 @@ class TestConversationResponse:
             users_count=1,
             avatar_url='http://localhost/image.png',
         )
-        json_str = (
-            '{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
-            '"avatar_url": "http://localhost/image.png", "name": "name"}}'
-        )
+        json_str = ('{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
+                    '"avatar_url": "http://localhost/image.png", "name": "name"}}')
         assert ConversationResponse.from_json(json_str) == ConversationResponse(success=True, error=None, conversation=conversation)
 
 
@@ -671,10 +661,8 @@ class TestConversationListResponse:
             avatar_url='http://localhost/image.png',
         )
         r = ConversationListResponse(success=True, conversations=[conversation])
-        assert r.to_json() == (
-            '{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
-            '"avatar_url": "http://localhost/image.png", "name": "name"}]}'
-        )
+        assert r.to_json() == ('{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
+                               '"avatar_url": "http://localhost/image.png", "name": "name"}]}')
 
     def test_conversation_list_response_to_plain(self):
         r = ConversationListResponse()
@@ -710,10 +698,8 @@ class TestConversationListResponse:
             users_count=1,
             avatar_url='http://localhost/image.png',
         )
-        json_str = (
-            '{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
-            '"avatar_url": "http://localhost/image.png", "name": "name"}]}'
-        )
+        json_str = ('{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
+                    '"avatar_url": "http://localhost/image.png", "name": "name"}]}')
         assert ConversationListResponse.from_json(json_str) == ConversationListResponse(success=True, error=None, cursor=None, conversations=[conversation])
 
 
@@ -735,8 +721,8 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
@@ -757,15 +743,14 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
         assert r.to_json() == (
             '{"success": true, "error": null, '
-            '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}'
-        )
+            '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}')
 
     def test_message_response_to_plain(self):
         r = MessageResponse()
@@ -780,15 +765,13 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
-        assert r.to_plain() == (
-            'ID:\t1\nConversation ID:\t1\n'
-            'Send time:\t2021-04-08 22:39:30+09:00\nUpdate time:\t2021-04-08 22:39:30+09:00\nText:\tmsg\nBlocks:\t-'
-        )
+        assert r.to_plain() == ('ID:\t1\nConversation ID:\t1\n'
+                                'Send time:\t2021-04-08 22:39:30+09:00\nUpdate time:\t2021-04-08 22:39:30+09:00\nText:\tmsg\nBlocks:\t-')
 
     def test_message_response_from_json(self):
         assert MessageResponse.from_json('{"success": true, "error": null, "message": null}') == MessageResponse(success=True, error=None, message=None)
@@ -804,14 +787,13 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             blocks=[],
         )
         json_str = (
             '{"success": true, "error": null, '
-            '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}'
-        )
+            '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}')
         assert MessageResponse.from_json(json_str) == MessageResponse(success=True, error=None, message=message)
 
 
@@ -872,8 +854,7 @@ class TestDepartmentListResponse:
         r = DepartmentListResponse(success=True, departments=[department])
         assert r.to_json() == (
             '{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
-            '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}'
-        )
+            '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}')
 
     def test_department_list_response_to_plain(self):
         r = DepartmentListResponse()
@@ -923,10 +904,8 @@ class TestDepartmentListResponse:
             leader_ids=[1],
             ancestry='',
         )
-        json_str = (
-            '{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
-            '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}'
-        )
+        json_str = ('{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
+                    '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}')
         assert DepartmentListResponse.from_json(json_str) == DepartmentListResponse(success=True, error=None, cursor=None, departments=[department])
 
 
@@ -981,8 +960,7 @@ class TestSpaceResponse:
         r = SpaceResponse(success=True, space=space)
         assert r.to_json() == (
             '{"success": true, "error": null, "space": {"id": 1, "kakaoi_org_id": 1, "name": "name", "color_code": "default", "color_tone": "light", '
-            '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}'
-        )
+            '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}')
 
     def test_space_response_to_plain(self):
         r = SpaceResponse()
@@ -1004,10 +982,8 @@ class TestSpaceResponse:
             logo_url='http://localhost/image.png',
         )
         r = SpaceResponse(success=True, space=space)
-        assert r.to_plain() == (
-            "ID:\t1\nOrgID:\t1\nName:\tname\nColor code:\tdefault\nColor tone:\tlight\nPermitted ext:\t['*']\n"
-            "Profile name format:\tname_only\nProfile position format:\tposition\nLogo URL:\thttp://localhost/image.png"
-        )
+        assert r.to_plain() == ("ID:\t1\nOrgID:\t1\nName:\tname\nColor code:\tdefault\nColor tone:\tlight\nPermitted ext:\t['*']\n"
+                                "Profile name format:\tname_only\nProfile position format:\tposition\nLogo URL:\thttp://localhost/image.png")
 
     def test_space_response_from_json(self):
         assert SpaceResponse.from_json('{"success": true, "error": null, "space": null}') == SpaceResponse(success=True, error=None, space=None)
@@ -1029,8 +1005,7 @@ class TestSpaceResponse:
         )
         json_str = (
             '{"success": true, "error": null, "space": {"id": 1, "kakaoi_org_id": 1, "name": "name", "color_code": "default", "color_tone": "light", '
-            '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}'
-        )
+            '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}')
         assert SpaceResponse.from_json(json_str) == SpaceResponse(success=True, error=None, space=space)
 
 

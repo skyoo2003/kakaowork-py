@@ -70,8 +70,8 @@ class Kakaowork:
         def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
                 'user_id': user_id,
-                'work_start_time': int(work_start_time.strftime('%s')),
-                'work_end_time': int(work_end_time.strftime('%s')),
+                'work_start_time': int(work_start_time.timestamp()),
+                'work_end_time': int(work_end_time.timestamp()),
             }
             r = self.client.http.request(
                 'POST',
@@ -83,8 +83,8 @@ class Kakaowork:
         def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
                 'user_id': user_id,
-                'vacation_start_time': int(vacation_start_time.strftime('%s')),
-                'vacation_end_time': int(vacation_end_time.strftime('%s')),
+                'vacation_start_time': int(vacation_start_time.timestamp()),
+                'vacation_end_time': int(vacation_end_time.timestamp()),
             }
             r = self.client.http.request(
                 'POST',

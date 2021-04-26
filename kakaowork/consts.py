@@ -1,5 +1,7 @@
 from enum import Enum
-from datetime import timedelta, timezone
+from datetime import timedelta
+
+from pytz import timezone
 
 
 class StrEnum(str, Enum):
@@ -19,4 +21,4 @@ BASE_PATH_DEPARTMENTS = '/v1/departments'
 BASE_PATH_SPACES = '/v1/spaces'
 BASE_PATH_BOTS = '/v1/bots'
 
-KST = timezone(timedelta(hours=9))
+KST = timezone('Asia/Seoul')
