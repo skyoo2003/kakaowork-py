@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from pytz import utc
+
 from kakaowork.consts import KST
 from kakaowork.utils import text2dict, exist_kv, to_kst
 
@@ -22,3 +24,5 @@ def test_exist_kv():
 def test_to_kst():
     assert to_kst(1617889170) == KST.localize(datetime(2021, 4, 8, 22, 39, 30))
     assert to_kst(1609426800) == KST.localize(datetime(2021, 1, 1, 0, 0, 0))
+    assert to_kst(datetime(2021, 4, 8, 22, 39, 30)) == KST.localize(datetime(2021, 4, 8, 22, 39, 30))
+    assert to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)) == KST.localize(datetime(2021, 4, 8, 22, 39, 30))
