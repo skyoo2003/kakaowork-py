@@ -12,7 +12,6 @@ from kakaowork.consts import (
     BASE_PATH_DEPARTMENTS,
     BASE_PATH_SPACES,
     BASE_PATH_BOTS,
-    KST,
 )
 from kakaowork.models import (
     ProfileNameFormat,
@@ -28,6 +27,7 @@ from kakaowork.models import (
     SpaceField,
     BotField,
 )
+from kakaowork.utils import to_kst
 
 
 class TestKakaowork:
@@ -77,10 +77,10 @@ class TestKakaoworkUsers:
         tels=[],
         mobiles=[],
         avatar_url='http://localhost/image.png',
-        work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+        work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
     )
 
     def test_kakaowork_users_properties(self):
@@ -171,8 +171,8 @@ class TestKakaoworkUsers:
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
         ret = Kakaowork.Users(self.client).set_work_time(
             user_id=1,
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
 
         req.assert_called_once_with(
@@ -192,8 +192,8 @@ class TestKakaoworkUsers:
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
         ret = Kakaowork.Users(self.client).set_vacation_time(
             user_id=1,
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
 
         req.assert_called_once_with(
@@ -242,10 +242,10 @@ class TestKakaoworkConversations:
         tels=[],
         mobiles=[],
         avatar_url='http://localhost/image.png',
-        work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+        work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
     )
 
     def test_kakaowork_conversations_open(self, mocker: MockerFixture):
@@ -349,8 +349,8 @@ class TestKakaoworkMessages:
         text='msg',
         user_id='1',
         conversation_id=1,
-        send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-        update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+        send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         blocks=[],
     )
 

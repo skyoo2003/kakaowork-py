@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import pytest
 
-from kakaowork.consts import KST
 from kakaowork.exceptions import NoValueError
 from kakaowork.blockkit import (
     BlockType,
@@ -33,6 +32,7 @@ from kakaowork.models import (
     SpaceResponse,
     BotResponse,
 )
+from kakaowork.utils import to_kst
 
 
 class TestErrorField:
@@ -97,10 +97,10 @@ class TestUserField:
         assert user.responsibility == 'leader'
         assert user.space_id == '123'
         assert user.tels == []
-        assert user.vacation_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.vacation_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.work_end_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert user.work_start_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert user.vacation_end_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
+        assert user.vacation_start_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
+        assert user.work_end_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
+        assert user.work_start_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
 
 
 class TestConversationField:
@@ -144,8 +144,8 @@ class TestMessageField:
         assert message.text == 'msg'
         assert message.user_id == '1'
         assert message.conversation_id == 1
-        assert message.send_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
-        assert message.update_time == datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST)
+        assert message.send_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
+        assert message.update_time == to_kst(datetime(2021, 4, 8, 22, 39, 30))
         assert message.blocks == [TextBlock(text='block', markdown=False)]
 
 
@@ -294,10 +294,10 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserResponse(success=True, user=user)
         assert r.success is True
@@ -324,10 +324,10 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserResponse(success=True, user=user)
         assert r.to_json() == (
@@ -357,10 +357,10 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserResponse(success=True, user=user)
         assert r.to_plain() == (
@@ -389,10 +389,10 @@ class TestUserResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         json_str = (
             '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
@@ -430,10 +430,10 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.success is True
@@ -461,10 +461,10 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_json() == (
@@ -494,10 +494,10 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_plain() == (
@@ -529,10 +529,10 @@ class TestUserListResponse:
             tels=[],
             mobiles=[],
             avatar_url='http://localhost/image.png',
-            work_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            work_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_start_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            vacation_end_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
         )
         json_str = (
             '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
@@ -735,8 +735,8 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
@@ -757,8 +757,8 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
@@ -780,8 +780,8 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
             blocks=[],
         )
         r = MessageResponse(success=True, message=message)
@@ -804,8 +804,8 @@ class TestMessageResponse:
             text='msg',
             user_id='1',
             conversation_id=1,
-            send_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
-            update_time=datetime(2021, 4, 8, 22, 39, 30, tzinfo=KST),
+            send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
             blocks=[],
         )
         json_str = (

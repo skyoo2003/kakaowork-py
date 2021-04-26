@@ -3,10 +3,12 @@ from abc import ABC, abstractclassmethod
 from datetime import datetime
 from typing import Optional, NamedTuple, Union, Any, Dict, List
 
-from kakaowork.consts import StrEnum, KST
+from pytz import utc, timezone
+
+from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
 from kakaowork.exceptions import NoValueError
-from kakaowork.utils import text2dict, exist_kv
+from kakaowork.utils import text2dict, exist_kv, to_kst
 
 
 def json_default(value: Any) -> Any:
@@ -115,10 +117,10 @@ class UserField(NamedTuple):
         return cls(**dict(
             value,
             identifications=[UserIdentificationField.from_dict(item) for item in value['identifications']] if exist_kv('identifications', value) else None,
-            work_start_time=datetime.fromtimestamp(value['work_start_time'], tz=KST) if exist_kv('work_start_time', value) else None,
-            work_end_time=datetime.fromtimestamp(value['work_end_time'], tz=KST) if exist_kv('work_end_time', value) else None,
-            vacation_start_time=datetime.fromtimestamp(value['vacation_start_time'], tz=KST) if exist_kv('vacation_start_time', value) else None,
-            vacation_end_time=datetime.fromtimestamp(value['vacation_end_time'], tz=KST) if exist_kv('vacation_end_time', value) else None,
+            work_start_time=to_kst(value['work_start_time']) if exist_kv('work_start_time', value) else None,
+            work_end_time=to_kst(value['work_end_time']) if exist_kv('work_end_time', value) else None,
+            vacation_start_time=to_kst(value['vacation_start_time']) if exist_kv('vacation_start_time', value) else None,
+            vacation_end_time=to_kst(value['vacation_end_time']) if exist_kv('vacation_end_time', value) else None,
         ))
 
 
@@ -170,8 +172,8 @@ class MessageField(NamedTuple):
                 blocks.append(block)
         return cls(**dict(
             value,
-            send_time=datetime.fromtimestamp(value['send_time'], tz=KST) if exist_kv('send_time', value) else None,
-            update_time=datetime.fromtimestamp(value['update_time'], tz=KST) if exist_kv('update_time', value) else None,
+            send_time=to_kst(value['send_time']) if exist_kv('send_time', value) else None,
+            update_time=to_kst(value['update_time']) if exist_kv('update_time', value) else None,
             blocks=blocks,
         ))
 
