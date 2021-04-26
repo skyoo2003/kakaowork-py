@@ -1,3 +1,19 @@
+Kakaowork 0.1.3 (2021-04-26)
+============================
+
+Bug Fixes
+---------
+
+- Fix client/model and update tests (`#27 <https://github.com/skyoo2003/kakaowork-py/issues/27>`_)
+- Fixed timezone crash issue (`#28 <https://github.com/skyoo2003/kakaowork-py/issues/28>`_)
+
+
+Documentation
+-------------
+
+- Project documentation via Sphinx (`#24 <https://github.com/skyoo2003/kakaowork-py/issues/24>`_)
+
+
 Kakaowork 0.1.2 (2021-04-21)
 ============================
 
