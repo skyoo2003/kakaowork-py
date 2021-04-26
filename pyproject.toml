@@ -16,6 +16,7 @@ keywords = ["kakaowork"]
 python = "^3.6.1"
 urllib3 = "^1.26.4"
 click = { version = "^7.1.2", optional = true }
+pytz = "*"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.12.1"
