@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pytz import utc
 from urllib3 import PoolManager, HTTPResponse
 from pytest_mock import MockerFixture
 
@@ -53,18 +54,14 @@ class TestKakaoworkUsers:
     client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
-    user_json = (
-        '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
-        '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
-        '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-        '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}'
-    )
-    user_list_json = (
-        '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
-        '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
-        '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-        '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}'
-    )
+    user_json = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
+                 '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
+                 '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
+                 '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+                      '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
+                      '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
+                      '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
     user_field = UserField(
         id=1234,
         space_id=12,
@@ -77,10 +74,10 @@ class TestKakaoworkUsers:
         tels=[],
         mobiles=[],
         avatar_url='http://localhost/image.png',
-        work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
     def test_kakaowork_users_properties(self):
@@ -171,8 +168,8 @@ class TestKakaoworkUsers:
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
         ret = Kakaowork.Users(self.client).set_work_time(
             user_id=1,
-            work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-            work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
 
         req.assert_called_once_with(
@@ -192,8 +189,8 @@ class TestKakaoworkUsers:
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
         ret = Kakaowork.Users(self.client).set_vacation_time(
             user_id=1,
-            vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-            vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
 
         req.assert_called_once_with(
@@ -209,20 +206,14 @@ class TestKakaoworkConversations:
     client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
-    conversation_json = (
-        '{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
-        '"avatar_url": "http://localhost/image.png", "name": "name"}}'
-    )
-    conversation_list_json = (
-        '{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
-        '"avatar_url": "http://localhost/image.png", "name": "name"}]}'
-    )
-    user_list_json = (
-        '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
-        '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
-        '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
-        '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}'
-    )
+    conversation_json = ('{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
+                         '"avatar_url": "http://localhost/image.png", "name": "name"}}')
+    conversation_list_json = ('{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
+                              '"avatar_url": "http://localhost/image.png", "name": "name"}]}')
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+                      '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
+                      '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
+                      '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
     conversation_field = ConversationField(
         id='1',
         name='name',
@@ -242,10 +233,10 @@ class TestKakaoworkConversations:
         tels=[],
         mobiles=[],
         avatar_url='http://localhost/image.png',
-        work_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        work_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        vacation_start_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        vacation_end_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
     def test_kakaowork_conversations_open(self, mocker: MockerFixture):
@@ -257,11 +248,7 @@ class TestKakaoworkConversations:
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
         ret = Kakaowork.Conversations(self.client).open(user_ids=[1])
 
-        req.assert_called_once_with(
-            'POST',
-            'https://api.kakaowork.com/v1/conversations.open',
-            body=b'{"user_id": 1}'
-        )
+        req.assert_called_once_with('POST', 'https://api.kakaowork.com/v1/conversations.open', body=b'{"user_id": 1}')
         assert ret.success is True
         assert ret.error is None
         assert ret.conversation == self.conversation_field
@@ -342,15 +329,14 @@ class TestKakaoworkMessages:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     message_json = (
         '{"success": true, "error": null, '
-        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}'
-    )
+        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}')
     message_field = MessageField(
         id='1',
         text='msg',
         user_id='1',
         conversation_id=1,
-        send_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
-        update_time=to_kst(datetime(2021, 4, 8, 22, 39, 30)),
+        send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         blocks=[],
     )
 
@@ -378,8 +364,7 @@ class TestKakaoworkDepartments:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     department_list_json = (
         '{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
-        '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}'
-    )
+        '"name": "name", "code": "code", "user_count": 1, "has_child": false, "depth": 0, "users_ids": [1], "leader_ids": [1], "ancestry": ""}]}')
     department_field = DepartmentField(
         id='1',
         ids_path='1',
@@ -420,8 +405,7 @@ class TestKakaoworkSpaces:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     space_json = (
         '{"success": true, "error": null, "space": {"id": 1, "kakaoi_org_id": 1, "name": "name", "color_code": "default", "color_tone": "light", '
-        '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}'
-    )
+        '"permitted_ext": ["*"], "profile_name_format": "name_only", "profile_position_format": "position", "logo_url": "http://localhost/image.png"}}')
     space_field = SpaceField(
         id=1,
         kakaoi_org_id=1,
