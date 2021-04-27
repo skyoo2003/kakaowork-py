@@ -2,7 +2,7 @@
 
 (Unofficial) Kakaowork Python client
 
-[![CI](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml) [![Documentation Status](https://readthedocs.org/projects/kakaowork-py/badge/?version=latest)](https://kakaowork-py.readthedocs.io/en/latest)
+[![CI](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml) [![Documentation Status](https://readthedocs.org/projects/kakaowork-py/badge/?version=stable)](https://kakaowork-py.readthedocs.io/en/stable)
  [![codecov](https://codecov.io/gh/skyoo2003/kakaowork-py/branch/master/graph/badge.svg?token=J6NQHDJEMZ)](https://codecov.io/gh/skyoo2003/kakaowork-py)
 
 __Table of Contents__
