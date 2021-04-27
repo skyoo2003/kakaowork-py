@@ -31,3 +31,34 @@ def to_kst(timestamp: Union[int, datetime]) -> datetime:
         else:
             return timestamp.astimezone(KST)
     raise ValueError('Unsupported timestamp type')
+
+
+def normalize_token(token: str) -> str:
+    token = token.lower()
+    if '_' in token:
+        return token.replace('_', '-')
+    return token
+
+
+def command_aliases() -> Dict[str, str]:
+    from kakaowork.command import users, conversations, messages, departments, spaces, bots
+    aliases: Dict[str, str] = {}
+    aliases.update({alias: users.name for alias in ('user', )})
+    aliases.update({alias: conversations.name
+                    for alias in (
+                        'conversation',
+                        'conv',
+                    )})
+    aliases.update({alias: messages.name
+                    for alias in (
+                        'message',
+                        'msg',
+                    )})
+    aliases.update({alias: departments.name
+                    for alias in (
+                        'department',
+                        'dept',
+                    )})
+    aliases.update({alias: spaces.name for alias in ('space', )})
+    aliases.update({alias: bots.name for alias in ('bot', )})
+    return aliases

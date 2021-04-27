@@ -16,6 +16,7 @@ from kakaowork.models import (
     BotResponse,
 )
 from kakaowork.command import (
+    cli,
     departments,
     spaces,
     bots,
@@ -26,26 +27,38 @@ class TestDepartmentsCommand:
     def test_departments_list_success(self, mocker: MockerFixture, cli_runner: CliRunner):
         resp = DepartmentListResponse(
             success=True,
-            departments=[DepartmentField(
-                id='1',
-                ids_path='1',
-                parent_id='',
-                space_id='1',
-                name='name',
-                code='code',
-                user_count=1,
-                has_child=False,
-                depth=0,
-                users_ids=[1],
-                leader_ids=[1],
-                ancestry='anc',
-            )]
+            departments=[
+                DepartmentField(
+                    id='1',
+                    ids_path='1',
+                    parent_id='',
+                    space_id='1',
+                    name='name',
+                    code='code',
+                    user_count=1,
+                    has_child=False,
+                    depth=0,
+                    users_ids=[1],
+                    leader_ids=[1],
+                    ancestry='anc',
+                )
+            ],
         )
         mocker.patch('kakaowork.client.Kakaowork.Departments.list', return_value=resp)
 
+        expected_output = 'ID:\t\t1\nName:\t\tname\nCode:\t\tcode\nUser count:\t1\n'
+
         res = cli_runner.invoke(departments, ['list'])
         assert res.exit_code == 0
-        assert res.output == 'ID:\t\t1\nName:\t\tname\nCode:\t\tcode\nUser count:\t1\n'
+        assert res.output == expected_output
+
+        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'department', 'list'])
+        assert res.exit_code == 0
+        assert res.output == expected_output
+
+        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'dept', 'list'])
+        assert res.exit_code == 0
+        assert res.output == expected_output
 
     def test_departments_list_error(self, mocker: MockerFixture, cli_runner: CliRunner):
         resp = DepartmentListResponse(
@@ -73,16 +86,20 @@ class TestSpacesCommand:
                 profile_name_format=ProfileNameFormat.NAME_NICKNAME,
                 profile_position_format=ProfilePositionFormat.POSITION,
                 logo_url='http://localhost/image.png',
-            )
+            ),
         )
         mocker.patch('kakaowork.client.Kakaowork.Spaces.info', return_value=resp)
 
+        expected_output = ("ID:\t1\nOrgID:\t1\nName:\tname\nColor code:\tdefault\nColor tone:\tlight\nPermitted ext:\t['*']\n"
+                           "Profile name format:\tname_nickname\nProfile position format:\tposition\nLogo URL:\thttp://localhost/image.png\n")
+
         res = cli_runner.invoke(spaces, ['info'])
         assert res.exit_code == 0
-        assert res.output == (
-            "ID:\t1\nOrgID:\t1\nName:\tname\nColor code:\tdefault\nColor tone:\tlight\nPermitted ext:\t['*']\n"
-            "Profile name format:\tname_nickname\nProfile position format:\tposition\nLogo URL:\thttp://localhost/image.png\n"
-        )
+        assert res.output == expected_output
+
+        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'space', 'info'])
+        assert res.exit_code == 0
+        assert res.output == expected_output
 
     def test_spaces_info_error(self, mocker: MockerFixture, cli_runner: CliRunner):
         resp = SpaceResponse(
@@ -104,9 +121,15 @@ class TestBotsCommand:
         )
         mocker.patch('kakaowork.client.Kakaowork.Bots.info', return_value=resp)
 
+        expected_output = 'ID:\t1\nName:\tname\nStatus:\tactivated\n'
+
         res = cli_runner.invoke(bots, ['info'])
         assert res.exit_code == 0
-        assert res.output == 'ID:\t1\nName:\tname\nStatus:\tactivated\n'
+        assert res.output == expected_output
+
+        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'bot', 'info'])
+        assert res.exit_code == 0
+        assert res.output == expected_output
 
     def test_bots_info_error(self, mocker: MockerFixture, cli_runner: CliRunner):
         response = BotResponse(
