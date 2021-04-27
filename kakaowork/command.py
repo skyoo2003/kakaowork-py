@@ -12,6 +12,23 @@ from kakaowork.models import (
     ConversationListResponse,
     DepartmentListResponse,
 )
+from kakaowork.utils import normalize_token, command_aliases
+
+
+class AliasedGroup(click.Group):
+    def get_command(self, ctx: click.Context, cmd_name: str):
+        # Return a command immediately if exact match
+        command = super().get_command(ctx, cmd_name)
+        if command is not None:
+            return command
+
+        # Returns a command if it matches an alias
+        aliases = command_aliases()
+        if cmd_name in aliases:
+            actual_cmd_name = aliases[cmd_name]
+            return super().get_command(ctx, actual_cmd_name)
+
+        ctx.fail(f"No such command: {cmd_name}.")
 
 
 class CLIOptions:
@@ -24,15 +41,15 @@ def _echo(ctx: click.Context, resp: BaseResponse) -> None:
     ctx.exit(0 if resp.success else 1)
 
 
-@click.group(name='kakaowork')
+@click.group(name='kakaowork', cls=AliasedGroup, context_settings=dict(token_normalize_func=normalize_token))
 @click.pass_context
 @click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'))
 def cli(ctx: click.Context, app_key: str):
     if not app_key:
         click.echo(click.style('No app key! Please pass your app key using option(-k, --app-key) or environment variable($KAKAOWORK_APP_KEY)', fg='red'))
         ctx.exit(1)
-    ctx.ensure_object(CLIOptions)
-    ctx.obj.app_key = app_key
+    opts: CLIOptions = ctx.ensure_object(CLIOptions)
+    opts.app_key = app_key
 
 
 @cli.group()
@@ -56,6 +73,7 @@ def users_list(ctx: click.Context, limit: int):
         while resp.cursor is not None:
             resp = client.users.list(cursor=resp.cursor)
             yield resp.to_plain()
+
     click.echo_via_pager(_generate_output(r))
 
 
@@ -139,6 +157,7 @@ def conversations_list(ctx: click.Context, limit: int):
         while resp.cursor is not None:
             resp = client.conversations.list(cursor=resp.cursor)
             yield resp.to_plain()
+
     click.echo_via_pager(_generate_output(r))
 
 
@@ -213,6 +232,7 @@ def departments_list(ctx: click.Context, limit: int):
         while resp.cursor is not None:
             resp = client.departments.list(cursor=resp.cursor)
             yield resp.to_plain()
+
     click.echo_via_pager(_generate_output(r))
 
 
