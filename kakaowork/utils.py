@@ -4,7 +4,7 @@ from typing import Union, Any, Dict
 
 from pytz import utc
 
-from kakaowork.consts import KST
+from kakaowork.consts import KST, BOOL_STRS, TRUE_STRS
 
 
 def text2dict(text: Union[str, bytes]) -> Dict[str, Any]:
@@ -62,3 +62,19 @@ def command_aliases() -> Dict[str, str]:
     aliases.update({alias: spaces.name for alias in ('space', )})
     aliases.update({alias: bots.name for alias in ('bot', )})
     return aliases
+
+
+def parse_kv_pairs(line: str) -> Dict[str, Any]:
+    kv = {}
+    for item in line.strip().split('\n'):
+        for token in item.strip().split(' '):
+            key, value = token.split('=')[:2]
+            if value in BOOL_STRS:
+                kv[key] = str2bool(value)
+            else:
+                kv[key] = value
+    return kv
+
+
+def str2bool(s: str) -> bool:
+    return s.strip().lower() in TRUE_STRS
