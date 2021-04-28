@@ -28,6 +28,7 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
+    CONVERSATION_NOT_FOUND = 'conversation_not_found'
 
 
 class ConversationType(StrEnum):
@@ -575,11 +576,7 @@ class BotResponse(BaseResponse):
 
     def to_plain(self) -> str:
         if self.info:
-            return '\n'.join([
-                f'ID:\t{self.info.bot_id}',
-                f'Name:\t{self.info.title}',
-                f'Status:\t{self.info.status}'
-            ])
+            return '\n'.join([f'ID:\t{self.info.bot_id}', f'Name:\t{self.info.title}', f'Status:\t{self.info.status}'])
         return super().to_plain()
 
     @classmethod
