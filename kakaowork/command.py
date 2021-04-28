@@ -45,7 +45,7 @@ class BlockKitParamType(click.ParamType):
         else:  # Parse key-value pairs with space separators
             data = parse_kv_pairs(value)
         block_cls = BlockType.block_cls(data['type'])
-        return block_cls(**{key: value for key, value in data.items() if key != 'type'})
+        return block_cls.from_dict(data)
 
     def __repr__(self) -> str:
         return 'BLOCKKIT'
@@ -227,9 +227,9 @@ def messages(ctx: click.Context):
 @click.argument('conversation_id', type=int)
 @click.argument('text', type=str)
 @click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True)
-def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[str, ...]):
+def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):
     opts: CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text)
+    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=blocks)
     _echo(ctx, r)
 
 

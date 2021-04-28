@@ -6,7 +6,8 @@ from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
 from urllib.parse import urlparse
 
 from kakaowork.consts import StrEnum
-from kakaowork.exceptions import InvalidBlock, InvalidBlockType
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
+from kakaowork.utils import exist_kv, json_default
 
 
 @unique
@@ -87,11 +88,11 @@ class SelectBlockOption(NamedTuple):
     text: str
     value: str
 
-
-def json_default(value: Any) -> Any:
-    if isinstance(value, Block):
-        return value.to_dict()
-    raise TypeError('not JSON serializable')
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'SelectBlockOption':
+        if not value:
+            raise NoValueError('No value to type cast')
+        return cls(**value)
 
 
 class Block(ABC):
@@ -149,6 +150,19 @@ class TextBlock(Block):
             return False
         return True
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'TextBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.TEXT:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            markdown=value['markdown'] if exist_kv('markdown', value) else False,
+        ))
+
 
 class ImageLinkBlock(Block):
     def __init__(self, *, url: str):
@@ -170,6 +184,16 @@ class ImageLinkBlock(Block):
         if not os.path.splitext(o.path)[1]:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ImageLinkBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.IMAGE_LINK:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**value)
 
 
 class ButtonBlock(Block):
@@ -218,6 +242,20 @@ class ButtonBlock(Block):
             return False
         return True
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ButtonBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.BUTTON:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            style=ButtonStyle(value['style']),
+            action_type=ButtonActionType(value['action_type']) if exist_kv('action_type', value) else None,
+        ))
+
 
 class DividerBlock(Block):
     def __init__(self) -> None:
@@ -225,6 +263,15 @@ class DividerBlock(Block):
 
     def validate(self) -> bool:
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'DividerBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.DIVIDER:
+            raise InvalidBlockType('No type or invalid')
+
+        return cls()
 
 
 class HeaderBlock(Block):
@@ -252,6 +299,19 @@ class HeaderBlock(Block):
             return False
         return True
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'HeaderBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.HEADER:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            style=HeaderStyle(value['style']) if exist_kv('style', value) else None,
+        ))
+
 
 class ActionBlock(Block):
     max_len_elements = 3
@@ -270,6 +330,19 @@ class ActionBlock(Block):
         if not self.elements or len(self.elements) > self.max_len_elements:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ActionBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.ACTION:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            elements=[ButtonBlock.from_dict(item) for item in value['elements']],
+        ))
 
 
 class DescriptionBlock(Block):
@@ -304,6 +377,20 @@ class DescriptionBlock(Block):
             return False
         return True
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'DescriptionBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.DESCRIPTION:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            content=TextBlock.from_dict(value['content']),
+            accent=value['accent'] if exist_kv('accent', value) else False,
+        ))
+
 
 class SectionBlock(Block):
     def __init__(self, *, content: TextBlock, accessory: ImageLinkBlock):
@@ -328,6 +415,20 @@ class SectionBlock(Block):
             return False
         return True
 
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'SectionBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.SECTION:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            content=TextBlock.from_dict(value['content']),
+            accessory=ImageLinkBlock.from_dict(value['accessory']),
+        ))
+
 
 class ContextBlock(Block):
     def __init__(self, *, content: TextBlock, image: ImageLinkBlock):
@@ -351,6 +452,20 @@ class ContextBlock(Block):
         if not self.image:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ContextBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.CONTEXT:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            content=TextBlock.from_dict(value['content']),
+            image=ImageLinkBlock.from_dict(value['image']),
+        ))
 
 
 class LabelBlock(Block):
@@ -377,6 +492,16 @@ class LabelBlock(Block):
         if self.markdown is None:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'LabelBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.LABEL:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**value)
 
 
 class InputBlock(Block):
@@ -408,6 +533,19 @@ class InputBlock(Block):
         if self.placeholder and len(self.placeholder) > self.max_len_placeholder:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'InputBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.INPUT:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            required=value['required'] if exist_kv('required', value) else False,
+        ))
 
 
 class SelectBlock(Block):
@@ -447,6 +585,20 @@ class SelectBlock(Block):
         if self.placeholder and len(self.placeholder) > self.max_len_placeholder:
             return False
         return True
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'SelectBlock':
+        if not value:
+            raise NoValueError('No value to type cast')
+        if 'type' in value and value['type'] != BlockType.SELECT:
+            raise InvalidBlockType('No type or invalid')
+        value = {k: v for k, v in value.items() if k != 'type'}
+
+        return cls(**dict(
+            value,
+            options=[SelectBlockOption.from_dict(item) for item in value['options']],
+            required=value['required'] if exist_kv('required', value) else False,
+        ))
 
 
 class BlockKitBuilder:

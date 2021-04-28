@@ -26,6 +26,7 @@ from kakaowork.models import (
     BotResponse,
 )
 from kakaowork.blockkit import Block
+from kakaowork.utils import json_default
 
 
 class Kakaowork:
@@ -155,7 +156,7 @@ class Kakaowork:
             r = self.client.http.request(
                 'POST',
                 f'{self.client.base_url}{self.base_path}.send',
-                body=json.dumps(payload).encode('utf-8'),
+                body=json.dumps(payload, default=json_default).encode('utf-8'),
             )
             return MessageResponse.from_json(r.data)
 

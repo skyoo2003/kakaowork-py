@@ -78,3 +78,13 @@ def parse_kv_pairs(line: str) -> Dict[str, Any]:
 
 def str2bool(s: str) -> bool:
     return s.strip().lower() in TRUE_STRS
+
+
+def json_default(value: Any) -> Any:
+    from kakaowork.blockkit import Block
+
+    if isinstance(value, Block):
+        return value.to_dict()
+    elif isinstance(value, datetime):
+        return int(value.timestamp())
+    raise TypeError('not JSON serializable')
