@@ -1,4 +1,5 @@
 import json
+from shlex import shlex
 from datetime import datetime
 from typing import Union, Any, Dict
 
@@ -7,9 +8,34 @@ from pytz import utc
 from kakaowork.consts import KST, BOOL_STRS, TRUE_STRS
 
 
+def is_bool(text: Union[str, bytes]) -> bool:
+    s = text.decode('utf-8') if isinstance(text, bytes) else text
+    return s.strip().lower() in BOOL_STRS
+
+
+def is_int(text: Union[str, bytes]) -> bool:
+    s = text.decode('utf-8') if isinstance(text, bytes) else text
+    try:
+        int(s)
+    except ValueError:
+        return False
+    return True
+
+
+def is_float(text: Union[str, bytes]) -> bool:
+    s = text.decode('utf-8') if isinstance(text, bytes) else text
+    try:
+        return str(float(s)) == s
+    except ValueError:
+        return False
+
+
+def text2bool(text: Union[str, bytes]) -> bool:
+    s = text.decode('utf-8') if isinstance(text, bytes) else text
+    return s.strip().lower() in TRUE_STRS
+
+
 def text2dict(text: Union[str, bytes]) -> Dict[str, Any]:
-    if not text:
-        return {}
     json_str = text.decode('utf-8') if isinstance(text, bytes) else text
     return json.loads(json_str)
 
@@ -65,19 +91,20 @@ def command_aliases() -> Dict[str, str]:
 
 
 def parse_kv_pairs(line: str) -> Dict[str, Any]:
-    kv = {}
-    for item in line.strip().split('\n'):
-        for token in item.strip().split(' '):
-            key, value = token.split('=')[:2]
-            if value in BOOL_STRS:
-                kv[key] = str2bool(value)
-            else:
-                kv[key] = value
-    return kv
-
-
-def str2bool(s: str) -> bool:
-    return s.strip().lower() in TRUE_STRS
+    lexer = shlex(line, posix=True)
+    lexer.wordchars += "=.-_()/:+*^&%$#@!?|{}"
+    kvs = {}
+    for token in lexer:
+        key, value = token.split('=', maxsplit=1)
+        if is_bool(value):
+            kvs[key] = text2bool(value)
+        elif is_int(value):
+            kvs[key] = int(value)
+        elif is_float(value):
+            kvs[key] = float(value)
+        else:
+            kvs[key] = value
+    return kvs
 
 
 def json_default(value: Any) -> Any:

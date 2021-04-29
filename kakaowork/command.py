@@ -14,7 +14,7 @@ from kakaowork.models import (
     DepartmentListResponse,
 )
 from kakaowork.blockkit import Block, BlockType
-from kakaowork.utils import normalize_token, command_aliases, parse_kv_pairs, str2bool
+from kakaowork.utils import normalize_token, command_aliases, parse_kv_pairs
 
 
 class AliasedGroup(click.Group):
