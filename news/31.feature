@@ -1,1 +1,1 @@
-BlockKits from structural inputs (key-value pairs, JSON)
+Add blocks option in messages send command
