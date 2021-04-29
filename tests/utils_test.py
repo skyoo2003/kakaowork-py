@@ -111,7 +111,7 @@ def test_parse_kv_pairs():
 
 def test_json_default():
     assert json_default(DividerBlock()) == {'type': 'divider'}
-    assert json_default(datetime(2021, 1, 1, 0, 0, 0)) == 1609426800
+    assert json_default(datetime(2021, 1, 1, 0, 0, 0, tzinfo=utc)) == 1609459200
     with pytest.raises(TypeError):
         json_default(1234)
     with pytest.raises(TypeError):
