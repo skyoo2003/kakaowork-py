@@ -23,6 +23,6 @@ BASE_PATH_BOTS = '/v1/bots'
 
 KST = timezone('Asia/Seoul')
 
-TRUE_STRS = ['true', '1', 'y', 'yes']
-FALSE_STRS = ['false', '0', 'n', 'no']
+TRUE_STRS = ['true', 'y', 'yes']
+FALSE_STRS = ['false', 'n', 'no']
 BOOL_STRS = TRUE_STRS + FALSE_STRS
