@@ -93,7 +93,7 @@ def command_aliases() -> Dict[str, str]:
 def parse_kv_pairs(line: str) -> Dict[str, Any]:
     lexer = shlex(line, posix=True)
     lexer.wordchars += "=.-_()/:+*^&%$#@!?|{}"
-    kvs = {}
+    kvs: Dict[str, Any] = {}
     for token in lexer:
         key, value = token.split('=', maxsplit=1)
         if is_bool(value):

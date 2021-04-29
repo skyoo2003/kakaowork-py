@@ -229,7 +229,7 @@ def messages(ctx: click.Context):
 @click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True)
 def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):
     opts: CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=blocks)
+    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
     _echo(ctx, r)
 
 
