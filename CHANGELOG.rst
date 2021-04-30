@@ -1,3 +1,24 @@
+Kakaowork 0.2.0 (2021-04-30)
+============================
+
+Breaking Changes
+----------------
+
+- Replace block_type with type in Blocks and kit_type with type BlockKitBuilder (`#31 <https://github.com/skyoo2003/kakaowork-py/issues/31>`_)
+
+
+New Features
+------------
+
+- Add blocks option in messages send command (`#31 <https://github.com/skyoo2003/kakaowork-py/issues/31>`_)
+
+
+Enhancement
+-----------
+
+- Support command aliases (`#34 <https://github.com/skyoo2003/kakaowork-py/issues/34>`_)
+
+
 Kakaowork 0.1.3 (2021-04-26)
 ============================
 
