@@ -1,6 +1,7 @@
 import os
+import json
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import click
 
@@ -12,7 +13,8 @@ from kakaowork.models import (
     ConversationListResponse,
     DepartmentListResponse,
 )
-from kakaowork.utils import normalize_token, command_aliases
+from kakaowork.blockkit import Block, BlockType
+from kakaowork.utils import normalize_token, command_aliases, parse_kv_pairs
 
 
 class AliasedGroup(click.Group):
@@ -31,6 +33,24 @@ class AliasedGroup(click.Group):
         ctx.fail(f"No such command: {cmd_name}.")
 
 
+class BlockKitParamType(click.ParamType):
+    name = 'blockkit'
+
+    def convert(self, value: str, param: Optional[click.Parameter], ctx: Optional[click.Context]) -> Any:
+        if value.startswith('@') and value.endswith('.json'):  # Load from a JSON file.
+            with open(value[1:], 'r') as f:
+                data = json.load(f)
+        elif value[0] in ['[', '{']:  # Load form JSON string.
+            data = json.loads(value)
+        else:  # Parse key-value pairs with space separators
+            data = parse_kv_pairs(value)
+        block_cls = BlockType.block_cls(data['type'])
+        return block_cls.from_dict(data)
+
+    def __repr__(self) -> str:
+        return 'BLOCKKIT'
+
+
 class CLIOptions:
     def __init__(self) -> None:
         self.app_key: str = ''
@@ -39,6 +59,9 @@ class CLIOptions:
 def _echo(ctx: click.Context, resp: BaseResponse) -> None:
     click.echo(click.style(resp.to_plain(), fg=None if resp.success else 'red'))
     ctx.exit(0 if resp.success else 1)
+
+
+BLOCKKIT = BlockKitParamType()
 
 
 @click.group(name='kakaowork', cls=AliasedGroup, context_settings=dict(token_normalize_func=normalize_token))
@@ -203,11 +226,10 @@ def messages(ctx: click.Context):
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('text', type=str)
-# TODO: block should be one of jsonable or key=value with space deplimiter
-# @click.option('-b', '--block', 'blocks', multiple=True)
-def messages_send(ctx: click.Context, conversation_id: int, text: str):
+@click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True)
+def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):
     opts: CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text)
+    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
     _echo(ctx, r)
 
 

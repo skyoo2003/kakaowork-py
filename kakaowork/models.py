@@ -8,13 +8,7 @@ from pytz import utc, timezone
 from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
 from kakaowork.exceptions import NoValueError
-from kakaowork.utils import text2dict, exist_kv, to_kst
-
-
-def json_default(value: Any) -> Any:
-    if isinstance(value, datetime):
-        return int(value.timestamp())
-    raise TypeError('not JSON serializable')
+from kakaowork.utils import text2dict, exist_kv, to_kst, json_default
 
 
 class ErrorCode(StrEnum):
@@ -28,6 +22,7 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
+    CONVERSATION_NOT_FOUND = 'conversation_not_found'
 
 
 class ConversationType(StrEnum):
@@ -168,8 +163,7 @@ class MessageField(NamedTuple):
         if exist_kv('blocks', value):
             for kv in value['blocks']:
                 block_cls = BlockType.block_cls(kv['type'])
-                block = block_cls(**{key: value for key, value in kv.items() if key != 'type'})
-                blocks.append(block)
+                blocks.append(block_cls.from_dict(kv))
         return cls(**dict(
             value,
             send_time=to_kst(value['send_time']) if exist_kv('send_time', value) else None,
@@ -575,11 +569,7 @@ class BotResponse(BaseResponse):
 
     def to_plain(self) -> str:
         if self.info:
-            return '\n'.join([
-                f'ID:\t{self.info.bot_id}',
-                f'Name:\t{self.info.title}',
-                f'Status:\t{self.info.status}'
-            ])
+            return '\n'.join([f'ID:\t{self.info.bot_id}', f'Name:\t{self.info.title}', f'Status:\t{self.info.status}'])
         return super().to_plain()
 
     @classmethod
