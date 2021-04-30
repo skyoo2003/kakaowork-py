@@ -1,7 +1,7 @@
 import os
 import json
 from enum import unique
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractclassmethod
 from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
 from urllib.parse import urlparse
 
@@ -26,8 +26,8 @@ class BlockType(StrEnum):
     SELECT = "select"
 
     @classmethod
-    def block_cls(cls, block_type: Union[str, 'BlockType']) -> Type['Block']:
-        bt = cls(block_type) if isinstance(block_type, str) else block_type
+    def block_cls(cls, type: Union[str, 'BlockType']) -> Type['Block']:
+        bt = cls(type) if isinstance(type, str) else type
         if bt == cls.TEXT:
             return TextBlock
         elif bt == cls.IMAGE_LINK:
@@ -88,6 +88,9 @@ class SelectBlockOption(NamedTuple):
     text: str
     value: str
 
+    def to_dict(self) -> Dict[str, Any]:
+        return self._asdict()
+
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'SelectBlockOption':
         if not value:
@@ -96,9 +99,8 @@ class SelectBlockOption(NamedTuple):
 
 
 class Block(ABC):
-    def __init__(self, *, block_type: BlockType):
-        self.block_type = block_type
-        self.block_vars: Dict[str, Any] = {}
+    def __init__(self, *, type: BlockType):
+        self.type = type
 
     def __str__(self):
         return self.to_json()
@@ -109,15 +111,14 @@ class Block(ABC):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, Block):
             return False
-        if self.block_type != value.block_type:
+        if self.type != value.type:
             return False
-        if self.block_vars != value.block_vars:
+        if self.to_dict() != value.to_dict():
             return False
         return True
 
     def to_dict(self) -> Dict[str, Any]:
-        block_vars = {key: value for key, value in self.block_vars.items() if value is not None}
-        return dict(type=self.block_type, **block_vars)
+        return {'type': self.type}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), default=json_default)
@@ -127,6 +128,7 @@ class Block(ABC):
         raise NotImplementedError()
 
     @classmethod
+    @abstractclassmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'Block':
         raise NotImplementedError()
 
@@ -135,19 +137,16 @@ class TextBlock(Block):
     max_len_text = 500
 
     def __init__(self, *, text: str, markdown: Optional[bool] = False):
-        super().__init__(block_type=BlockType.TEXT)
-        self.block_vars = {
-            'text': text,
-            'markdown': markdown or False,
-        }
+        super().__init__(type=BlockType.TEXT)
+        self.text = text
+        self.markdown = markdown if markdown is not None else False
 
-    @property
-    def text(self) -> str:
-        return self.block_vars['text']
-
-    @property
-    def markdown(self) -> bool:
-        return self.block_vars['markdown']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            text=self.text,
+            markdown=self.markdown,
+        )
 
     def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
@@ -158,7 +157,7 @@ class TextBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'TextBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.TEXT:
+        if 'type' not in value or value['type'] != BlockType.TEXT:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -170,14 +169,14 @@ class TextBlock(Block):
 
 class ImageLinkBlock(Block):
     def __init__(self, *, url: str):
-        super().__init__(block_type=BlockType.IMAGE_LINK)
-        self.block_vars = {
-            'url': url,
-        }
+        super().__init__(type=BlockType.IMAGE_LINK)
+        self.url = url
 
-    @property
-    def url(self) -> str:
-        return self.block_vars['url']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            url=self.url,
+        )
 
     def validate(self) -> bool:
         if not self.url:
@@ -193,7 +192,7 @@ class ImageLinkBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'ImageLinkBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.IMAGE_LINK:
+        if 'type' not in value or value['type'] != BlockType.IMAGE_LINK:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -210,34 +209,23 @@ class ButtonBlock(Block):
                  action_type: Optional[ButtonActionType] = None,
                  action_name: Optional[str] = None,
                  value: Optional[str] = None):
-        super().__init__(block_type=BlockType.BUTTON)
-        self.block_vars = {
-            'text': text,
-            'style': style,
-            'action_type': action_type,
-            'action_name': action_name,
-            'value': value,
-        }
+        super().__init__(type=BlockType.BUTTON)
+        self.text = text
+        self.style = style
+        self.action_type = action_type
+        self.action_name = action_name
+        self.value = value
 
-    @property
-    def text(self) -> str:
-        return self.block_vars['text']
-
-    @property
-    def style(self) -> ButtonStyle:
-        return self.block_vars['style']
-
-    @property
-    def action_type(self) -> ButtonActionType:
-        return self.block_vars['action_type']
-
-    @property
-    def action_name(self) -> str:
-        return self.block_vars['action_name']
-
-    @property
-    def value(self) -> str:
-        return self.block_vars['value']
+    def to_dict(self):
+        kwargs = dict(
+            super().to_dict(),
+            text=self.text,
+            style=self.style,
+            action_type=self.action_type,
+            action_name=self.action_name,
+            value=self.value,
+        )
+        return {k: v for k, v in kwargs.items() if v is not None}
 
     def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
@@ -250,7 +238,7 @@ class ButtonBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'ButtonBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.BUTTON:
+        if 'type' not in value or value['type'] != BlockType.BUTTON:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -263,7 +251,10 @@ class ButtonBlock(Block):
 
 class DividerBlock(Block):
     def __init__(self) -> None:
-        super().__init__(block_type=BlockType.DIVIDER)
+        super().__init__(type=BlockType.DIVIDER)
+
+    def to_dict(self):
+        return super().to_dict()
 
     def validate(self) -> bool:
         return True
@@ -282,19 +273,16 @@ class HeaderBlock(Block):
     max_len_text = 20
 
     def __init__(self, *, text: str, style: Optional[HeaderStyle] = None):
-        super().__init__(block_type=BlockType.HEADER)
-        self.block_vars = {
-            'text': text,
-            'style': style,
-        }
+        super().__init__(type=BlockType.HEADER)
+        self.text = text
+        self.style = style
 
-    @property
-    def text(self) -> str:
-        return self.block_vars['text']
-
-    @property
-    def style(self) -> HeaderStyle:
-        return self.block_vars['style']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            text=self.text,
+            style=self.style,
+        )
 
     def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
@@ -307,7 +295,7 @@ class HeaderBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'HeaderBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.HEADER:
+        if 'type' not in value or value['type'] != BlockType.HEADER:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -321,14 +309,14 @@ class ActionBlock(Block):
     max_len_elements = 3
 
     def __init__(self, *, elements: List[ButtonBlock]):
-        super().__init__(block_type=BlockType.ACTION)
-        self.block_vars = {
-            'elements': elements,
-        }
+        super().__init__(type=BlockType.ACTION)
+        self.elements = elements or []
 
-    @property
-    def elements(self) -> List[ButtonBlock]:
-        return self.block_vars['elements']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            elements=[item.to_dict() for item in self.elements],
+        )
 
     def validate(self) -> bool:
         if not self.elements or len(self.elements) > self.max_len_elements:
@@ -339,7 +327,7 @@ class ActionBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'ActionBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.ACTION:
+        if 'type' not in value or value['type'] != BlockType.ACTION:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -353,24 +341,18 @@ class DescriptionBlock(Block):
     max_len_term = 10
 
     def __init__(self, *, term: str, content: TextBlock, accent: Optional[bool] = False):
-        super().__init__(block_type=BlockType.DESCRIPTION)
-        self.block_vars = {
-            'term': term,
-            'content': content,
-            'accent': accent or False,
-        }
+        super().__init__(type=BlockType.DESCRIPTION)
+        self.term = term
+        self.content = content
+        self.accent = accent if accent is not None else False
 
-    @property
-    def term(self) -> str:
-        return self.block_vars['term']
-
-    @property
-    def content(self) -> TextBlock:
-        return self.block_vars['content']
-
-    @property
-    def accent(self) -> bool:
-        return self.block_vars['accent']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            term=self.term,
+            content=self.content.to_dict(),
+            accent=self.accent,
+        )
 
     def validate(self) -> bool:
         if not self.term or len(self.term) > self.max_len_term:
@@ -385,7 +367,7 @@ class DescriptionBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'DescriptionBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.DESCRIPTION:
+        if 'type' not in value or value['type'] != BlockType.DESCRIPTION:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -398,19 +380,16 @@ class DescriptionBlock(Block):
 
 class SectionBlock(Block):
     def __init__(self, *, content: TextBlock, accessory: ImageLinkBlock):
-        super().__init__(block_type=BlockType.SECTION)
-        self.block_vars = {
-            'content': content,
-            'accessory': accessory,
-        }
+        super().__init__(type=BlockType.SECTION)
+        self.content = content
+        self.accessory = accessory
 
-    @property
-    def content(self) -> TextBlock:
-        return self.block_vars['content']
-
-    @property
-    def accessory(self) -> ImageLinkBlock:
-        return self.block_vars['accessory']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            content=self.content.to_dict(),
+            accessory=self.accessory.to_dict(),
+        )
 
     def validate(self) -> bool:
         if not self.content:
@@ -423,7 +402,7 @@ class SectionBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'SectionBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.SECTION:
+        if 'type' not in value or value['type'] != BlockType.SECTION:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -436,19 +415,16 @@ class SectionBlock(Block):
 
 class ContextBlock(Block):
     def __init__(self, *, content: TextBlock, image: ImageLinkBlock):
-        super().__init__(block_type=BlockType.CONTEXT)
-        self.block_vars = {
-            'content': content,
-            'image': image,
-        }
+        super().__init__(type=BlockType.CONTEXT)
+        self.content = content
+        self.image = image
 
-    @property
-    def content(self) -> TextBlock:
-        return self.block_vars['content']
-
-    @property
-    def image(self) -> ImageLinkBlock:
-        return self.block_vars['image']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            content=self.content.to_dict(),
+            image=self.image.to_dict(),
+        )
 
     def validate(self) -> bool:
         if not self.content:
@@ -461,7 +437,7 @@ class ContextBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'ContextBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.CONTEXT:
+        if 'type' not in value or value['type'] != BlockType.CONTEXT:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -476,19 +452,16 @@ class LabelBlock(Block):
     max_len_text = 200
 
     def __init__(self, *, text: str, markdown: bool):
-        super().__init__(block_type=BlockType.LABEL)
-        self.block_vars = {
-            'text': text,
-            'markdown': markdown,
-        }
+        super().__init__(type=BlockType.LABEL)
+        self.text = text
+        self.markdown = markdown
 
-    @property
-    def text(self) -> str:
-        return self.block_vars['text']
-
-    @property
-    def markdown(self) -> bool:
-        return self.block_vars['markdown']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            text=self.text,
+            markdown=self.markdown,
+        )
 
     def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
@@ -501,7 +474,7 @@ class LabelBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'LabelBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.LABEL:
+        if 'type' not in value or value['type'] != BlockType.LABEL:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -512,24 +485,18 @@ class InputBlock(Block):
     max_len_placeholder = 50
 
     def __init__(self, *, name: str, required: Optional[bool] = False, placeholder: Optional[str] = None):
-        super().__init__(block_type=BlockType.INPUT)
-        self.block_vars = {
-            'name': name,
-            'required': required or False,
-            'placeholder': placeholder,
-        }
+        super().__init__(type=BlockType.INPUT)
+        self.name = name
+        self.required = required if required is not None else False
+        self.placeholder = placeholder
 
-    @property
-    def name(self) -> str:
-        return self.block_vars['name']
-
-    @property
-    def required(self) -> Optional[bool]:
-        return self.block_vars['required']
-
-    @property
-    def placeholder(self) -> Optional[str]:
-        return self.block_vars['placeholder']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            name=self.name,
+            required=self.required,
+            placeholder=self.placeholder,
+        )
 
     def validate(self) -> bool:
         if not self.name:
@@ -542,7 +509,7 @@ class InputBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'InputBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.INPUT:
+        if 'type' not in value or value['type'] != BlockType.INPUT:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -557,29 +524,20 @@ class SelectBlock(Block):
     max_len_placeholder = 50
 
     def __init__(self, *, name: str, options: List[SelectBlockOption], required: Optional[bool] = False, placeholder: Optional[str] = None):
-        super().__init__(block_type=BlockType.SELECT)
-        self.block_vars = {
-            'name': name,
-            'options': options,
-            'required': required or False,
-            'placeholder': placeholder,
-        }
+        super().__init__(type=BlockType.SELECT)
+        self.name = name
+        self.options = options or []
+        self.required = required if required is not None else False
+        self.placeholder = placeholder
 
-    @property
-    def name(self) -> str:
-        return self.block_vars['name']
-
-    @property
-    def options(self) -> List[SelectBlockOption]:
-        return self.block_vars['options']
-
-    @property
-    def required(self) -> Optional[bool]:
-        return self.block_vars['required']
-
-    @property
-    def placeholder(self) -> Optional[str]:
-        return self.block_vars['placeholder']
+    def to_dict(self):
+        return dict(
+            super().to_dict(),
+            name=self.name,
+            options=[item.to_dict() for item in self.options],
+            required=self.required,
+            placeholder=self.placeholder,
+        )
 
     def validate(self) -> bool:
         if not self.name:
@@ -594,7 +552,7 @@ class SelectBlock(Block):
     def from_dict(cls, value: Dict[str, Any]) -> 'SelectBlock':
         if not value:
             raise NoValueError('No value to type cast')
-        if 'type' in value and value['type'] != BlockType.SELECT:
+        if 'type' not in value or value['type'] != BlockType.SELECT:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
 
@@ -606,92 +564,92 @@ class SelectBlock(Block):
 
 
 class BlockKitBuilder:
-    def __init__(self, *, kit_type: BlockKitType):
-        self.kit_type = kit_type
+    def __init__(self, *, type: BlockKitType):
+        self.type = type
         self.reset()
 
     def reset(self):
-        self.kit_vars: Dict[str, Any] = {
+        self.vars: Dict[str, Any] = {
             'blocks': [],
         }
 
     @property
     def text(self) -> str:
-        if self.kit_type != BlockKitType.MESSAGE:
+        if self.type != BlockKitType.MESSAGE:
             raise InvalidBlockType("It can be set only for message type")
-        return self.kit_vars['text'] if 'text' in self.kit_vars else ''
+        return self.vars['text'] if 'text' in self.vars else ''
 
     @text.setter
     def text(self, value: str):
-        if self.kit_type != BlockKitType.MESSAGE:
+        if self.type != BlockKitType.MESSAGE:
             raise InvalidBlockType("It can be set only for message type")
-        self.kit_vars['text'] = value
+        self.vars['text'] = value
 
     @property
     def title(self) -> str:
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        return self.kit_vars['title'] if 'title' in self.kit_vars else ''
+        return self.vars['title'] if 'title' in self.vars else ''
 
     @title.setter
     def title(self, value: str):
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        self.kit_vars['title'] = value
+        self.vars['title'] = value
 
     @property
     def accept(self) -> str:
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        return self.kit_vars['accept'] if 'accept' in self.kit_vars else ''
+        return self.vars['accept'] if 'accept' in self.vars else ''
 
     @accept.setter
     def accept(self, value: str):
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        self.kit_vars['accept'] = value
+        self.vars['accept'] = value
 
     @property
     def decline(self) -> str:
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        return self.kit_vars['decline'] if 'decline' in self.kit_vars else ''
+        return self.vars['decline'] if 'decline' in self.vars else ''
 
     @decline.setter
     def decline(self, value: str):
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        self.kit_vars['decline'] = value
+        self.vars['decline'] = value
 
     @property
     def value(self) -> str:
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        return self.kit_vars['value'] if 'value' in self.kit_vars else ''
+        return self.vars['value'] if 'value' in self.vars else ''
 
     @value.setter
     def value(self, value: str):
-        if self.kit_type != BlockKitType.MODAL:
+        if self.type != BlockKitType.MODAL:
             raise InvalidBlockType("It can be set only for modal type")
-        self.kit_vars['value'] = value
+        self.vars['value'] = value
 
     @property
     def blocks(self) -> List[Block]:
-        return self.kit_vars['blocks'] if 'blocks' in self.kit_vars and self.kit_vars['blocks'] else []
+        return self.vars['blocks'] if 'blocks' in self.vars and self.vars['blocks'] else []
 
     @blocks.setter
     def blocks(self, value: List[Block]):
-        self.kit_vars['blocks'] = []
+        self.vars['blocks'] = []
         for item in value:
             self.add_block(item)
 
     def add_block(self, block: Block):
         if not block.validate():
             raise InvalidBlock()
-        self.kit_vars['blocks'].append(block)
+        self.vars['blocks'].append(block)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {key: value for key, value in self.kit_vars.items() if value is not None}
+        return {key: value for key, value in self.vars.items() if value is not None}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), default=json_default)
