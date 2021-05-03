@@ -22,7 +22,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-urllib3 = "^1.26.4"
+urllib3 = "^1.14.0"
 click = { version = "^7.1.2", optional = true }
 pytz = "*"
 
