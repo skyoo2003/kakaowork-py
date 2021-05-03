@@ -1,3 +1,12 @@
+Kakaowork 0.2.1 (2021-05-03)
+============================
+
+Enhancement
+-----------
+
+- Change urllib3 minimum required version (`#39 <https://github.com/skyoo2003/kakaowork-py/issues/39>`_)
+- Update the project classifiers
+
 Kakaowork 0.2.0 (2021-04-30)
 ============================
 
