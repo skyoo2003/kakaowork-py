@@ -38,6 +38,7 @@ mypy = "^0.812"
 coverage = "^5.5"
 tox = "^3.23.0"
 sphinx = "^3.5.4"
+pydocstyle = "^6.0.0"
 
 [tool.poetry.extras]
 cli = ['click']
