@@ -20,3 +20,7 @@ repos:
     rev: v0.31.0
     hooks:
       - id: yapf
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.0.0
+    hooks:
+      - id: pydocstyle
