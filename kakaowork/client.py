@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List
 from urllib3 import PoolManager
 
 from kakaowork.consts import (
-    LIMIT,
+    Limit,
     BASE_URL,
     BASE_PATH_USERS,
     BASE_PATH_CONVERSATIONS,
@@ -59,7 +59,7 @@ class Kakaowork:
             )
             return UserResponse.from_json(r.data)
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> UserListResponse:
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> UserListResponse:
             fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',
@@ -108,7 +108,7 @@ class Kakaowork:
             )
             return ConversationResponse.from_json(r.data)
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> ConversationListResponse:
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> ConversationListResponse:
             fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',
@@ -165,7 +165,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = LIMIT) -> DepartmentListResponse:
+        def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> DepartmentListResponse:
             fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
             r = self.client.http.request(
                 'GET',

@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from datetime import timedelta
 
 from pytz import timezone
@@ -11,7 +11,11 @@ class StrEnum(str, Enum):
     pass
 
 
-LIMIT = 10
+class Limit(IntEnum):
+    MIN = 1
+    DEFAULT = 10
+    MAX = 100
+
 
 BASE_URL = 'https://api.kakaowork.com'
 BASE_PATH_USERS = '/v1/users'
