@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Any
 
 import click
 
-from kakaowork.consts import StrEnum
+from kakaowork.consts import StrEnum, Limit
 from kakaowork.client import Kakaowork
 from kakaowork.models import (
     BaseResponse,
@@ -83,7 +83,7 @@ def users(ctx: click.Context):
 
 @users.command(name='list', help="Show a list of details of users belonging to a workspace")
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
+@click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
 def users_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -167,7 +167,7 @@ def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):
 
 @conversations.command(name='list', help='Lists conversations')
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
+@click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
 def conversations_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -241,7 +241,7 @@ def departments(ctx: click.Context):
 
 @departments.command(name='list', help='Lists departments ina workspace')
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
+@click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
 def departments_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)

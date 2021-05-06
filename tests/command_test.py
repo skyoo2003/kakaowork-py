@@ -1,6 +1,7 @@
 from pytest_mock import MockerFixture
 from click.testing import Result, CliRunner
 
+from kakaowork.consts import Limit
 from kakaowork.models import (
     ErrorCode,
     BotStatus,
@@ -70,6 +71,14 @@ class TestDepartmentsCommand:
         res = cli_runner.invoke(departments, ['list'])
         assert res.exit_code == 1
         assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
+
+        res = cli_runner.invoke(departments, ['list', '--limit', 0])
+        assert res.exit_code == 2
+        assert "Error: Invalid value for '-l' / '--limit': 0 is not in the valid range of 1 to 100" in res.output
+
+        res = cli_runner.invoke(departments, ['list', '--limit', 101])
+        assert res.exit_code == 2
+        assert "Error: Invalid value for '-l' / '--limit': 101 is not in the valid range of 1 to 100" in res.output
 
 
 class TestSpacesCommand:
