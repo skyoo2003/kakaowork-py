@@ -64,9 +64,9 @@ def _echo(ctx: click.Context, resp: BaseResponse) -> None:
 BLOCKKIT = BlockKitParamType()
 
 
-@click.group(name='kakaowork', cls=AliasedGroup, context_settings=dict(token_normalize_func=normalize_token))
+@click.group(name='kakaowork', cls=AliasedGroup, context_settings=dict(token_normalize_func=normalize_token), help='Kakaowork CLI using Client API')
 @click.pass_context
-@click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'))
+@click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'), help='Kakaowork app key. See https://docs.kakaoi.ai/kakao_work/botdevguide')
 def cli(ctx: click.Context, app_key: str):
     if not app_key:
         click.echo(click.style('No app key! Please pass your app key using option(-k, --app-key) or environment variable($KAKAOWORK_APP_KEY)', fg='red'))
@@ -75,15 +75,15 @@ def cli(ctx: click.Context, app_key: str):
     opts.app_key = app_key
 
 
-@cli.group()
+@cli.group(help='Manages users in a workspace')
 @click.pass_context
 def users(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@users.command(name='list', help="Show a list of details of users belonging to the workspace")
+@users.command(name='list', help="Show a list of details of users belonging to a workspace")
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10)
+@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
 def users_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -100,11 +100,11 @@ def users_list(ctx: click.Context, limit: int):
     click.echo_via_pager(_generate_output(r))
 
 
-@users.command(name='find', help="Show details of a user by identifier (ID, Email, Mobile)")
+@users.command(name='find', help="Shows an user by ID, Email or Mobile)")
 @click.pass_context
-@click.option('-u', '--user-id', type=int)
-@click.option('-e', '--email')
-@click.option('-m', '--mobile')
+@click.option('-u', '--user-id', type=int, help='Only display the user by ID')
+@click.option('-e', '--email', help='Only display the user by E-mail')
+@click.option('-m', '--mobile', help='Only display the user by Mobile')
 def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optional[str] = None, mobile: Optional[str] = None):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -120,11 +120,11 @@ def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optiona
     _echo(ctx, r)
 
 
-@users.command(name='set', help="Change the user's status (working time, vacation time)")
+@users.command(name='set', help="Manages the status of a user")
 @click.pass_context
 @click.argument('user_id', type=int)
-@click.option('-wt', '--work-time', nargs=2, type=click.DateTime())
-@click.option('-vt', '--vacation-time', nargs=2, type=click.DateTime())
+@click.option('-wt', '--work-time', nargs=2, type=click.DateTime(), help='Working time with start and end. e.g. 2021-01-01T10:00:00 2021-01-01T19:00:00')
+@click.option('-vt', '--vacation-time', nargs=2, type=click.DateTime(), help='Vacation time with start and end. e.g. 2021-01-01T10:00:00 2021-01-05T19:00:00')
 def users_set(ctx: click.Context,
               user_id: int,
               work_time: Optional[Tuple[datetime, datetime]] = None,
@@ -150,13 +150,13 @@ def users_set(ctx: click.Context,
             ctx.exit(1)
 
 
-@cli.group()
+@cli.group(help='Manages conversations in a workspace')
 @click.pass_context
 def conversations(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@conversations.command(name='open')
+@conversations.command(name='open', help='Creates a conversation')
 @click.pass_context
 @click.argument('user_ids', nargs=-1, type=int)
 def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):
@@ -165,9 +165,9 @@ def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):
     _echo(ctx, r)
 
 
-@conversations.command(name='list')
+@conversations.command(name='list', help='Lists conversations')
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10)
+@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
 def conversations_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -184,7 +184,7 @@ def conversations_list(ctx: click.Context, limit: int):
     click.echo_via_pager(_generate_output(r))
 
 
-@conversations.command(name='users')
+@conversations.command(name='users', help='Lists users of a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
 def conversations_users(ctx: click.Context, conversation_id: int):
@@ -194,7 +194,7 @@ def conversations_users(ctx: click.Context, conversation_id: int):
     _echo(ctx, r)
 
 
-@conversations.command(name='invite')
+@conversations.command(name='invite', help='Invites one or many users to a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('user_ids', nargs=-1, type=int)
@@ -205,7 +205,7 @@ def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tup
     _echo(ctx, r)
 
 
-@conversations.command(name='kick')
+@conversations.command(name='kick', help='Kicks one or many users from a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('user_ids', nargs=-1, type=int)
@@ -216,32 +216,32 @@ def conversations_kick(ctx: click.Context, conversation_id: int, user_ids: Tuple
     _echo(ctx, r)
 
 
-@cli.group()
+@cli.group(help='Manages a message in a conversation')
 @click.pass_context
 def messages(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@messages.command(name='send')
+@messages.command(name='send', help='Sends a message in a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('text', type=str)
-@click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True)
+@click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True, help='One or many blocks to send in a message')
 def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):
     opts: CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
     _echo(ctx, r)
 
 
-@cli.group()
+@cli.group(help='Display departments in a workspace')
 @click.pass_context
 def departments(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@departments.command(name='list')
+@departments.command(name='list', help='Lists departments ina workspace')
 @click.pass_context
-@click.option('-l', '--limit', type=int, default=10)
+@click.option('-l', '--limit', type=int, default=10, show_default=True, help='Maximum paging size')
 def departments_list(ctx: click.Context, limit: int):
     opts: CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -258,13 +258,13 @@ def departments_list(ctx: click.Context, limit: int):
     click.echo_via_pager(_generate_output(r))
 
 
-@cli.group()
+@cli.group(help='Shows the info of a space in a workspace')
 @click.pass_context
 def spaces(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@spaces.command(name='info')
+@spaces.command(name='info', help='Display the info of a space')
 @click.pass_context
 def spaces_info(ctx: click.Context):
     opts: CLIOptions = ctx.obj
@@ -272,13 +272,13 @@ def spaces_info(ctx: click.Context):
     _echo(ctx, r)
 
 
-@cli.group()
+@cli.group(help='Shows the info of a bot in a workspace')
 @click.pass_context
 def bots(ctx: click.Context):
     ctx.ensure_object(CLIOptions)
 
 
-@bots.command(name='info')
+@bots.command(name='info', help='Display the info of a bot')
 @click.pass_context
 def bots_info(ctx: click.Context):
     opts: CLIOptions = ctx.obj
