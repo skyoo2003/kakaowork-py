@@ -36,7 +36,7 @@ yapf = "^0.31.0"
 flake8 = "^3.9.1"
 mypy = "^0.812"
 coverage = "^5.5"
-tox = "^3.23.0"
+tox = "^3.23.1"
 sphinx = "^3.5.4"
 
 [tool.poetry.extras]
