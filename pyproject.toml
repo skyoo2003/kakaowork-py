@@ -37,7 +37,7 @@ flake8 = "^3.9.2"
 mypy = "^0.812"
 coverage = "^5.5"
 tox = "^3.23.1"
-sphinx = "^3.5.4"
+sphinx = "^4.0.0"
 
 [tool.poetry.extras]
 cli = ['click']
