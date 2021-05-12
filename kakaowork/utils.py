@@ -1,7 +1,7 @@
 import json
 from shlex import shlex
 from datetime import datetime
-from typing import Union, Any, Dict
+from typing import Union, Any, Dict, Sequence
 
 from pytz import utc
 
@@ -9,11 +9,41 @@ from kakaowork.consts import KST, BOOL_STRS, TRUE_STRS
 
 
 def is_bool(text: Union[str, bytes]) -> bool:
+    """Whether a string can be cast to a bool type.
+
+    Args:
+        text: A text to check type
+
+    Returns:
+        True if it can be cast to a bool type, False otherwise.
+
+    Examples:
+        >>> is_bool('true')
+        True
+        >>> is_bool('yes')
+        True
+        >>> is_bool('123')
+        False
+    """
     s = text.decode('utf-8') if isinstance(text, bytes) else text
     return s.strip().lower() in BOOL_STRS
 
 
 def is_int(text: Union[str, bytes]) -> bool:
+    """Whether a string can be cast to an int type.
+
+    Args:
+        text: A text to check type
+
+    Returns:
+        True if it can be cast to an int type, False otherwise.
+
+    Examples:
+        >>> is_int('123')
+        True
+        >>> is_int('1.0')
+        False
+    """
     s = text.decode('utf-8') if isinstance(text, bytes) else text
     try:
         int(s)
@@ -23,6 +53,20 @@ def is_int(text: Union[str, bytes]) -> bool:
 
 
 def is_float(text: Union[str, bytes]) -> bool:
+    """Whether a string can be cast to a float type.
+
+    Args:
+        text: A text to check type
+
+    Returns:
+        True if it can be cast to a float type, False otherwise.
+
+    Examples:
+        >>> is_float('1.0')
+        True
+        >>> is_float('123')
+        False
+    """
     s = text.decode('utf-8') if isinstance(text, bytes) else text
     try:
         return str(float(s)) == s
@@ -31,11 +75,45 @@ def is_float(text: Union[str, bytes]) -> bool:
 
 
 def text2bool(text: Union[str, bytes]) -> bool:
+    """Returns the text as a boolean value.
+
+    Args:
+        text: A text to be cast as a boolean type.
+
+    Returns:
+        True if it can be cast to a boolean type and its value is true, False otherwise.
+
+    Examples:
+        >>> text2bool('true')
+        True
+        >>> text2bool('yes')
+        True
+        >>> text2bool('false')
+        False
+        >>> text2bool('123')
+        False
+    """
     s = text.decode('utf-8') if isinstance(text, bytes) else text
     return s.strip().lower() in TRUE_STRS
 
 
-def text2dict(text: Union[str, bytes]) -> Dict[str, Any]:
+def text2dict(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
+    """Returns the text as a JSON object or array.
+
+    Args:
+        text: A text to be cast as a JSON object or array
+
+    Returns:
+        A value of Python dict or sequence type
+
+    Examples:
+        >>> text2dict('{}')
+        {}
+        >>> text2dict('{"key": "value"}')
+        {"key": "value"}
+        >>> text2dict('[1, 2, 3]')
+        [1, 2, 3]
+    """
     json_str = text.decode('utf-8') if isinstance(text, bytes) else text
     return json.loads(json_str)
 
