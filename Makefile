@@ -14,6 +14,7 @@ test:
 
 lint:
 	poetry run flake8 kakaowork tests
+	poetry run pydocstyle
 
 typecheck:
 	poetry run mypy kakaowork
