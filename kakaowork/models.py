@@ -23,6 +23,7 @@ class ErrorCode(StrEnum):
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
     CONVERSATION_NOT_FOUND = 'conversation_not_found'
+    BAD_REQUEST = 'bad_request'
 
 
 class ConversationType(StrEnum):
