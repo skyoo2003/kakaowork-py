@@ -110,7 +110,7 @@ def text2dict(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
         >>> text2dict('{}')
         {}
         >>> text2dict('{"key": "value"}')
-        {"key": "value"}
+        {'key': 'value'}
         >>> text2dict('[1, 2, 3]')
         [1, 2, 3]
     """
@@ -119,6 +119,21 @@ def text2dict(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
 
 
 def exist_kv(key: str, node: Dict[str, Any]) -> bool:
+    """Returns whether a key and its value exist.
+
+    Args:
+        key: A key of a dict
+        node: dict node
+
+    Returns:
+        True if a key and its value exist, False otherwise.
+
+    Examples:
+        >>> exist_kv('', {})
+        False
+        >>> exist_kv('key', {'key': 'value'})
+        True
+    """
     if key in node and node[key]:
         return True
     return False
