@@ -50,6 +50,10 @@ class TestErrorField:
 
 
 class TestUserIdentificationField:
+    def test_user_identification_to_dict(self):
+        uid = UserIdentificationField(type='gmail', value='user@localhost')
+        assert uid.to_dict() == {'type': 'gmail', 'value': 'user@localhost'}
+
     def test_user_identification_from_dict(self):
         with pytest.raises(NoValueError):
             UserIdentificationField.from_dict({})
