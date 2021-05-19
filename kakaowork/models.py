@@ -12,6 +12,10 @@ from kakaowork.utils import text2dict, exist_kv, to_kst, json_default
 
 
 class ErrorCode(StrEnum):
+    # If you return the 'UNKNOWN' error code, even though it's an official error code. please report it!
+    UNKNOWN = 'unknown'
+
+    # Common error codes
     INVALID_PARAMETER = 'invalid_parameter'
     INVALID_AUTHENTICATION = 'invalid_authentication'
     INVALID_REPRESENTATION = 'invalid_representation'
@@ -22,8 +26,13 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
-    CONVERSATION_NOT_FOUND = 'conversation_not_found'
     BAD_REQUEST = 'bad_request'
+
+    # API specific codes
+    USER_NOT_FOUND = 'user_not_found'
+    CONVERSATION_NOT_FOUND = 'conversation_not_found'
+    TEXT_TOO_LONG = 'text_too_long'
+    INVALID_BLOCKS = 'invalid_blocks'
 
 
 class ConversationType(StrEnum):
@@ -63,9 +72,13 @@ class ErrorField(NamedTuple):
     def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
         if not value:
             raise NoValueError('No value to type cast')
+        try:
+            code = ErrorCode(value['code']) if exist_kv('code', value) else None
+        except ValueError:
+            code = ErrorCode.UNKNOWN
         return cls(**dict(
             value,
-            code=ErrorCode(value['code']) if exist_kv('code', value) else None,
+            code=code,
         ))
 
 

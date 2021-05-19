@@ -37,6 +37,10 @@ from kakaowork.utils import to_kst
 
 
 class TestErrorField:
+    def test_error_field_to_dict(self):
+        error = ErrorField(code=ErrorCode.API_NOT_FOUND, message='api not found')
+        assert error.to_dict() == {'code': 'api_not_found', 'message': 'api not found'}
+
     def test_error_field_from_dict(self):
         with pytest.raises(NoValueError):
             ErrorField.from_dict({})
@@ -47,6 +51,13 @@ class TestErrorField:
         })
         assert error.code == ErrorCode.API_NOT_FOUND
         assert error.message == 'api not found'
+
+        error = ErrorField.from_dict({
+            'code': '???',
+            'message': 'unknwon error',
+        })
+        assert error.code == ErrorCode.UNKNOWN
+        assert error.message == 'unknwon error'
 
 
 class TestUserIdentificationField:
