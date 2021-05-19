@@ -78,6 +78,42 @@ class TestUserIdentificationField:
 
 
 class TestUserField:
+    def test_user_field_to_dict(self):
+        user = UserField(
+            id='1234',
+            space_id='123',
+            name='noname',
+            identifications=[UserIdentificationField(type='email', value='user@localhost')],
+            nickname='nm',
+            avatar_url='http://localhost/image.png',
+            department='dp',
+            position='ps',
+            responsibility='leader',
+            tels=['123-123-123'],
+            mobiles=['123-123-123'],
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        )
+        assert user.to_dict() == {
+            'id': '1234',
+            'space_id': '123',
+            'name': 'noname',
+            'identifications': [{'type': 'email', 'value': 'user@localhost'}],
+            'nickname': 'nm',
+            'avatar_url': 'http://localhost/image.png',
+            'department': 'dp',
+            'position': 'ps',
+            'responsibility': 'leader',
+            'tels': ['123-123-123'],
+            'mobiles': ['123-123-123'],
+            'work_start_time': 1617889170,
+            'work_end_time': 1617889170,
+            'vacation_start_time': 1617889170,
+            'vacation_end_time': 1617889170,
+        }
+
     def test_user_field_from_dict(self):
         with pytest.raises(NoValueError):
             UserField.from_dict({})
@@ -120,6 +156,22 @@ class TestUserField:
 
 
 class TestConversationField:
+    def test_conversation_field_to_dict(self):
+        conversation = ConversationField(
+            id='1',
+            type=ConversationType.DM,
+            users_count=2,
+            avatar_url='http://localhost/image.png',
+            name='noname',
+        )
+        assert conversation.to_dict() == {
+            'id': '1',
+            'type': 'dm',
+            'users_count': 2,
+            'avatar_url': 'http://localhost/image.png',
+            'name': 'noname',
+        }
+
     def test_conversation_field_from_dict(self):
         with pytest.raises(NoValueError):
             ConversationField.from_dict({})
@@ -139,6 +191,30 @@ class TestConversationField:
 
 
 class TestMessageField:
+    def test_message_field_to_dict(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        assert message.to_dict() == {
+            'id': '123',
+            'text': 'msg',
+            'user_id': '1',
+            'conversation_id': 1,
+            'send_time': 1617889170,
+            'update_time': 1617889170,
+            'blocks': [{
+                'type': 'text',
+                'text': 'block',
+                'markdown': False,
+            }]
+        }
+
     def test_message_field_from_dict(self):
         with pytest.raises(NoValueError):
             MessageField.from_dict({})
@@ -166,6 +242,36 @@ class TestMessageField:
 
 
 class TestDepartmentField:
+    def test_department_field_to_dict(self):
+        department = DepartmentField(
+            id='1',
+            ids_path='1',
+            parent_id='',
+            space_id='1',
+            name='dep',
+            code='depcode',
+            user_count=1,
+            has_child=False,
+            depth=0,
+            users_ids=[1],
+            leader_ids=[1],
+            ancestry='',
+        )
+        assert department.to_dict() == {
+            'id': '1',
+            'ids_path': '1',
+            'parent_id': '',
+            'space_id': '1',
+            'name': 'dep',
+            'code': 'depcode',
+            'user_count': 1,
+            'has_child': False,
+            'depth': 0,
+            'users_ids': [1],
+            'leader_ids': [1],
+            'ancestry': '',
+        }
+
     def test_department_field_from_dict(self):
         with pytest.raises(NoValueError):
             DepartmentField.from_dict({})
@@ -199,6 +305,30 @@ class TestDepartmentField:
 
 
 class TestSpaceField:
+    def test_space_field_to_dict(self):
+        space = SpaceField(
+            id=1,
+            kakaoi_org_id=1,
+            name='space',
+            color_code='default',
+            color_tone=ColorTone.LIGHT,
+            permitted_ext=['*'],
+            profile_name_format=ProfileNameFormat.NAME_ONLY,
+            profile_position_format=ProfilePositionFormat.POSITION,
+            logo_url='http://localhost/image.png',
+        )
+        assert space.to_dict() == {
+            'id': 1,
+            'kakaoi_org_id': 1,
+            'name': 'space',
+            'color_code': 'default',
+            'color_tone': 'light',
+            'permitted_ext': ['*'],
+            'profile_name_format': 'name_only',
+            'profile_position_format': 'position',
+            'logo_url': 'http://localhost/image.png',
+        }
+
     def test_space_field_from_dict(self):
         with pytest.raises(NoValueError):
             SpaceField.from_dict({})
@@ -226,6 +356,18 @@ class TestSpaceField:
 
 
 class TestBotField:
+    def test_bot_field_to_dict(self):
+        bot = BotField(
+            bot_id=1,
+            title='bot',
+            status=BotStatus.ACTIVATED,
+        )
+        assert bot.to_dict() == {
+            'bot_id': 1,
+            'title': 'bot',
+            'status': 'activated',
+        }
+
     def test_bot_field_from_dict(self):
         with pytest.raises(NoValueError):
             BotField.from_dict({})

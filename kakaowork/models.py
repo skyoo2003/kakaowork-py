@@ -66,7 +66,7 @@ class ErrorField(NamedTuple):
     message: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
@@ -87,7 +87,7 @@ class UserIdentificationField(NamedTuple):
     value: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
@@ -115,8 +115,12 @@ class UserField(NamedTuple):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            self._asdict(),
+            dict(self._asdict()),
             identifications=[uid.to_dict() for uid in self.identifications] if self.identifications else None,
+            work_start_time=int(self.work_start_time.timestamp()) if self.work_start_time else None,
+            work_end_time=int(self.work_end_time.timestamp()) if self.work_end_time else None,
+            vacation_start_time=int(self.vacation_start_time.timestamp()) if self.vacation_start_time else None,
+            vacation_end_time=int(self.vacation_end_time.timestamp()) if self.vacation_end_time else None,
         )
 
     @classmethod
@@ -141,7 +145,7 @@ class ConversationField(NamedTuple):
     name: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
@@ -164,7 +168,9 @@ class MessageField(NamedTuple):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            self._asdict(),
+            dict(self._asdict()),
+            send_time=int(self.send_time.timestamp()) if self.send_time else None,
+            update_time=int(self.update_time.timestamp()) if self.update_time else None,
             blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
         )
 
@@ -201,7 +207,7 @@ class DepartmentField(NamedTuple):
     ancestry: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
@@ -222,7 +228,7 @@ class SpaceField(NamedTuple):
     logo_url: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'SpaceField':
@@ -242,7 +248,7 @@ class BotField(NamedTuple):
     status: BotStatus
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'BotField':
