@@ -4,7 +4,7 @@ from kakaowork.blockkit import (BlockType, ButtonStyle, ButtonActionType, Header
 
 from kakaowork.exceptions import (KakaoworkError, InvalidBlock, InvalidBlockType, NoValueError)
 
-from kakaowork.client import Kakaowork
+from kakaowork.client import (Kakaowork, AsyncKakaowork)
 
 from kakaowork.models import (ErrorCode, ConversationType, ColorTone, ProfileNameFormat, ProfilePositionFormat, BotStatus, ErrorField, UserIdentificationField,
                               UserField, ConversationField, MessageField, DepartmentField, SpaceField, BotField, BaseResponse, UserResponse, UserListResponse,

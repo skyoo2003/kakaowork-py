@@ -23,8 +23,9 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 urllib3 = "^1.14.0"
-click = { version = "^7.1.2", optional = true }
 pytz = "*"
+aiosonic = "^0.10.0"
+click = { version = "^7.1.2", optional = true }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.12.1"
