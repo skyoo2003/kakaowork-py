@@ -6,6 +6,6 @@ Thanks for contributing to kakaowork-py
 
 ### Checklist
 
-- [ ] Added **a news fragment** in the `news` directory to describe this fix with the issue or pr number and the extension such as `.breaking`, `.feature`, `.enhancement`, `.bugfix`, `.deprecation`, `.removal` or `.doc`.
+- [ ] Added **a news fragment** in the `news` directory to describe this fix with the issue or pr number and the extension such as `.breaking`, `.feature`, `.enhancement`, `.bugfix`, `.deprecation`, `.removal`, `.doc` or `.misc`.
 - [ ] Added **any related issues**
 - [ ] Added **tests** for changed code.

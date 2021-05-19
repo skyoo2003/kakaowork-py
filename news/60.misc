@@ -1,0 +1,3 @@
+Changed dependencies
+- pytz>=2015.7
+- click^7.0.0
