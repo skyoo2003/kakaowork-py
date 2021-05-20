@@ -100,7 +100,10 @@ class TestUserField:
             'id': '1234',
             'space_id': '123',
             'name': 'noname',
-            'identifications': [{'type': 'email', 'value': 'user@localhost'}],
+            'identifications': [{
+                'type': 'email',
+                'value': 'user@localhost'
+            }],
             'nickname': 'nm',
             'avatar_url': 'http://localhost/image.png',
             'department': 'dp',
