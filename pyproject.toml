@@ -24,6 +24,7 @@ classifiers = [
 python = "^3.6.1"
 urllib3 = "^1.14.0"
 pytz = ">=2015.7"
+aiosonic = "^0.10.0"
 click = { version = ">=7,<9", optional = true }
 
 [tool.poetry.dev-dependencies]
@@ -32,6 +33,7 @@ towncrier = "^21.3.0"
 pytest = "^6.2.4"
 pytest-cov = "^2.12.0"
 pytest-mock = "^3.6.1"
+pytest-asyncio = "^0.15.1"
 yapf = "^0.31.0"
 flake8 = "^3.9.2"
 mypy = "^0.812"
