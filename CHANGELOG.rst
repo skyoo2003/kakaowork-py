@@ -1,3 +1,8 @@
+Kakaowork 0.3.0 (2021-05-21)Kakaowork 0.3.0 (2021-05-21)
+============================
+
+
+
 Kakaowork 0.3.0 (2021-05-21)
 ============================
 
@@ -14,11 +19,18 @@ Enhancement
 - Updated API specific error codes and unknown. (`#57 <https://github.com/skyoo2003/kakaowork-py/issues/57>`_)
 - Fields' to_dict method is returned as a dict, not an OrderedDict. Also, it's a timestamp, not a datetime. (`#58 <https://github.com/skyoo2003/kakaowork-py/pull/58>`_)
 
+
+Documentation
+-------------
+
+- Added CLI documentation to help to use it (`#33 <https://github.com/skyoo2003/kakaowork-py/issues/33>`_)
+
+
 Miscellaneous
 -------------
 
 - Changed dependencies (`#60 <https://github.com/skyoo2003/kakaowork-py/issues/60>`_)
-  
+
   - pytz>=2015.7
   - click^7.0.0
 
