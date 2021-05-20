@@ -17,11 +17,26 @@ from kakaowork.models import (
     BotResponse,
 )
 from kakaowork.command import (
+    _command_aliases,
     cli,
     departments,
     spaces,
     bots,
 )
+
+
+def test__command_aliases():
+    assert _command_aliases() == {
+        'user': 'users',
+        'conversation': 'conversations',
+        'conv': 'conversations',
+        'message': 'messages',
+        'msg': 'messages',
+        'department': 'departments',
+        'dept': 'departments',
+        'space': 'spaces',
+        'bot': 'bots',
+    }
 
 
 class TestDepartmentsCommand:
@@ -74,11 +89,11 @@ class TestDepartmentsCommand:
 
         res = cli_runner.invoke(departments, ['list', '--limit', 0])
         assert res.exit_code == 2
-        assert "Error: Invalid value for '-l' / '--limit': 0 is not in the valid range of 1 to 100" in res.output
+        assert "Error: Invalid value for '-l' / '--limit': 0 is not in the range" in res.output
 
         res = cli_runner.invoke(departments, ['list', '--limit', 101])
         assert res.exit_code == 2
-        assert "Error: Invalid value for '-l' / '--limit': 101 is not in the valid range of 1 to 100" in res.output
+        assert "Error: Invalid value for '-l' / '--limit': 101 is not in the range" in res.output
 
 
 class TestSpacesCommand:

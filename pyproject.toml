@@ -23,9 +23,9 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 urllib3 = "^1.14.0"
-pytz = "*"
+pytz = ">=2015.7"
 aiosonic = "^0.10.0"
-click = { version = "^7.1.2", optional = true }
+click = { version = ">=7,<9", optional = true }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.12.1"
@@ -105,6 +105,11 @@ title_format = "{name} {version} ({project_date})"
     [[tool.towncrier.type]]
     directory = "doc"
     name = "Documentation"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "misc"
+    name = "Miscellaneous"
     showcontent = true
 
 [build-system]
