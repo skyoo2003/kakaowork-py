@@ -18,6 +18,7 @@ Miscellaneous
 -------------
 
 - Changed dependencies (`#60 <https://github.com/skyoo2003/kakaowork-py/issues/60>`_)
+  
   - pytz>=2015.7
   - click^7.0.0
 
