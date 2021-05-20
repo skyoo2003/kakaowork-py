@@ -34,6 +34,18 @@ from kakaowork.models import (
 from kakaowork.utils import to_kst
 
 
+# Workaround: Returns future if Python version less than 3.8, value otherwise.
+# See https://stackoverflow.com/a/50031903
+def _async_return(value):
+    import sys
+    if sys.version_info < (3, 8):
+        f = asyncio.Future()
+        f.set_result(value)
+        return f
+    else:
+        return value
+
+
 class TestKakaowork:
     def test_kakaowork_properties(self):
         c = Kakaowork(app_key='dummy')
@@ -54,7 +66,6 @@ class TestKakaowork:
 
 
 class TestKakaoworkUsers:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
     user_json = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
@@ -83,20 +94,15 @@ class TestKakaoworkUsers:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
-    def test_kakaowork_users_properties(self):
-        api = Kakaowork.Users(self.client)
-
-        assert api.client == self.client
-        assert api.base_path == BASE_PATH_USERS
-
     def test_kakaowork_users_info(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).info(1)
+        ret = client.users.info(1)
 
         req.assert_called_once_with(
             'GET',
@@ -108,13 +114,14 @@ class TestKakaoworkUsers:
         assert ret.user == self.user_field
 
     def test_kakaowork_users_find_by_email(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).find_by_email('user@domain.com')
+        ret = client.users.find_by_email('user@domain.com')
 
         req.assert_called_once_with(
             'GET',
@@ -126,13 +133,14 @@ class TestKakaoworkUsers:
         assert ret.user == self.user_field
 
     def test_kakaowork_users_find_by_phone_number(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).find_by_phone_number('+82-10-1234-1234')
+        ret = client.users.find_by_phone_number('+82-10-1234-1234')
 
         req.assert_called_once_with(
             'GET',
@@ -144,13 +152,14 @@ class TestKakaoworkUsers:
         assert ret.user == self.user_field
 
     def test_kakaowork_users_list(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_list_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).list(limit=1)
+        ret = client.users.list(limit=1)
 
         req.assert_called_once_with(
             'GET',
@@ -163,13 +172,14 @@ class TestKakaoworkUsers:
         assert ret.users == [self.user_field]
 
     def test_kakaowork_users_set_work_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).set_work_time(
+        ret = client.users.set_work_time(
             user_id=1,
             work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
@@ -184,13 +194,14 @@ class TestKakaoworkUsers:
         assert ret.error is None
 
     def test_kakaowork_users_set_vacation_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Users(self.client).set_vacation_time(
+        ret = client.users.set_vacation_time(
             user_id=1,
             vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
@@ -206,7 +217,6 @@ class TestKakaoworkUsers:
 
 
 class TestKakaoworkConversations:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
     conversation_json = ('{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
@@ -243,13 +253,14 @@ class TestKakaoworkConversations:
     )
 
     def test_kakaowork_conversations_open(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.conversation_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Conversations(self.client).open(user_ids=[1])
+        ret = client.conversations.open(user_ids=[1])
 
         req.assert_called_once_with('POST', 'https://api.kakaowork.com/v1/conversations.open', body=b'{"user_id": 1}')
         assert ret.success is True
@@ -257,13 +268,14 @@ class TestKakaoworkConversations:
         assert ret.conversation == self.conversation_field
 
     def test_kakaowork_conversations_list(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.conversation_list_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Conversations(self.client).list(limit=1)
+        ret = client.conversations.list(limit=1)
 
         req.assert_called_once_with(
             'GET',
@@ -276,13 +288,14 @@ class TestKakaoworkConversations:
         assert ret.conversations == [self.conversation_field]
 
     def test_kakaowork_conversations_users(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_list_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Conversations(self.client).users(conversation_id=1)
+        ret = client.conversations.users(conversation_id=1)
 
         req.assert_called_once_with(
             'GET',
@@ -293,13 +306,14 @@ class TestKakaoworkConversations:
         assert ret.users == [self.user_field]
 
     def test_kakaowork_conversations_invite(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Conversations(self.client).invite(conversation_id=1, user_ids=[1])
+        ret = client.conversations.invite(conversation_id=1, user_ids=[1])
 
         req.assert_called_once_with(
             'POST',
@@ -310,13 +324,14 @@ class TestKakaoworkConversations:
         assert ret.error is None
 
     def test_kakaowork_conversations_kick(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Conversations(self.client).kick(conversation_id=1, user_ids=[1])
+        ret = client.conversations.kick(conversation_id=1, user_ids=[1])
 
         req.assert_called_once_with(
             'POST',
@@ -328,7 +343,6 @@ class TestKakaoworkConversations:
 
 
 class TestKakaoworkMessages:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     message_json = (
         '{"success": true, "error": null, '
@@ -344,13 +358,14 @@ class TestKakaoworkMessages:
     )
 
     def test_kakaowork_messages_send(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.message_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Messages(self.client).send(conversation_id=1, text='msg')
+        ret = client.messages.send(conversation_id=1, text='msg')
 
         req.assert_called_once_with(
             'POST',
@@ -363,7 +378,6 @@ class TestKakaoworkMessages:
 
 
 class TestKakaoworkDepartments:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     department_list_json = (
         '{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
@@ -384,13 +398,14 @@ class TestKakaoworkDepartments:
     )
 
     def test_kakaowork_departments_list(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.department_list_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Departments(self.client).list(limit=1)
+        ret = client.departments.list(limit=1)
 
         req.assert_called_once_with(
             'GET',
@@ -404,7 +419,6 @@ class TestKakaoworkDepartments:
 
 
 class TestKakaoworkSpaces:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     space_json = (
         '{"success": true, "error": null, "space": {"id": 1, "kakaoi_org_id": 1, "name": "name", "color_code": "default", "color_tone": "light", '
@@ -422,13 +436,14 @@ class TestKakaoworkSpaces:
     )
 
     def test_kakaowork_spaces_info(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.space_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Spaces(self.client).info()
+        ret = client.spaces.info()
 
         req.assert_called_once_with(
             'GET',
@@ -440,7 +455,6 @@ class TestKakaoworkSpaces:
 
 
 class TestKakaoworkBots:
-    client = Kakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     bot_json = '{"success": true, "error": null, "info": {"bot_id": 1, "title": "bot", "status": "activated"}}'
     bot_field = BotField(
@@ -450,13 +464,14 @@ class TestKakaoworkBots:
     )
 
     def test_kakaowork_bots_info(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.bot_json,
             status=200,
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = Kakaowork.Bots(self.client).info()
+        ret = client.bots.info()
 
         req.assert_called_once_with(
             'GET',
@@ -467,14 +482,9 @@ class TestKakaoworkBots:
         assert ret.info == self.bot_field
 
 
-def _async_return(value):
-    f = asyncio.Future()
-    f.set_result(value)
-    return f
-
-
 class TestAsyncKakaowork:
-    def test_async_kakaowork_properties(self):
+    @pytest.mark.asyncio
+    async def test_async_kakaowork_properties(self):
         c = AsyncKakaowork(app_key='dummy')
 
         assert c.app_key == 'dummy'
@@ -493,7 +503,6 @@ class TestAsyncKakaowork:
 
 
 class TestAsyncKakaoworkUsers:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
     user_json = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
@@ -522,25 +531,20 @@ class TestAsyncKakaoworkUsers:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
-    def test_async_kakaowork_users_properties(self):
-        api = AsyncKakaowork.Users(self.client)
-
-        assert api.client == self.client
-        assert api.base_path == BASE_PATH_USERS
-
     @pytest.mark.asyncio
     async def test_async_kakaowork_users_info(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).info(1)
+        ret = await client.users.info(1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.info',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'user_id': 1},
         )
         assert ret.success is True
@@ -549,17 +553,18 @@ class TestAsyncKakaoworkUsers:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_users_find_by_email(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).find_by_email('user@domain.com')
+        ret = await client.users.find_by_email('user@domain.com')
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.find_by_email',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'email': 'user@domain.com'},
         )
         assert ret.success is True
@@ -568,17 +573,18 @@ class TestAsyncKakaoworkUsers:
 
     @pytest.mark.asyncio
     async def test_kakaowork_users_find_by_phone_number(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).find_by_phone_number('+82-10-1234-1234')
+        ret = await client.users.find_by_phone_number('+82-10-1234-1234')
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.find_by_phone_number',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'phone_number': '+82-10-1234-1234'},
         )
         assert ret.success is True
@@ -587,17 +593,18 @@ class TestAsyncKakaoworkUsers:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_users_list(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).list(limit=1)
+        ret = await client.users.list(limit=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.list',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'limit': '1'},
         )
         assert ret.success is True
@@ -607,12 +614,13 @@ class TestAsyncKakaoworkUsers:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_users_set_work_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).set_work_time(
+        ret = await client.users.set_work_time(
             user_id=1,
             work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
@@ -621,7 +629,7 @@ class TestAsyncKakaoworkUsers:
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.set_work_time',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"user_id": 1, "work_start_time": 1617889170, "work_end_time": 1617889170}',
         )
         assert ret.success is True
@@ -629,12 +637,13 @@ class TestAsyncKakaoworkUsers:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_users_set_vacation_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Users(self.client).set_vacation_time(
+        ret = await client.users.set_vacation_time(
             user_id=1,
             vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
             vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
@@ -643,7 +652,7 @@ class TestAsyncKakaoworkUsers:
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.set_vacation_time',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"user_id": 1, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}',
         )
         assert ret.success is True
@@ -651,7 +660,6 @@ class TestAsyncKakaoworkUsers:
 
 
 class TestAsyncKakaoworkConversations:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
     conversation_json = ('{"success": true, "error": null, "conversation": {"id": "1", "type": "dm", "users_count": 1, '
@@ -689,17 +697,18 @@ class TestAsyncKakaoworkConversations:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_conversations_open(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.conversation_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Conversations(self.client).open(user_ids=[1])
+        ret = await client.conversations.open(user_ids=[1])
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations.open',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"user_id": 1}',
         )
         assert ret.success is True
@@ -708,17 +717,18 @@ class TestAsyncKakaoworkConversations:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_conversations_list(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.conversation_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Conversations(self.client).list(limit=1)
+        ret = await client.conversations.list(limit=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations.list',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'limit': '1'},
         )
         assert ret.success is True
@@ -728,17 +738,18 @@ class TestAsyncKakaoworkConversations:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_conversations_users(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Conversations(self.client).users(conversation_id=1)
+        ret = await client.conversations.users(conversation_id=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations/1/users',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
         )
         assert ret.success is True
         assert ret.error is None
@@ -746,17 +757,18 @@ class TestAsyncKakaoworkConversations:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_conversations_invite(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Conversations(self.client).invite(conversation_id=1, user_ids=[1])
+        ret = await client.conversations.invite(conversation_id=1, user_ids=[1])
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations/1/invite',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"user_ids": [1]}',
         )
         assert ret.success is True
@@ -764,17 +776,18 @@ class TestAsyncKakaoworkConversations:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_conversations_kick(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Conversations(self.client).kick(conversation_id=1, user_ids=[1])
+        ret = await client.conversations.kick(conversation_id=1, user_ids=[1])
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations/1/kick',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"user_ids": [1]}',
         )
         assert ret.success is True
@@ -782,7 +795,6 @@ class TestAsyncKakaoworkConversations:
 
 
 class TestAsyncKakaoworkMessages:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     message_json = (
         '{"success": true, "error": null, '
@@ -799,17 +811,18 @@ class TestAsyncKakaoworkMessages:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_messages_send(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.message_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Messages(self.client).send(conversation_id=1, text='msg')
+        ret = await client.messages.send(conversation_id=1, text='msg')
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/messages.send',
             method='POST',
-            headers=self.client.headers,
+            headers=client.headers,
             data=b'{"conversation_id": 1, "text": "msg", "blocks": []}',
         )
         assert ret.success is True
@@ -818,7 +831,6 @@ class TestAsyncKakaoworkMessages:
 
 
 class TestAsyncKakaoworkDepartments:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     department_list_json = (
         '{"success": true, "error": null, "cursor": null, "departments": [{"id": "1", "ids_path": "1", "parent_id": "0", "space_id": "1", '
@@ -840,17 +852,18 @@ class TestAsyncKakaoworkDepartments:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_departments_list(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.department_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Departments(self.client).list(limit=1)
+        ret = await client.departments.list(limit=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/departments.list',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
             params={'limit': '1'},
         )
         assert ret.success is True
@@ -860,7 +873,6 @@ class TestAsyncKakaoworkDepartments:
 
 
 class TestAsyncKakaoworkSpaces:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     space_json = (
         '{"success": true, "error": null, "space": {"id": 1, "kakaoi_org_id": 1, "name": "name", "color_code": "default", "color_tone": "light", '
@@ -879,17 +891,18 @@ class TestAsyncKakaoworkSpaces:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_spaces_info(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.space_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Spaces(self.client).info()
+        ret = await client.spaces.info()
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/spaces.info',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
         )
         assert ret.success is True
         assert ret.error is None
@@ -897,7 +910,6 @@ class TestAsyncKakaoworkSpaces:
 
 
 class TestAsyncKakaoworkBots:
-    client = AsyncKakaowork(app_key='dummy')
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     bot_json = '{"success": true, "error": null, "info": {"bot_id": 1, "title": "bot", "status": "activated"}}'
     bot_field = BotField(
@@ -908,17 +920,18 @@ class TestAsyncKakaoworkBots:
 
     @pytest.mark.asyncio
     async def test_async_kakaowork_bots_info(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.bot_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await AsyncKakaowork.Bots(self.client).info()
+        ret = await client.bots.info()
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/bots.info',
             method='GET',
-            headers=self.client.headers,
+            headers=client.headers,
         )
         assert ret.success is True
         assert ret.error is None
