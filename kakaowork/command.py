@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Dict
 
 import click
 
@@ -14,7 +14,30 @@ from kakaowork.models import (
     DepartmentListResponse,
 )
 from kakaowork.blockkit import Block, BlockType
-from kakaowork.utils import normalize_token, command_aliases, parse_kv_pairs
+from kakaowork.utils import normalize_token, parse_kv_pairs
+
+
+def _command_aliases() -> Dict[str, str]:
+    aliases: Dict[str, str] = {}
+    aliases.update({alias: 'users' for alias in ('user', )})
+    aliases.update({alias: 'conversations'
+                    for alias in (
+                        'conversation',
+                        'conv',
+                    )})
+    aliases.update({alias: 'messages'
+                    for alias in (
+                        'message',
+                        'msg',
+                    )})
+    aliases.update({alias: 'departments'
+                    for alias in (
+                        'department',
+                        'dept',
+                    )})
+    aliases.update({alias: 'spaces' for alias in ('space', )})
+    aliases.update({alias: 'bots' for alias in ('bot', )})
+    return aliases
 
 
 class AliasedGroup(click.Group):
@@ -25,7 +48,7 @@ class AliasedGroup(click.Group):
             return command
 
         # Returns a command if it matches an alias
-        aliases = command_aliases()
+        aliases = _command_aliases()
         if cmd_name in aliases:
             actual_cmd_name = aliases[cmd_name]
             return super().get_command(ctx, actual_cmd_name)
