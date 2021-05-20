@@ -6,7 +6,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/kakaowork)](https://pypi.org/project/kakaowork)
 [![Downloads](https://pepy.tech/badge/kakaowork)](https://pepy.tech/project/kakaowork)
 [![GitHub](https://img.shields.io/github/license/skyoo2003/kakaowork-py)](LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/kakaowork-py/badge/?version=stable)](https://kakaowork-py.readthedocs.io/en/stable)
+[![Documentation Status](https://readthedocs.org/projects/kakaowork-py/badge/?version=latest)](https://kakaowork-py.readthedocs.io/en/latest)
 [![CI](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/skyoo2003/kakaowork-py/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/skyoo2003/kakaowork-py/branch/master/graph/badge.svg?token=J6NQHDJEMZ)](https://codecov.io/gh/skyoo2003/kakaowork-py)
 
