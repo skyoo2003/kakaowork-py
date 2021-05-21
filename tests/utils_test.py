@@ -5,7 +5,7 @@ from pytz import utc
 
 from kakaowork.blockkit import DividerBlock
 from kakaowork.consts import KST
-from kakaowork.utils import (is_bool, is_int, is_float, text2bool, text2dict, exist_kv, to_kst, normalize_token, command_aliases, parse_kv_pairs, json_default)
+from kakaowork.utils import (is_bool, is_int, is_float, text2bool, text2dict, exist_kv, to_kst, normalize_token, parse_kv_pairs, json_default)
 
 
 def test_is_bool():
@@ -79,20 +79,6 @@ def test_normalize_token():
     assert normalize_token('--TO-STR') == '--to-str'
     assert normalize_token('--to_str') == '--to-str'
     assert normalize_token('--TO_STR') == '--to-str'
-
-
-def test_command_aliases():
-    assert command_aliases() == {
-        'user': 'users',
-        'conversation': 'conversations',
-        'conv': 'conversations',
-        'message': 'messages',
-        'msg': 'messages',
-        'department': 'departments',
-        'dept': 'departments',
-        'space': 'spaces',
-        'bot': 'bots',
-    }
 
 
 def test_parse_kv_pairs():

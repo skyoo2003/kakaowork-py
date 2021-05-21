@@ -12,6 +12,10 @@ from kakaowork.utils import text2dict, exist_kv, to_kst, json_default
 
 
 class ErrorCode(StrEnum):
+    # If you return the 'UNKNOWN' error code, even though it's an official error code. please report it!
+    UNKNOWN = 'unknown'
+
+    # Common error codes
     INVALID_PARAMETER = 'invalid_parameter'
     INVALID_AUTHENTICATION = 'invalid_authentication'
     INVALID_REPRESENTATION = 'invalid_representation'
@@ -22,8 +26,13 @@ class ErrorCode(StrEnum):
     TOO_MANY_REQUESTS = 'too_many_requests'
     EXPIRED_AUTHENTICATION = 'expired_authentication'
     MISSING_PARAMETER = 'missing_parameter'
-    CONVERSATION_NOT_FOUND = 'conversation_not_found'
     BAD_REQUEST = 'bad_request'
+
+    # API specific codes
+    USER_NOT_FOUND = 'user_not_found'
+    CONVERSATION_NOT_FOUND = 'conversation_not_found'
+    TEXT_TOO_LONG = 'text_too_long'
+    INVALID_BLOCKS = 'invalid_blocks'
 
 
 class ConversationType(StrEnum):
@@ -57,15 +66,19 @@ class ErrorField(NamedTuple):
     message: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
         if not value:
             raise NoValueError('No value to type cast')
+        try:
+            code = ErrorCode(value['code']) if exist_kv('code', value) else None
+        except ValueError:
+            code = ErrorCode.UNKNOWN
         return cls(**dict(
             value,
-            code=ErrorCode(value['code']) if exist_kv('code', value) else None,
+            code=code,
         ))
 
 
@@ -74,7 +87,7 @@ class UserIdentificationField(NamedTuple):
     value: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
@@ -102,8 +115,12 @@ class UserField(NamedTuple):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            self._asdict(),
+            dict(self._asdict()),
             identifications=[uid.to_dict() for uid in self.identifications] if self.identifications else None,
+            work_start_time=int(self.work_start_time.timestamp()) if self.work_start_time else None,
+            work_end_time=int(self.work_end_time.timestamp()) if self.work_end_time else None,
+            vacation_start_time=int(self.vacation_start_time.timestamp()) if self.vacation_start_time else None,
+            vacation_end_time=int(self.vacation_end_time.timestamp()) if self.vacation_end_time else None,
         )
 
     @classmethod
@@ -128,7 +145,7 @@ class ConversationField(NamedTuple):
     name: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
@@ -151,7 +168,9 @@ class MessageField(NamedTuple):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            self._asdict(),
+            dict(self._asdict()),
+            send_time=int(self.send_time.timestamp()) if self.send_time else None,
+            update_time=int(self.update_time.timestamp()) if self.update_time else None,
             blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
         )
 
@@ -188,7 +207,7 @@ class DepartmentField(NamedTuple):
     ancestry: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
@@ -209,7 +228,7 @@ class SpaceField(NamedTuple):
     logo_url: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'SpaceField':
@@ -229,7 +248,7 @@ class BotField(NamedTuple):
     status: BotStatus
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return dict(self._asdict())
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'BotField':
