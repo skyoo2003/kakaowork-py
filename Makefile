@@ -15,6 +15,7 @@ test:
 lint:
 	poetry run flake8 kakaowork tests
 	poetry run pydocstyle
+	poetry run pre-commit run --all-files --show-diff-on-failure
 
 typecheck:
 	poetry run mypy kakaowork
