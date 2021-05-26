@@ -1,22 +1,14 @@
 class KakaoworkError(Exception):
-    """
-    Kakaowork base error
-    """
+    """Kakaowork base error."""
 
 
 class InvalidBlockType(KakaoworkError):
-    """
-    Invalid block type
-    """
+    """Invalid block type."""
 
 
 class InvalidBlock(KakaoworkError):
-    """
-    Invalid block
-    """
+    """Invalid block."""
 
 
 class NoValueError(KakaoworkError):
-    """
-    No value error
-    """
+    """No value error."""

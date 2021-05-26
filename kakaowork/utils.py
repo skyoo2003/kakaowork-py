@@ -140,6 +140,17 @@ def exist_kv(key: str, node: Dict[str, Any]) -> bool:
 
 
 def to_kst(timestamp: Union[int, datetime]) -> datetime:
+    """Returns KST(Korea Standard Time) from timestamp.
+
+    Args:
+        timestamp: an unix timestamp or a datetime instance
+
+    Returns:
+        a KST timezone datetime instance
+
+    Raises:
+        ValueError: If the 'timestamp' is not one of int or datetime type.
+    """
     if isinstance(timestamp, int):
         return datetime.fromtimestamp(timestamp, tz=utc).astimezone(KST)
     elif isinstance(timestamp, datetime):
@@ -153,6 +164,20 @@ def to_kst(timestamp: Union[int, datetime]) -> datetime:
 
 
 def normalize_token(token: str) -> str:
+    """Returns normalized token.
+
+    Args:
+        token: A string to normalize
+
+    Returns:
+        A normalized token
+
+    Examples:
+        >>> normalize_token('to_str')
+        to-str
+        >>> normalize_token('TO_STR')
+        to-str
+    """
     token = token.lower()
     if '_' in token:
         return token.replace('_', '-')
@@ -160,6 +185,20 @@ def normalize_token(token: str) -> str:
 
 
 def parse_kv_pairs(line: str) -> Dict[str, Any]:
+    r"""Returns parsed key-value pairs from a text.
+
+    Args:
+        line: A string text
+
+    Returns:
+        a dict from parsed key-value pairs text
+
+    Examples:
+        >>> parse_kv_pairs('key=value')
+        {'key': 'value'}
+        >>> parse_kv_pairs("key1=value1 key2='value2,still_value2,not_key1=\"not_value1\"'")
+        {'key1': 'value1', 'key2': 'value2,still_value2,not_key1="not_value1"'}
+    """
     lexer = shlex(line, posix=True)
     lexer.wordchars += "=.-_()/:+*^&%$#@!?|{}"
     kvs: Dict[str, Any] = {}
@@ -177,6 +216,17 @@ def parse_kv_pairs(line: str) -> Dict[str, Any]:
 
 
 def json_default(value: Any) -> Any:
+    """Returns defaults for JSON serialization.
+
+    Args:
+        value: Any instance
+
+    Returns:
+        Serializable value
+
+    Raises:
+        TypeError: If the 'value' is not supported for serialization.
+    """
     from kakaowork.blockkit import Block
 
     if isinstance(value, Block):
