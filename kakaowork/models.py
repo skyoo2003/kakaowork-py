@@ -8,7 +8,7 @@ from pytz import utc, timezone
 from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
 from kakaowork.exceptions import NoValueError
-from kakaowork.utils import text2dict, exist_kv, to_kst, json_default
+from kakaowork.utils import text2json, exist_kv, to_kst, json_default
 
 
 class ErrorCode(StrEnum):
@@ -295,7 +295,7 @@ class BaseResponse(ABC, object):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -333,7 +333,7 @@ class UserResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         r = cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -384,7 +384,7 @@ class UserListResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'UserListResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -415,7 +415,7 @@ class ConversationResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'ConversationResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -457,7 +457,7 @@ class ConversationListResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'ConversationListResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -490,7 +490,7 @@ class MessageResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'MessageResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -532,7 +532,7 @@ class DepartmentListResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]):
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -568,7 +568,7 @@ class SpaceResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'SpaceResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
@@ -594,7 +594,7 @@ class BotResponse(BaseResponse):
 
     @classmethod
     def from_json(cls, value: Union[str, bytes]) -> 'BotResponse':
-        data = text2dict(value)
+        data = dict(text2json(value))
         return cls(**dict(
             data,
             error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,

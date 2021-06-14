@@ -5,13 +5,12 @@ from pytz import timezone
 
 
 class StrEnum(str, Enum):
-    """
-    String enumeration type
-    """
+    """String enumeration type."""
     pass
 
 
 class Limit(IntEnum):
+    """Limit enumeration type."""
     MIN = 1
     DEFAULT = 10
     MAX = 100

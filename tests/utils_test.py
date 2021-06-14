@@ -5,7 +5,7 @@ from pytz import utc
 
 from kakaowork.blockkit import DividerBlock
 from kakaowork.consts import KST
-from kakaowork.utils import (is_bool, is_int, is_float, text2bool, text2dict, exist_kv, to_kst, normalize_token, parse_kv_pairs, json_default)
+from kakaowork.utils import (is_bool, is_int, is_float, text2bool, text2json, exist_kv, to_kst, normalize_token, parse_kv_pairs, json_default)
 
 
 def test_is_bool():
@@ -49,13 +49,13 @@ def test_text2bool():
     assert text2bool('n') is False
 
 
-def test_text2dict():
+def test_text2json():
     with pytest.raises(ValueError):
-        text2dict('')
+        text2json('')
     with pytest.raises(ValueError):
-        text2dict(b'')
-    assert text2dict('{"key": "value"}') == {"key": "value"}
-    assert text2dict(b'{"key": "value"}') == {"key": "value"}
+        text2json(b'')
+    assert text2json('{"key": "value"}') == {"key": "value"}
+    assert text2json(b'{"key": "value"}') == {"key": "value"}
 
 
 def test_exist_kv():

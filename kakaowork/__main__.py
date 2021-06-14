@@ -1,7 +1,7 @@
 import sys
 
 
-def main():
+def main():  # noqa: D103
     try:
         from kakaowork.command import cli, CLIOptions
         cli(obj=CLIOptions())

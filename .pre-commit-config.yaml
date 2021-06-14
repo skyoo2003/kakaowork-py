@@ -20,3 +20,13 @@ repos:
     rev: v0.31.0
     hooks:
       - id: yapf
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.0.0
+    hooks:
+      # The pydocstyle hook's args must have the same contents as .pydocstyle
+      # See http://www.pydocstyle.org/en/stable/usage.html#usage-with-the-pre-commit-git-hooks-framework
+      - id: pydocstyle
+        args:
+          - --ignore=D100,D203,D204,D213,D215,D400,D401,D404,D406,D407,D408,D409,D413
+          - --match='^(?!client|models|blockkit).*\.py$'
+          - --match-dir=kakaowork
