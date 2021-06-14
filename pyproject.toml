@@ -40,7 +40,7 @@ mypy = "^0.902"
 coverage = "^5.5"
 tox = "^3.23.1"
 sphinx = "^4.0.1"
-types-pytz = "^0.1.0"
+types-pytz = "^0.1.1"
 
 [tool.poetry.extras]
 cli = ['click']
