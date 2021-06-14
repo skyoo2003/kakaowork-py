@@ -40,7 +40,7 @@ def _command_aliases() -> Dict[str, str]:
     return aliases
 
 
-class AliasedGroup(click.Group):
+class _AliasedGroup(click.Group):
     def get_command(self, ctx: click.Context, cmd_name: str):
         # Return a command immediately if exact match
         command = super().get_command(ctx, cmd_name)
@@ -56,7 +56,7 @@ class AliasedGroup(click.Group):
         ctx.fail(f"No such command: {cmd_name}.")
 
 
-class BlockKitParamType(click.ParamType):
+class _BlockKitParamType(click.ParamType):
     name = 'blockkit'
 
     def convert(self, value: str, param: Optional[click.Parameter], ctx: Optional[click.Context]) -> Any:
@@ -74,7 +74,7 @@ class BlockKitParamType(click.ParamType):
         return 'BLOCKKIT'
 
 
-class CLIOptions:
+class _CLIOptions:
     def __init__(self) -> None:
         self.app_key: str = ''
 
@@ -84,31 +84,31 @@ def _echo(ctx: click.Context, resp: BaseResponse) -> None:
     ctx.exit(0 if resp.success else 1)
 
 
-BLOCKKIT = BlockKitParamType()
+BLOCKKIT = _BlockKitParamType()
 
 
-@click.group(name='kakaowork', cls=AliasedGroup, context_settings=dict(token_normalize_func=normalize_token), help='Kakaowork CLI using Client API')
+@click.group(name='kakaowork', cls=_AliasedGroup, context_settings=dict(token_normalize_func=normalize_token), help='Kakaowork CLI using Client API')
 @click.pass_context
 @click.option('-k', '--app-key', default=os.environ.get('KAKAOWORK_APP_KEY'), help='Kakaowork app key. See https://docs.kakaoi.ai/kakao_work/botdevguide')
-def cli(ctx: click.Context, app_key: str):
+def cli(ctx: click.Context, app_key: str):  # noqa: D103
     if not app_key:
         click.echo(click.style('No app key! Please pass your app key using option(-k, --app-key) or environment variable($KAKAOWORK_APP_KEY)', fg='red'))
         ctx.exit(1)
-    opts: CLIOptions = ctx.ensure_object(CLIOptions)
+    opts: _CLIOptions = ctx.ensure_object(_CLIOptions)
     opts.app_key = app_key
 
 
 @cli.group(help='Manages users in a workspace')
 @click.pass_context
-def users(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def users(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @users.command(name='list', help="Show a list of details of users belonging to a workspace")
 @click.pass_context
 @click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
-def users_list(ctx: click.Context, limit: int):
-    opts: CLIOptions = ctx.obj
+def users_list(ctx: click.Context, limit: int):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.users.list(limit=limit)
     if not r.success:
@@ -128,8 +128,8 @@ def users_list(ctx: click.Context, limit: int):
 @click.option('-u', '--user-id', type=int, help='Only display the user by ID')
 @click.option('-e', '--email', help='Only display the user by E-mail')
 @click.option('-m', '--mobile', help='Only display the user by Mobile')
-def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optional[str] = None, mobile: Optional[str] = None):
-    opts: CLIOptions = ctx.obj
+def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optional[str] = None, mobile: Optional[str] = None):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
 
     if user_id is not None:
@@ -151,11 +151,11 @@ def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optiona
 def users_set(ctx: click.Context,
               user_id: int,
               work_time: Optional[Tuple[datetime, datetime]] = None,
-              vacation_time: Optional[Tuple[datetime, datetime]] = None):
+              vacation_time: Optional[Tuple[datetime, datetime]] = None):  # noqa: D103
     if not (work_time or vacation_time):
         raise click.BadParameter("You must enter either '--work-time (-wt)' or '--vacation-time (-vt)'")
 
-    opts: CLIOptions = ctx.obj
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
 
     if work_time:
@@ -175,15 +175,15 @@ def users_set(ctx: click.Context,
 
 @cli.group(help='Manages conversations in a workspace')
 @click.pass_context
-def conversations(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def conversations(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @conversations.command(name='open', help='Creates a conversation')
 @click.pass_context
 @click.argument('user_ids', nargs=-1, type=int)
-def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):
-    opts: CLIOptions = ctx.obj
+def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).conversations.open(user_ids=list(user_ids))
     _echo(ctx, r)
 
@@ -191,8 +191,8 @@ def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):
 @conversations.command(name='list', help='Lists conversations')
 @click.pass_context
 @click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
-def conversations_list(ctx: click.Context, limit: int):
-    opts: CLIOptions = ctx.obj
+def conversations_list(ctx: click.Context, limit: int):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.conversations.list(limit=limit)
     if not r.success:
@@ -210,8 +210,8 @@ def conversations_list(ctx: click.Context, limit: int):
 @conversations.command(name='users', help='Lists users of a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
-def conversations_users(ctx: click.Context, conversation_id: int):
-    opts: CLIOptions = ctx.obj
+def conversations_users(ctx: click.Context, conversation_id: int):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.conversations.users(conversation_id=conversation_id)
     _echo(ctx, r)
@@ -221,8 +221,8 @@ def conversations_users(ctx: click.Context, conversation_id: int):
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('user_ids', nargs=-1, type=int)
-def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):
-    opts: CLIOptions = ctx.obj
+def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.conversations.invite(conversation_id=conversation_id, user_ids=list(user_ids))
     _echo(ctx, r)
@@ -232,8 +232,8 @@ def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tup
 @click.pass_context
 @click.argument('conversation_id', type=int)
 @click.argument('user_ids', nargs=-1, type=int)
-def conversations_kick(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):
-    opts: CLIOptions = ctx.obj
+def conversations_kick(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.conversations.kick(conversation_id=conversation_id, user_ids=list(user_ids))
     _echo(ctx, r)
@@ -241,8 +241,8 @@ def conversations_kick(ctx: click.Context, conversation_id: int, user_ids: Tuple
 
 @cli.group(help='Manages a message in a conversation')
 @click.pass_context
-def messages(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def messages(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @messages.command(name='send', help='Sends a message in a conversation')
@@ -250,23 +250,23 @@ def messages(ctx: click.Context):
 @click.argument('conversation_id', type=int)
 @click.argument('text', type=str)
 @click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True, help='One or many blocks to send in a message')
-def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):
-    opts: CLIOptions = ctx.obj
+def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
     _echo(ctx, r)
 
 
 @cli.group(help='Display departments in a workspace')
 @click.pass_context
-def departments(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def departments(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @departments.command(name='list', help='Lists departments ina workspace')
 @click.pass_context
 @click.option('-l', '--limit', type=click.IntRange(Limit.MIN, Limit.MAX), default=Limit.DEFAULT, show_default=True, help='Maximum paging size')
-def departments_list(ctx: click.Context, limit: int):
-    opts: CLIOptions = ctx.obj
+def departments_list(ctx: click.Context, limit: int):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
     r = client.departments.list(limit=limit)
     if not r.success:
@@ -283,27 +283,27 @@ def departments_list(ctx: click.Context, limit: int):
 
 @cli.group(help='Shows the info of a space in a workspace')
 @click.pass_context
-def spaces(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def spaces(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @spaces.command(name='info', help='Display the info of a space')
 @click.pass_context
-def spaces_info(ctx: click.Context):
-    opts: CLIOptions = ctx.obj
+def spaces_info(ctx: click.Context):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).spaces.info()
     _echo(ctx, r)
 
 
 @cli.group(help='Shows the info of a bot in a workspace')
 @click.pass_context
-def bots(ctx: click.Context):
-    ctx.ensure_object(CLIOptions)
+def bots(ctx: click.Context):  # noqa: D103
+    ctx.ensure_object(_CLIOptions)
 
 
 @bots.command(name='info', help='Display the info of a bot')
 @click.pass_context
-def bots_info(ctx: click.Context):
-    opts: CLIOptions = ctx.obj
+def bots_info(ctx: click.Context):  # noqa: D103
+    opts: _CLIOptions = ctx.obj
     r = Kakaowork(app_key=opts.app_key).bots.info()
     _echo(ctx, r)
