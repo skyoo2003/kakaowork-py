@@ -696,7 +696,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-pytz"
-version = "0.1.0"
+version = "0.1.1"
 description = "Typing stubs for pytz"
 category = "dev"
 optional = false
@@ -769,7 +769,7 @@ cli = ["click"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "e82485c6c170e51eb1cabc75fc54d4a7c03fed130bd4bdaad81da78eeea6ec33"
+content-hash = "8928561a1d375bda3a95eff7d312e464a63643dd15a313b052d954e71ce8990f"
 
 [metadata.files]
 aiosonic = [
@@ -1173,7 +1173,7 @@ typed-ast = [
     {file = "typed_ast-1.4.3.tar.gz", hash = "sha256:fb1bbeac803adea29cedd70781399c99138358c26d05fcbd23c13016b7f5ec65"},
 ]
 types-pytz = [
-    {file = "types_pytz-0.1.0-py2.py3-none-any.whl", hash = "sha256:82b3b8cfeb1496cb856cbb7fd514ad21f70e1b2dc765cba42f55bb2927375c8e"},
+    {file = "types_pytz-0.1.1-py2.py3-none-any.whl", hash = "sha256:1f444521f32c02ec18f17b3ae2b0dffcfb10c0e92f9d93ace14daf6b646edac4"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
