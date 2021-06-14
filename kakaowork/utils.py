@@ -174,9 +174,9 @@ def normalize_token(token: str) -> str:
 
     Examples:
         >>> normalize_token('to_str')
-        to-str
+        'to-str'
         >>> normalize_token('TO_STR')
-        to-str
+        'to-str'
     """
     token = token.lower()
     if '_' in token:
