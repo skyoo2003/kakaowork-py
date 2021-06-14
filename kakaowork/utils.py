@@ -97,7 +97,7 @@ def text2bool(text: Union[str, bytes]) -> bool:
     return s.strip().lower() in TRUE_STRS
 
 
-def text2dict(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
+def text2json(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
     """Returns the text as a JSON object or array.
 
     Args:
@@ -107,11 +107,11 @@ def text2dict(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
         A value of Python dict or sequence type
 
     Examples:
-        >>> text2dict('{}')
+        >>> text2json('{}')
         {}
-        >>> text2dict('{"key": "value"}')
+        >>> text2json('{"key": "value"}')
         {'key': 'value'}
-        >>> text2dict('[1, 2, 3]')
+        >>> text2json('[1, 2, 3]')
         [1, 2, 3]
     """
     json_str = text.decode('utf-8') if isinstance(text, bytes) else text
