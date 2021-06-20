@@ -638,12 +638,16 @@ class BlockKitBuilder:
         return self.vars['blocks'] if 'blocks' in self.vars and self.vars['blocks'] else []
 
     @blocks.setter
-    def blocks(self, value: List[Block]):
+    def blocks(self, value: List[Union[Block, dict]]):
         self.vars['blocks'] = []
         for item in value:
             self.add_block(item)
 
-    def add_block(self, block: Block):
+    def add_block(self, block: Union[Block, dict]):
+        if isinstance(block, dict):
+            if 'type' not in block:
+                raise InvalidBlock()
+            block = BlockType.block_cls(block['type']).from_dict(block)
         if not block.validate():
             raise InvalidBlock()
         self.vars['blocks'].append(block)
@@ -653,3 +657,12 @@ class BlockKitBuilder:
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), default=json_default)
+
+    def load(self, path: str) -> None:
+        with open(path, 'r') as f:
+            r = json.load(f)
+        for key, value in r.items():
+            if key == 'type':
+                self.type = BlockKitType(value)
+            else:
+                setattr(self, key, value)
