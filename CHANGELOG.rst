@@ -1,3 +1,18 @@
+Kakaowork 0.3.1 (2021-06-20)
+============================
+
+New Features
+------------
+
+- Added BlockKitBuilder API to load from JSON file (`#37 <https://github.com/skyoo2003/kakaowork-py/issues/37>`_)
+
+
+Documentation
+-------------
+
+- Added docstrings for APIs documentation (`#32 <https://github.com/skyoo2003/kakaowork-py/issues/32>`_)
+
+
 Kakaowork 0.3.0 (2021-05-21)
 ============================
 
