@@ -1,4 +1,8 @@
+import json
+from unittest.mock import mock_open
+
 import pytest
+from pytest_mock import MockerFixture
 
 from kakaowork.blockkit import (
     BlockType,
@@ -21,7 +25,7 @@ from kakaowork.blockkit import (
     SelectBlock,
     BlockKitBuilder,
 )
-from kakaowork.exceptions import InvalidBlockType, NoValueError
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
 
 
 class TestTextBlock:
@@ -758,13 +762,56 @@ class TestBlockKitBuilder:
             builder.text = 'hello'
         assert 'text' not in builder.vars
 
-    def test_blockkit_builder_add_block(self):
+    def test_blockkit_builder_message_add_block(self):
         divider = DividerBlock()
 
         builder = BlockKitBuilder(type=BlockKitType.MESSAGE)
         builder.add_block(divider)
-        assert builder.blocks == [divider]
+        assert builder.blocks[-1] == divider
+
+        with pytest.raises(InvalidBlock):  # No type
+            builder.add_block({'text': 'hello', 'markdown': False})
+
+        with pytest.raises(InvalidBlock):  # No text
+            builder.add_block({'type': 'text', 'text': '', 'markdown': False})
+
+        builder.add_block({'type': 'text', 'text': 'hello', 'markdown': False})
+        assert builder.blocks[-1] == TextBlock(text='hello', markdown=False)
+
+    def test_blockkit_builder_modal_add_block(self):
+        divider = DividerBlock()
 
         builder = BlockKitBuilder(type=BlockKitType.MODAL)
         builder.add_block(divider)
-        assert builder.blocks == [divider]
+        assert builder.blocks[-1] == divider
+
+        with pytest.raises(InvalidBlock):  # No type
+            builder.add_block({'text': 'hello', 'markdown': False})
+
+        with pytest.raises(InvalidBlock):  # No text
+            builder.add_block({'type': 'text', 'text': '', 'markdown': False})
+
+        builder.add_block({'type': 'text', 'text': 'hello', 'markdown': False})
+        assert builder.blocks[-1] == TextBlock(text='hello', markdown=False)
+
+    def test_blockkit_builder_load(self, mocker: MockerFixture):
+        json_str = json.dumps({
+            'type': 'message',
+            'text': 'hello',
+            'blocks': [
+                {
+                    'type': 'text',
+                    'text': 'block',
+                    'markdown': False
+                },
+            ],
+        })
+        mocker.patch('builtins.open', mock_open(read_data=json_str))
+
+        builder = BlockKitBuilder(type=BlockKitType.MESSAGE)
+        builder.load('/path/to/jsonfile')
+
+        assert builder.type == BlockKitType.MESSAGE
+        assert builder.vars == {'text': 'hello', 'blocks': [TextBlock(text='block', markdown=False)]}
+        assert builder.text == 'hello'
+        assert builder.blocks == [TextBlock(text='block', markdown=False)]
