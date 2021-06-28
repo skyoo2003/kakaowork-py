@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kakaowork"
-version = "0.3.2"
+version = "0.3.3"
 description = "Kakaowork Python client"
 authors = ["Sung-Kyu Yoo <skyoo2003@gmail.com>"]
 license = "MIT"

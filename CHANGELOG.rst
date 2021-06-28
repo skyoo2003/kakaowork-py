@@ -1,3 +1,12 @@
+Kakaowork 0.3.3 (2021-06-29)
+============================
+
+Bug Fixes
+---------
+
+- Fixed an exception occurs when missing fields from the models (`#82 <https://github.com/skyoo2003/kakaowork-py/issues/82>`_)
+
+
 Kakaowork 0.3.2 (2021-06-28)
 ============================
 
