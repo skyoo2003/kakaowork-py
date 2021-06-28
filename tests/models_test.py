@@ -1,3 +1,4 @@
+import warnings
 from datetime import datetime, timezone
 
 import pytest
@@ -59,6 +60,16 @@ class TestErrorField:
         assert error.code == ErrorCode.UNKNOWN
         assert error.message == 'unknwon error'
 
+        with warnings.catch_warnings(record=True) as w:
+            ErrorField.from_dict({
+                'code': 'api_not_found',
+                'message': 'api not found',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
+
 
 class TestUserIdentificationField:
     def test_user_identification_to_dict(self):
@@ -76,6 +87,16 @@ class TestUserIdentificationField:
         assert uid.type == 'gmail'
         assert uid.value == 'user@localhost'
 
+        with warnings.catch_warnings(record=True) as w:
+            UserIdentificationField.from_dict({
+                'type': 'gmail',
+                'value': 'user@localhost',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
+
 
 class TestUserField:
     def test_user_field_to_dict(self):
@@ -83,6 +104,7 @@ class TestUserField:
             id='1234',
             space_id='123',
             name='noname',
+            display_name='dpname',
             identifications=[UserIdentificationField(type='email', value='user@localhost')],
             nickname='nm',
             avatar_url='http://localhost/image.png',
@@ -100,6 +122,7 @@ class TestUserField:
             'id': '1234',
             'space_id': '123',
             'name': 'noname',
+            'display_name': 'dpname',
             'identifications': [{
                 'type': 'email',
                 'value': 'user@localhost'
@@ -157,6 +180,32 @@ class TestUserField:
         assert user.work_end_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
         assert user.work_start_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
 
+        with warnings.catch_warnings(record=True) as w:
+            UserField.from_dict({
+                'avatar_url': None,
+                'department': 'test',
+                'id': '1234',
+                'identifications': [{
+                    'type': 'email',
+                    'value': 'user@localhost'
+                }],
+                'mobiles': [],
+                'name': 'noname',
+                'nickname': None,
+                'position': None,
+                'responsibility': 'leader',
+                'space_id': '123',
+                'tels': [],
+                'vacation_end_time': 1617889170,
+                'vacation_start_time': 1617889170,
+                'work_end_time': 1617889170,
+                'work_start_time': 1617889170,
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
+
 
 class TestConversationField:
     def test_conversation_field_to_dict(self):
@@ -191,6 +240,19 @@ class TestConversationField:
         assert conversation.users_count == 2
         assert conversation.avatar_url is None
         assert conversation.name == 'noname'
+
+        with warnings.catch_warnings(record=True) as w:
+            ConversationField.from_dict({
+                'id': '1',
+                'type': 'dm',
+                'users_count': 2,
+                'avatar_url': None,
+                'name': 'noname',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
 
 
 class TestMessageField:
@@ -233,7 +295,7 @@ class TestMessageField:
                 'type': 'text',
                 'text': 'block',
                 'markdown': False,
-            }]
+            }],
         })
         assert message.id == '123'
         assert message.text == 'msg'
@@ -242,6 +304,25 @@ class TestMessageField:
         assert message.send_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
         assert message.update_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
         assert message.blocks == [TextBlock(text='block', markdown=False)]
+
+        with warnings.catch_warnings(record=True) as w:
+            MessageField.from_dict({
+                'id': '123',
+                'text': 'msg',
+                'user_id': '1',
+                'conversation_id': 1,
+                'send_time': 1617889170,
+                'update_time': 1617889170,
+                'blocks': [{
+                    'type': 'text',
+                    'text': 'block',
+                    'markdown': False,
+                }],
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
 
 
 class TestDepartmentField:
@@ -306,6 +387,26 @@ class TestDepartmentField:
         assert department.leader_ids == [1]
         assert department.ancestry == ''
 
+        with warnings.catch_warnings(record=True) as w:
+            DepartmentField.from_dict({
+                'id': '1',
+                'ids_path': '1',
+                'parent_id': '',
+                'space_id': '1',
+                'name': 'dep',
+                'code': 'depcode',
+                'user_count': 1,
+                'has_child': False,
+                'depth': 0,
+                'users_ids': [1],
+                'leader_ids': [1],
+                'ancestry': '',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
+
 
 class TestSpaceField:
     def test_space_field_to_dict(self):
@@ -357,6 +458,23 @@ class TestSpaceField:
         assert space.profile_position_format == ProfilePositionFormat.POSITION
         assert space.logo_url == 'http://localhost/image.png'
 
+        with warnings.catch_warnings(record=True) as w:
+            SpaceField.from_dict({
+                'id': 1,
+                'kakaoi_org_id': 1,
+                'name': 'space',
+                'color_code': 'default',
+                'color_tone': 'light',
+                'permitted_ext': ['*'],
+                'profile_name_format': 'name_only',
+                'profile_position_format': 'position',
+                'logo_url': 'http://localhost/image.png',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
+
 
 class TestBotField:
     def test_bot_field_to_dict(self):
@@ -383,6 +501,17 @@ class TestBotField:
         assert bot.bot_id == 1
         assert bot.title == 'bot'
         assert bot.status == BotStatus.ACTIVATED
+
+        with warnings.catch_warnings(record=True) as w:
+            BotField.from_dict({
+                'bot_id': 1,
+                'title': 'bot',
+                'status': 'activated',
+                '_extra': 'extra!!',
+            })
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert str(w[-1].message) == 'There are missing fields: _extra'
 
 
 class TestBaseResponse:
@@ -478,6 +607,7 @@ class TestUserResponse:
             space_id=12,
             identifications=[UserIdentificationField(type='email', value='user@localhost')],
             name='name',
+            display_name='dp',
             nickname='nickname',
             department='dep',
             position=ProfilePositionFormat.POSITION,
@@ -491,8 +621,9 @@ class TestUserResponse:
             vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserResponse(success=True, user=user)
+        print(r.to_json())
         assert r.to_json() == (
-            '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
+            '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", "display_name": "dp", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
             '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
@@ -611,6 +742,7 @@ class TestUserListResponse:
             space_id=12,
             identifications=[UserIdentificationField(type='email', value='user@localhost')],
             name='name',
+            display_name='dp',
             nickname='nickname',
             department='dep',
             position=ProfilePositionFormat.POSITION,
@@ -625,7 +757,7 @@ class TestUserListResponse:
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_json() == (
-            '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+            '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", "display_name": "dp", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
             '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
