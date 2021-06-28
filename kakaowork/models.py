@@ -1,7 +1,8 @@
 import json
+import warnings
 from abc import ABC, abstractclassmethod
 from datetime import datetime
-from typing import Optional, NamedTuple, Union, Any, Dict, List
+from typing import Optional, NamedTuple, Union, Any, Dict, List, Sequence
 
 from pytz import utc, timezone
 
@@ -9,6 +10,19 @@ from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
 from kakaowork.exceptions import NoValueError
 from kakaowork.utils import text2json, exist_kv, to_kst, json_default
+
+
+def _drop_missing(kv: Dict[str, Any], keys: Sequence[str]) -> Dict[str, Any]:
+    mk: List[str] = []  # missing keys
+    ret: Dict[str, Any] = {}
+    for k, v in kv.items():
+        if k not in keys:
+            mk.append(k)
+            continue
+        ret[k] = v
+    if mk:
+        warnings.warn(f'There are missing fields: {",".join(mk)}', category=RuntimeWarning, stacklevel=2)
+    return ret
 
 
 class ErrorCode(StrEnum):
@@ -77,7 +91,7 @@ class ErrorField(NamedTuple):
         except ValueError:
             code = ErrorCode.UNKNOWN
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             code=code,
         ))
 
@@ -93,13 +107,14 @@ class UserIdentificationField(NamedTuple):
     def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(value))
+        return cls(**dict(_drop_missing(value, cls._fields)))
 
 
 class UserField(NamedTuple):
     id: str
     space_id: str
     name: str
+    display_name: Optional[str] = None
     identifications: Optional[List[UserIdentificationField]] = None
     nickname: Optional[str] = None
     avatar_url: Optional[str] = None
@@ -128,7 +143,7 @@ class UserField(NamedTuple):
         if not value:
             raise NoValueError('No value to type cast')
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             identifications=[UserIdentificationField.from_dict(item) for item in value['identifications']] if exist_kv('identifications', value) else None,
             work_start_time=to_kst(value['work_start_time']) if exist_kv('work_start_time', value) else None,
             work_end_time=to_kst(value['work_end_time']) if exist_kv('work_end_time', value) else None,
@@ -152,7 +167,7 @@ class ConversationField(NamedTuple):
         if not value:
             raise NoValueError('No value to type cast')
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             type=ConversationType(value['type']),
         ))
 
@@ -185,7 +200,7 @@ class MessageField(NamedTuple):
                 block_cls = BlockType.block_cls(kv['type'])
                 blocks.append(block_cls.from_dict(kv))
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             send_time=to_kst(value['send_time']) if exist_kv('send_time', value) else None,
             update_time=to_kst(value['update_time']) if exist_kv('update_time', value) else None,
             blocks=blocks,
@@ -213,7 +228,7 @@ class DepartmentField(NamedTuple):
     def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(value))
+        return cls(**dict(_drop_missing(value, cls._fields)))
 
 
 class SpaceField(NamedTuple):
@@ -235,7 +250,7 @@ class SpaceField(NamedTuple):
         if not value:
             raise NoValueError('No value to type cast')
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             color_tone=ColorTone(value['color_tone']),
             profile_name_format=ProfileNameFormat(value['profile_name_format']),
             profile_position_format=ProfilePositionFormat(value['profile_position_format']),
@@ -255,7 +270,7 @@ class BotField(NamedTuple):
         if not value:
             raise NoValueError('No value to type cast')
         return cls(**dict(
-            value,
+            _drop_missing(value, cls._fields),
             status=BotStatus(value['status']),
         ))
 
