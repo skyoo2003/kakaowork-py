@@ -1,6 +1,6 @@
 [[package]]
 name = "aiosonic"
-version = "0.10.1"
+version = "0.11.0"
 description = "Async http client"
 category = "main"
 optional = false
@@ -12,7 +12,7 @@ hpack = "4.0.0"
 hyperframe = "6.0.0"
 
 [package.extras]
-test = ["aiodns (==2.0.0)", "aiohttp (==3.7.3)", "asgiref (==3.3.1)", "async-timeout (==3.0.1)", "attrs (==20.3.0)", "certifi (==2020.12.5)", "cffi (==1.14.5)", "chardet (==3.0.4)", "click (==7.1.2)", "coverage (==5.4)", "coveralls (==3.0.0)", "django (==3.1.5)", "docopt (==0.6.2)", "filelock (==3.0.12)", "h11 (==0.12.0)", "httpcore (==0.12.2)", "httpx (==0.16.1)", "idna (==2.10)", "iniconfig (==1.1.1)", "multidict (==5.1.0)", "packaging (==20.8)", "pluggy (==0.13.1)", "py (==1.10.0)", "pycares (==3.1.1)", "pycparser (==2.20)", "pyparsing (==2.4.7)", "pytest-aiohttp (==0.3.0)", "pytest-asyncio (==0.14.0)", "pytest-cov (==2.11.1)", "pytest-django (==4.1.0)", "pytest-mock (==3.5.1)", "pytest-sugar (==0.9.4)", "pytest-timeout (==1.4.2)", "pytest (==6.2.2)", "pytz (==2020.5)", "requests (==2.25.1)", "sniffio (==1.2.0)", "sqlparse (==0.4.1)", "termcolor (==1.1.0)", "toml (==0.10.2)", "typing-extensions (==3.7.4.3)", "urllib3 (==1.26.3)", "uvicorn (==0.13.3)", "yarl (==1.6.3)", "mypy-extensions (==0.4.3)", "mypy (==0.800)", "pytest-mypy (==0.8.0)", "typed-ast (==1.4.2)"]
+test = ["aiodns (==3.0.0)", "aiohttp (==3.7.4.post0)", "anyio (==3.2.0)", "asgiref (==3.3.4)", "async-timeout (==3.0.1)", "attrs (==21.2.0)", "certifi (==2021.5.30)", "cffi (==1.14.5)", "chardet (==4.0.0)", "click (==8.0.1)", "coverage (==5.5)", "coveralls (==3.1.0)", "django (==3.2.4)", "docopt (==0.6.2)", "filelock (==3.0.12)", "h11 (==0.12.0)", "httpcore (==0.13.6)", "httpx (==0.18.2)", "idna (==2.10)", "iniconfig (==1.1.1)", "multidict (==5.1.0)", "packaging (==20.9)", "pluggy (==0.13.1)", "py (==1.10.0)", "pycares (==4.0.0)", "pycparser (==2.20)", "pyparsing (==2.4.7)", "pytest-aiohttp (==0.3.0)", "pytest-asyncio (==0.15.1)", "pytest-cov (==2.12.1)", "pytest-django (==4.4.0)", "pytest-mock (==3.6.1)", "pytest-sugar (==0.9.4)", "pytest-timeout (==1.4.2)", "pytest (==6.2.4)", "pytz (==2021.1)", "requests (==2.25.1)", "sniffio (==1.2.0)", "sqlparse (==0.4.1)", "termcolor (==1.1.0)", "toml (==0.10.2)", "typing-extensions (==3.10.0.0)", "urllib3 (==1.26.5)", "uvicorn (==0.14.0)", "yarl (==1.6.3)", "mypy-extensions (==0.4.3)", "mypy (==0.902)", "pytest-mypy (==0.8.1)"]
 
 [[package]]
 name = "alabaster"
@@ -783,11 +783,11 @@ cli = ["click"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "87ad306b81711d357523408fd48e5b4119b55166acd9e29559012c400dc14d0f"
+content-hash = "d0868264e8cff1b2a2fcda9501930be39f8a8ed7212eed6336e4c957307cfefd"
 
 [metadata.files]
 aiosonic = [
-    {file = "aiosonic-0.10.1.tar.gz", hash = "sha256:e38b71bf63731d3adc59f430f226e87d86b68204f6e23c7b85cd6cc8b7a3e1d3"},
+    {file = "aiosonic-0.11.0.tar.gz", hash = "sha256:e1d7940d7ae467e818b215f79122d3c8950cf7525e5927296dafb905baf81d5d"},
 ]
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
