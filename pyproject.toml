@@ -39,7 +39,7 @@ flake8 = "^3.9.2"
 mypy = "^0.910"
 coverage = "^5.5"
 tox = "^3.23.1"
-sphinx = "^4.0.3"
+sphinx = "^4.1.0"
 types-pytz = "^2021.1.0"
 pydocstyle = "^6.0.0"
 
