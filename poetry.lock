@@ -1,6 +1,6 @@
 [[package]]
 name = "aiosonic"
-version = "0.11.3"
+version = "0.12.0"
 description = "Async http client"
 category = "main"
 optional = false
@@ -783,11 +783,11 @@ cli = ["click"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "ccd3ad5050a72cddf4f056d811f66834a7f9050f1135d8dc0323c006fb1490a9"
+content-hash = "bff7fa43b18123d690d4a0f52e6709eb93cbaf2f567a68ebeb42c4f9ddace529"
 
 [metadata.files]
 aiosonic = [
-    {file = "aiosonic-0.11.3.tar.gz", hash = "sha256:d2f1533c7d13be4a9a92e66c403b8aebf01402f59e4d021dfb61b055d11737f5"},
+    {file = "aiosonic-0.12.0.tar.gz", hash = "sha256:43415ca49154ccfda2e045967601c50780a2b5463f911bdca96ec8621db250ca"},
 ]
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
