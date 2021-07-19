@@ -1,9 +1,10 @@
 import json
+from time import sleep
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 
+import urllib3
 import aiosonic
-from urllib3 import PoolManager
 
 from kakaowork.consts import (
     Limit,
@@ -28,6 +29,18 @@ from kakaowork.models import (
 )
 from kakaowork.blockkit import Block
 from kakaowork.utils import json_default
+from kakaowork.ratelimit import TokenBucketRateLimiter
+
+
+def _respect_rate_limit(self, limiter: TokenBucketRateLimiter, response: urllib3.HTTPResponse):
+    if 200 <= response.status < 300 and limiter.capacity <= 0:
+        capacity = int(response.headers.get('ratelimit-limit', 0))
+        limiter.capacity(capacity)
+    elif response.status == 429:
+        capacity = int(response.headers.get('ratelimit-limit', 0))
+        wait_time = int(response.headers.get('retry-after', 0))
+        sleep(wait_time)
+        limiter.reset(capacity=capacity)
 
 
 class Kakaowork:
@@ -35,38 +48,47 @@ class Kakaowork:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_USERS):
             self.client = client
             self.base_path = base_path
+            self.limiter = TokenBucketRateLimiter(0, 60.0)
 
         def info(self, user_id: int) -> UserResponse:
-            r = self.client.http.request(
-                'GET',
-                f'{self.client.base_url}{self.base_path}.info',
-                fields={'user_id': user_id},
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'GET',
+                    f'{self.client.base_url}{self.base_path}.info',
+                    fields={'user_id': user_id},
+                )
+            _respect_rate_limit(r)
             return UserResponse.from_json(r.data)
 
         def find_by_email(self, email: str) -> UserResponse:
-            r = self.client.http.request(
-                'GET',
-                f'{self.client.base_url}{self.base_path}.find_by_email',
-                fields={'email': email},
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'GET',
+                    f'{self.client.base_url}{self.base_path}.find_by_email',
+                    fields={'email': email},
+                )
+            _respect_rate_limit(r)
             return UserResponse.from_json(r.data)
 
         def find_by_phone_number(self, phone_number: str) -> UserResponse:
-            r = self.client.http.request(
-                'GET',
-                f'{self.client.base_url}{self.base_path}.find_by_phone_number',
-                fields={'phone_number': phone_number},
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'GET',
+                    f'{self.client.base_url}{self.base_path}.find_by_phone_number',
+                    fields={'phone_number': phone_number},
+                )
+            _respect_rate_limit(r)
             return UserResponse.from_json(r.data)
 
         def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> UserListResponse:
             fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': str(limit)}
-            r = self.client.http.request(
-                'GET',
-                f'{self.client.base_url}{self.base_path}.list',
-                fields=fields,
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'GET',
+                    f'{self.client.base_url}{self.base_path}.list',
+                    fields=fields,
+                )
+            _respect_rate_limit(r)
             return UserListResponse.from_json(r.data)
 
         def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
@@ -75,11 +97,13 @@ class Kakaowork:
                 'work_start_time': int(work_start_time.timestamp()),
                 'work_end_time': int(work_end_time.timestamp()),
             }
-            r = self.client.http.request(
-                'POST',
-                f'{self.client.base_url}{self.base_path}.set_work_time',
-                body=json.dumps(payload).encode('utf-8'),
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'POST',
+                    f'{self.client.base_url}{self.base_path}.set_work_time',
+                    body=json.dumps(payload).encode('utf-8'),
+                )
+            _respect_rate_limit(r)
             return BaseResponse.from_json(r.data)
 
         def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
@@ -88,11 +112,13 @@ class Kakaowork:
                 'vacation_start_time': int(vacation_start_time.timestamp()),
                 'vacation_end_time': int(vacation_end_time.timestamp()),
             }
-            r = self.client.http.request(
-                'POST',
-                f'{self.client.base_url}{self.base_path}.set_vacation_time',
-                body=json.dumps(payload).encode('utf-8'),
-            )
+            with self.limiter:
+                r = self.client.http.request(
+                    'POST',
+                    f'{self.client.base_url}{self.base_path}.set_vacation_time',
+                    body=json.dumps(payload).encode('utf-8'),
+                )
+            _respect_rate_limit(r)
             return BaseResponse.from_json(r.data)
 
     class Conversations:
@@ -202,7 +228,7 @@ class Kakaowork:
     def __init__(self, *, app_key: str, base_url: Optional[str] = BASE_URL):
         self.app_key = app_key
         self.base_url = base_url
-        self.http = PoolManager(headers=self.headers, retries=3, maxsize=5)
+        self.http = urllib3.PoolManager(headers=self.headers, retries=3, maxsize=5)
 
     @property
     def headers(self) -> Dict[str, Any]:
