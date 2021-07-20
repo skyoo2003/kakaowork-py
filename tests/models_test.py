@@ -621,7 +621,6 @@ class TestUserResponse:
             vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
         r = UserResponse(success=True, user=user)
-        print(r.to_json())
         assert r.to_json() == (
             '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", "display_name": "dp", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '

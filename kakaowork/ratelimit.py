@@ -1,4 +1,5 @@
-from time import perf_counter, sleep
+import time
+import asyncio
 from threading import RLock
 from typing import Optional
 from functools import wraps
@@ -6,7 +7,7 @@ from functools import wraps
 
 class RateLimiter:
     """Rate limiter class."""
-    def __init__(self, capacity: int, refill_rate: float) -> None:
+    def __init__(self, *, capacity: int, refill_rate: float) -> None:
         """Initialize the rate limiter.
 
         Args:
@@ -15,9 +16,9 @@ class RateLimiter:
         """
         self._capacity = capacity
         self._refill_rate = refill_rate
-        self._ticker = perf_counter  # Ref https://www.webucator.com/article/python-clocks-explained/
+        self._timer = time.perf_counter  # Ref https://www.webucator.com/article/python-clocks-explained/
         self._lock = RLock()
-        self._last_refill_time = self._ticker()
+        self._last_refill_time = self._timer()
         self._tokens = capacity
 
     def __call__(self, f):
@@ -39,10 +40,23 @@ class RateLimiter:
             return self
         wait_time = self.limit()
         if wait_time > 0.0:
-            sleep(wait_time)
+            time.sleep(wait_time)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the rate limiter."""
+        pass
+
+    async def __aenter__(self) -> 'RateLimiter':
+        """Enter the rate limiter."""
+        if self.capacity <= 0:
+            return self
+        wait_time = self.limit()
+        if wait_time > 0.0:
+            await asyncio.sleep(wait_time)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit the rate limiter."""
         pass
 
@@ -88,7 +102,7 @@ class RateLimiter:
                 self._capacity = capacity
             if refill_rate is not None:
                 self._refill_rate = refill_rate
-            self._last_refill_time = self._ticker()
+            self._last_refill_time = self._timer()
             self._tokens = self._capacity
 
     def limit(self, requests: int = 1) -> float:
@@ -101,7 +115,7 @@ class RateLimiter:
             A float number of seconds to wait before next request
         """
         with self._lock:
-            refill_time = self._ticker()
+            refill_time = self._timer()
             refill_tokens = int((refill_time - self._last_refill_time) / self.refill_rate)
             if refill_tokens > 0:
                 self._tokens = min(self.capacity, self._tokens + refill_tokens)
