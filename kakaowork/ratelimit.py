@@ -1,7 +1,7 @@
 import time
 import asyncio
 from threading import RLock
-from typing import Optional
+from typing import Optional, Callable, List, Dict
 from functools import wraps
 
 
@@ -21,14 +21,14 @@ class RateLimiter:
         self._last_refill_time = self._timer()
         self._tokens = capacity
 
-    def __call__(self, f):
+    def __call__(self, f: Callable):
         """Decorator to rate limit a function.
 
         Args:
             f: Function to rate limit.
         """
         @wraps(f)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: List, **kwargs: Dict):
             with self:
                 return f(*args, **kwargs)
 
@@ -118,12 +118,12 @@ class RateLimiter:
             refill_time = self._timer()
             refill_tokens = int((refill_time - self._last_refill_time) / self.refill_rate)
             if refill_tokens > 0:
-                self._tokens = min(self.capacity, self._tokens + refill_tokens)
+                self._tokens = min(self._capacity, self._tokens + refill_tokens)
                 self._last_refill_time = refill_time
 
             wait_time = 0.0
-            if self._tokens - requests > 0:
+            if self._tokens - requests >= 0:
                 self._tokens -= requests
             else:
-                wait_time = (self._tokens - requests) * self.refill_rate
+                wait_time = abs(self._tokens - requests) * self.refill_rate
             return wait_time
