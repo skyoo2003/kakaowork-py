@@ -32,18 +32,7 @@ from kakaowork.models import (
     BotField,
 )
 from kakaowork.utils import to_kst
-
-
-# Workaround: Returns future if Python version less than 3.8, value otherwise.
-# See https://stackoverflow.com/a/50031903
-def _async_return(value):
-    import sys
-    if sys.version_info < (3, 8):
-        f = asyncio.Future()
-        f.set_result(value)
-        return f
-    else:
-        return value
+from tests import _async_return
 
 
 class TestKakaowork:

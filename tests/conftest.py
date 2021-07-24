@@ -1,6 +1,8 @@
 import pytest
 from click.testing import CliRunner
 
+from tests import Clock
+
 
 @pytest.fixture(autouse=True)
 def urllib3_never_request(monkeypatch):
@@ -17,3 +19,8 @@ def cli_runner_isolated():
     cli_runner = CliRunner()
     with cli_runner.isolated_filesystem():
         yield cli_runner
+
+
+@pytest.fixture(scope="function")
+def timer():
+    return Clock()
