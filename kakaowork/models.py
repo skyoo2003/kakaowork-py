@@ -275,6 +275,139 @@ class BotField(NamedTuple):
         ))
 
 
+class ReactiveType(StrEnum):
+    SUBMIT_ACTION = "submit_action"
+    SUBMIT_MODAL = "submission"
+    REQUEST_MODAL = "request_modal"
+
+
+class BaseReactiveBody(ABC, object):
+    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str) -> None:
+        self.type = type
+        self.action_time = action_time
+        self.message = message
+        self.value = value
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, BaseReactiveBody):
+            return False
+        return self.to_dict() == value.to_dict()
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), default=json_default)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            type=self.type,
+            action_time=self.action_time,
+            message=self.message,
+            value=self.value,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
+        data = dict(text2json(value))
+        return cls(**dict(
+            data,
+            type=ReactiveType(data['type']),
+            message=MessageField.from_dict(data['message']),
+        ))
+
+
+class SubmitActionReactiveBody(BaseReactiveBody):
+    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str, action_name: str, react_user_id: int) -> None:
+        super().__init__(type=type, action_time=action_time, message=message, value=value)
+        self.action_name = action_name
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            action_name=self.action_name,
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+        data = dict(text2json(value))
+        return cls(**data)
+
+
+class SubmitModalReactiveBody(BaseReactiveBody):
+    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str, actions: Dict, react_user_id: int) -> None:
+        super().__init__(type=type, action_time=action_time, message=message, value=value)
+        self.actions = actions
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            actions=self.actions,
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+        data = dict(text2json(value))
+        return cls(**data)
+
+
+class RequestModalReactiveBody(BaseReactiveBody):
+    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str, react_user_id: int) -> None:
+        super().__init__(type=type, action_time=action_time, message=message, value=value)
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+        data = dict(text2json(value))
+        return cls(**data)
+
+
+class RequestModalReactiveResponse(object):
+    def __init__(self, *, title: str, accept: str, decline: str, blocks: List[Block], value: str) -> None:
+        self.view = dict(
+            title=self.title,
+            accept=self.accept,
+            decline=self.decline,
+            blocks=[b.to_dict() for b in self.blocks] if self.blocks else [],
+            value=self.value,
+        )
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, BaseReactiveBody):
+            return False
+        return self.to_dict() == value.to_dict()
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), default=json_default)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(view=self.view)
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+        data = dict(text2json(value))
+        return cls(**data)
+
+
 class BaseResponse(ABC, object):
     def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None):
         self.success = success if success is not None else True
