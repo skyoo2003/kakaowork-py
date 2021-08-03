@@ -41,7 +41,7 @@ coverage = "^5.5"
 tox = "^3.24.1"
 sphinx = "^4.1.2"
 types-pytz = "^2021.1.0"
-pydocstyle = "^6.0.0"
+pydocstyle = "^6.1.1"
 
 [tool.poetry.extras]
 cli = ['click']
