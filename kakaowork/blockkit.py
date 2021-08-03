@@ -1,7 +1,7 @@
 import os
 import json
 from enum import unique
-from abc import ABC, abstractmethod, abstractclassmethod
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
 from urllib.parse import urlparse
 
@@ -127,7 +127,8 @@ class Block(ABC):
     def validate(self) -> bool:
         raise NotImplementedError()
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'Block':
         raise NotImplementedError()
 
