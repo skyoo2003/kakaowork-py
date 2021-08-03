@@ -1,3 +1,26 @@
+Kakaowork 0.4.0 (2021-08-04)
+============================
+
+New Features
+------------
+
+- Support Reactive Web API (`#89 <https://github.com/skyoo2003/kakaowork-py/issues/89>`_)
+
+
+Enhancement
+-----------
+
+- Client-side rate limiting according to official documentation. (`#94 <https://github.com/skyoo2003/kakaowork-py/issues/94>`_)
+
+
+Miscellaneous
+-------------
+
+- Changed aiosonic dependency (`#85 <https://github.com/skyoo2003/kakaowork-py/issues/85>`_)
+
+  - aiosonic>=0.10,<0.12
+
+
 Kakaowork 0.3.3 (2021-06-29)
 ============================
 
