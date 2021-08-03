@@ -127,7 +127,6 @@ class Block(ABC):
     def validate(self) -> bool:
         raise NotImplementedError()
 
-    @classmethod
     @abstractclassmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'Block':
         raise NotImplementedError()
