@@ -311,7 +311,7 @@ class BaseReactiveBody(ABC, object):
         )
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
+    def from_json(cls, value: Union[str, bytes]) -> 'BaseReactiveBody':
         data = dict(text2json(value))
         return cls(**dict(
             data,
@@ -334,7 +334,7 @@ class SubmitActionReactiveBody(BaseReactiveBody):
         )
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+    def from_json(cls, value: Union[str, bytes]) -> 'SubmitActionReactiveBody':
         data = dict(text2json(value))
         return cls(**data)
 
@@ -353,7 +353,7 @@ class SubmitModalReactiveBody(BaseReactiveBody):
         )
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+    def from_json(cls, value: Union[str, bytes]) -> 'SubmitModalReactiveBody':
         data = dict(text2json(value))
         return cls(**data)
 
@@ -370,7 +370,7 @@ class RequestModalReactiveBody(BaseReactiveBody):
         )
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveBody':
         data = dict(text2json(value))
         return cls(**data)
 
@@ -378,11 +378,11 @@ class RequestModalReactiveBody(BaseReactiveBody):
 class RequestModalReactiveResponse(object):
     def __init__(self, *, title: str, accept: str, decline: str, blocks: List[Block], value: str) -> None:
         self.view = dict(
-            title=self.title,
-            accept=self.accept,
-            decline=self.decline,
-            blocks=[b.to_dict() for b in self.blocks] if self.blocks else [],
-            value=self.value,
+            title=title,
+            accept=accept,
+            decline=decline,
+            blocks=[b.to_dict() for b in blocks] if blocks else [],
+            value=value,
         )
 
     def __str__(self):
@@ -403,7 +403,7 @@ class RequestModalReactiveResponse(object):
         return dict(view=self.view)
 
     @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
+    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveResponse':
         data = dict(text2json(value))
         return cls(**data)
 
