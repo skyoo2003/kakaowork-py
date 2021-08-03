@@ -23,6 +23,7 @@ Developer's Guide
 .. toctree::
   :maxdepth: 2
 
+  dev/reactive_handler
   dev/contributing
 
 Additional Notes

@@ -8,7 +8,7 @@ from pytz import utc, timezone
 
 from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
-from kakaowork.exceptions import NoValueError
+from kakaowork.exceptions import NoValueError, InvalidReactiveBody
 from kakaowork.utils import text2json, exist_kv, to_kst, json_default
 
 
@@ -272,6 +272,189 @@ class BotField(NamedTuple):
         return cls(**dict(
             _drop_missing(value, cls._fields),
             status=BotStatus(value['status']),
+        ))
+
+
+class ReactiveType(StrEnum):
+    SUBMIT_ACTION = "submit_action"
+    SUBMIT_MODAL = "submission"
+    REQUEST_MODAL = "request_modal"
+
+
+class BaseReactiveBody(ABC, object):
+    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str) -> None:
+        self.type = type
+        self.action_time = action_time
+        self.message = message
+        self.value = value
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, BaseReactiveBody):
+            return False
+        return self.to_dict() == value.to_dict()
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), default=json_default)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            type=self.type,
+            action_time=self.action_time,
+            message=self.message.to_dict(),
+            value=self.value,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'BaseReactiveBody':
+        data = dict(text2json(value))
+        if 'type' not in data:
+            raise InvalidReactiveBody('No type')
+        return cls(**dict(
+            data,
+            type=ReactiveType(data['type']),
+            message=MessageField.from_dict(data['message']),
+        ))
+
+
+class SubmitActionReactiveBody(BaseReactiveBody):
+    def __init__(self, *, action_time: str, message: MessageField, value: str, action_name: str, react_user_id: int) -> None:
+        super().__init__(type=ReactiveType.SUBMIT_ACTION, action_time=action_time, message=message, value=value)
+        self.action_name = action_name
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            action_name=self.action_name,
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'SubmitActionReactiveBody':
+        data = dict(text2json(value))
+        if 'type' not in data or data['type'] != ReactiveType.SUBMIT_ACTION:
+            raise InvalidReactiveBody('No type or invalid')
+        data = {k: v for k, v in data.items() if k != 'type'}
+        return cls(**dict(
+            data,
+            message=MessageField.from_dict(data['message']),
+            action_name=data['action_name'],
+            react_user_id=int(data['react_user_id']),
+        ))
+
+
+class SubmitModalReactiveBody(BaseReactiveBody):
+    def __init__(self, *, action_time: str, message: MessageField, value: str, actions: Dict[str, Any], react_user_id: int) -> None:
+        super().__init__(type=ReactiveType.SUBMIT_MODAL, action_time=action_time, message=message, value=value)
+        self.actions = actions
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            actions=self.actions,
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'SubmitModalReactiveBody':
+        data = dict(text2json(value))
+        if 'type' not in data or data['type'] != ReactiveType.SUBMIT_MODAL:
+            raise InvalidReactiveBody('No type or invalid')
+        data = {k: v for k, v in data.items() if k != 'type'}
+        return cls(**dict(
+            data,
+            message=MessageField.from_dict(data['message']),
+            actions=data['actions'],
+            react_user_id=int(data['react_user_id']),
+        ))
+
+
+class RequestModalReactiveBody(BaseReactiveBody):
+    def __init__(self, *, action_time: str, message: MessageField, value: str, react_user_id: int) -> None:
+        super().__init__(type=ReactiveType.REQUEST_MODAL, action_time=action_time, message=message, value=value)
+        self.react_user_id = react_user_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            super().to_dict(),
+            react_user_id=self.react_user_id,
+        )
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveBody':
+        data = dict(text2json(value))
+        if 'type' not in data or data['type'] != ReactiveType.REQUEST_MODAL:
+            raise InvalidReactiveBody('No type or invalid')
+        data = {k: v for k, v in data.items() if k != 'type'}
+        return cls(**dict(
+            data,
+            message=MessageField.from_dict(data['message']),
+            react_user_id=int(data['react_user_id']),
+        ))
+
+
+class ModalReactiveView(NamedTuple):
+    title: str
+    accept: str
+    decline: str
+    blocks: List[Block]
+    value: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            dict(self._asdict()),
+            blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
+        )
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'ModalReactiveView':
+        if not value:
+            raise NoValueError('No value to type cast')
+        blocks: List[Block] = []
+        if exist_kv('blocks', value):
+            for kv in value['blocks']:
+                block_cls = BlockType.block_cls(kv['type'])
+                blocks.append(block_cls.from_dict(kv))
+        return cls(**dict(
+            _drop_missing(value, cls._fields),
+            blocks=blocks,
+        ))
+
+
+class RequestModalReactiveResponse(object):
+    def __init__(self, *, view: ModalReactiveView) -> None:
+        self.view = view
+
+    def __str__(self):
+        return self.to_json()
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, RequestModalReactiveResponse):
+            return False
+        return self.to_dict() == value.to_dict()
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict(), default=json_default)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(view=self.view.to_dict())
+
+    @classmethod
+    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveResponse':
+        data = dict(text2json(value))
+        return cls(**dict(
+            data,
+            view=ModalReactiveView.from_dict(data['view']),
         ))
 
 

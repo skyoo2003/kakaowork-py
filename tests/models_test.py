@@ -24,6 +24,13 @@ from kakaowork.models import (
     DepartmentField,
     SpaceField,
     BotField,
+    ReactiveType,
+    BaseReactiveBody,
+    SubmitActionReactiveBody,
+    SubmitModalReactiveBody,
+    RequestModalReactiveBody,
+    ModalReactiveView,
+    RequestModalReactiveResponse,
     BaseResponse,
     UserResponse,
     UserListResponse,
@@ -512,6 +519,395 @@ class TestBotField:
             assert len(w) == 1
             assert issubclass(w[-1].category, RuntimeWarning)
             assert str(w[-1].message) == 'There are missing fields: _extra'
+
+
+class TestBaseReactiveBody:
+    def test_base_reactive_body_properties(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = BaseReactiveBody(type=ReactiveType.SUBMIT_MODAL, action_time="2021-01-01", message=message, value='value')
+        assert body.type == ReactiveType.SUBMIT_MODAL
+        assert body.action_time == '2021-01-01'
+        assert body.message == message
+        assert body.value == 'value'
+
+    def test_base_reactive_body_to_json(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = BaseReactiveBody(type=ReactiveType.SUBMIT_MODAL, action_time="2021-01-01", message=message, value='value')
+        assert body.to_json() == ('{"type": "submission", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": "1"'
+                                  ', "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                                  '"text": "block", "markdown": false}]}, "value": "value"}')
+
+    def test_base_reactive_body_to_dict(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = BaseReactiveBody(type=ReactiveType.SUBMIT_MODAL, action_time="2021-01-01", message=message, value='value')
+        assert body.to_dict() == {
+            'type': ReactiveType.SUBMIT_MODAL,
+            'action_time': '2021-01-01',
+            'message': {
+                'id': '123',
+                'text': 'msg',
+                'user_id': '1',
+                'conversation_id': 1,
+                'send_time': 1617889170,
+                'update_time': 1617889170,
+                'blocks': [{
+                    'type': BlockType.TEXT,
+                    'text': 'block',
+                    'markdown': False
+                }]
+            },
+            'value': 'value'
+        }
+
+    def test_base_reactive_body_from_json(self):
+        json_str = ('{"type": "submission", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": "1"'
+                    ', "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                    '"text": "block", "markdown": false}]}, "value": "value"}')
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = BaseReactiveBody(type=ReactiveType.SUBMIT_MODAL, action_time="2021-01-01", message=message, value='value')
+        assert BaseReactiveBody.from_json(json_str) == body
+
+
+class TestSubmitActionReactiveBody:
+    def test_submit_action_reactive_body_properties(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitActionReactiveBody(action_time="2021-01-01", message=message, value='value', action_name='name', react_user_id=1)
+        assert body.type == ReactiveType.SUBMIT_ACTION
+        assert body.action_time == '2021-01-01'
+        assert body.message == message
+        assert body.value == 'value'
+        assert body.action_name == 'name'
+        assert body.react_user_id == 1
+
+    def test_submit_action_reactive_body_to_json(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitActionReactiveBody(action_time="2021-01-01", message=message, value='value', action_name='name', react_user_id=1)
+        assert body.to_json() == ('{"type": "submit_action", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
+                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                                  '"text": "block", "markdown": false}]}, "value": "value", "action_name": "name", "react_user_id": 1}')
+
+    def test_submit_action_reactive_body_to_dict(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitActionReactiveBody(action_time="2021-01-01", message=message, value='value', action_name='name', react_user_id=1)
+        assert body.to_dict() == {
+            'type': ReactiveType.SUBMIT_ACTION,
+            'action_time': '2021-01-01',
+            'message': {
+                'id': '123',
+                'text': 'msg',
+                'user_id': '1',
+                'conversation_id': 1,
+                'send_time': 1617889170,
+                'update_time': 1617889170,
+                'blocks': [{
+                    'type': BlockType.TEXT,
+                    'text': 'block',
+                    'markdown': False
+                }]
+            },
+            'value': 'value',
+            'action_name': 'name',
+            'react_user_id': 1
+        }
+
+    def test_submit_action_reactive_body_from_json(self):
+        json_str = ('{"type": "submit_action", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
+                    '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text",'
+                    '"text": "block", "markdown": false}]}, "value": "value", "action_name": "name", "react_user_id": 1}')
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitActionReactiveBody(action_time="2021-01-01", message=message, value='value', action_name='name', react_user_id=1)
+        assert SubmitActionReactiveBody.from_json(json_str) == body
+
+
+class TestSubmitModalReactiveBody:
+    def test_submit_modal_reactive_body_properties(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitModalReactiveBody(action_time="2021-01-01", message=message, value='value', actions={'key': 'value'}, react_user_id=1)
+        assert body.type == ReactiveType.SUBMIT_MODAL
+        assert body.action_time == '2021-01-01'
+        assert body.message == message
+        assert body.value == 'value'
+        assert body.actions == {'key': 'value'}
+        assert body.react_user_id == 1
+
+    def test_submit_modal_reactive_body_to_json(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitModalReactiveBody(action_time="2021-01-01", message=message, value='value', actions={'key': 'value'}, react_user_id=1)
+        assert body.to_json() == ('{"type": "submission", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": "1"'
+                                  ', "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                                  '"text": "block", "markdown": false}]}, "value": "value", "actions": {"key": "value"}, "react_user_id": 1}')
+
+    def test_submit_modal_reactive_body_to_dict(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitModalReactiveBody(action_time="2021-01-01", message=message, value='value', actions={'key': 'value'}, react_user_id=1)
+        assert body.to_dict() == {
+            'type': ReactiveType.SUBMIT_MODAL,
+            'action_time': '2021-01-01',
+            'message': {
+                'id': '123',
+                'text': 'msg',
+                'user_id': '1',
+                'conversation_id': 1,
+                'send_time': 1617889170,
+                'update_time': 1617889170,
+                'blocks': [{
+                    'type': BlockType.TEXT,
+                    'text': 'block',
+                    'markdown': False
+                }]
+            },
+            'value': 'value',
+            'actions': {
+                'key': 'value'
+            },
+            'react_user_id': 1
+        }
+
+    def test_submit_modal_reactive_body_from_json(self):
+        json_str = ('{"type": "submission", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": "1"'
+                    ', "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                    '"text": "block", "markdown": false}]}, "value": "value", "actions": {"key": "value"}, "react_user_id": 1}')
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = SubmitModalReactiveBody(action_time="2021-01-01", message=message, value='value', actions={'key': 'value'}, react_user_id=1)
+        assert SubmitModalReactiveBody.from_json(json_str) == body
+
+
+class TestRequestModalReactiveBody:
+    def test_request_modal_reactive_body_properties(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = RequestModalReactiveBody(action_time="2021-01-01", message=message, value='value', react_user_id=1)
+        assert body.type == ReactiveType.REQUEST_MODAL
+        assert body.action_time == '2021-01-01'
+        assert body.message == message
+        assert body.value == 'value'
+        assert body.react_user_id == 1
+
+    def test_request_modal_reactive_body_to_json(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = RequestModalReactiveBody(action_time="2021-01-01", message=message, value='value', react_user_id=1)
+        assert body.to_json() == ('{"type": "request_modal", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
+                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                                  '"text": "block", "markdown": false}]}, "value": "value", "react_user_id": 1}')
+
+    def test_request_modal_reactive_body_to_dict(self):
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = RequestModalReactiveBody(action_time="2021-01-01", message=message, value='value', react_user_id=1)
+        assert body.to_dict() == {
+            'type': ReactiveType.REQUEST_MODAL,
+            'action_time': '2021-01-01',
+            'message': {
+                'id': '123',
+                'text': 'msg',
+                'user_id': '1',
+                'conversation_id': 1,
+                'send_time': 1617889170,
+                'update_time': 1617889170,
+                'blocks': [{
+                    'type': BlockType.TEXT,
+                    'text': 'block',
+                    'markdown': False
+                }]
+            },
+            'value': 'value',
+            'react_user_id': 1
+        }
+
+    def test_request_modal_reactive_body_from_json(self):
+        json_str = ('{"type": "request_modal", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
+                    '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
+                    '"text": "block", "markdown": false}]}, "value": "value", "react_user_id": 1}')
+        message = MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+        body = RequestModalReactiveBody(action_time="2021-01-01", message=message, value='value', react_user_id=1)
+        assert RequestModalReactiveBody.from_json(json_str) == body
+
+
+class TestRequestModalReactiveResponse:
+    def test_request_modal_reactive_response_properties(self):
+        view = ModalReactiveView(
+            title='title',
+            accept='accept',
+            decline='decline',
+            blocks=[TextBlock(text='block', markdown=False)],
+            value='value',
+        )
+        res = RequestModalReactiveResponse(view=view)
+        assert res.view == view
+
+    def test_request_modal_reactive_response_to_json(self):
+        view = ModalReactiveView(
+            title='title',
+            accept='accept',
+            decline='decline',
+            blocks=[TextBlock(text='block', markdown=False)],
+            value='value',
+        )
+        res = RequestModalReactiveResponse(view=view)
+        assert res.to_json() == ('{"view": {"title": "title", "accept": "accept", "decline": "decline", "blocks": [{"type": "text", "text": '
+                                 '"block", "markdown": false}], "value": "value"}}')
+
+    def test_request_modal_reactive_response_to_dict(self):
+        view = ModalReactiveView(
+            title='title',
+            accept='accept',
+            decline='decline',
+            blocks=[TextBlock(text='block', markdown=False)],
+            value='value',
+        )
+        res = RequestModalReactiveResponse(view=view)
+        assert res.to_dict() == {
+            'view': {
+                'title': 'title',
+                'accept': 'accept',
+                'decline': 'decline',
+                'blocks': [{
+                    'type': 'text',
+                    'text': 'block',
+                    'markdown': False
+                }],
+                'value': 'value'
+            }
+        }
+
+    def test_request_modal_reactive_response_from_json(self):
+        json_str = ('{"view": {"title": "title", "accept": "accept", "decline": "decline", "blocks": [{"type": "text", "text": '
+                    '"block", "markdown": false}], "value": "value"}}')
+        view = ModalReactiveView(
+            title='title',
+            accept='accept',
+            decline='decline',
+            blocks=[TextBlock(text='block', markdown=False)],
+            value='value',
+        )
+        res = RequestModalReactiveResponse(view=view)
+        assert RequestModalReactiveResponse.from_json(json_str) == res
 
 
 class TestBaseResponse:
