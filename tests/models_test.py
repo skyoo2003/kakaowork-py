@@ -631,7 +631,7 @@ class TestSubmitActionReactiveBody:
         )
         body = SubmitActionReactiveBody(action_time="2021-01-01", message=message, value='value', action_name='name', react_user_id=1)
         assert body.to_json() == ('{"type": "submit_action", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
-                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text",'
+                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
                                   '"text": "block", "markdown": false}]}, "value": "value", "action_name": "name", "react_user_id": 1}')
 
     def test_submit_action_reactive_body_to_dict(self):
@@ -798,7 +798,7 @@ class TestRequestModalReactiveBody:
         )
         body = RequestModalReactiveBody(action_time="2021-01-01", message=message, value='value', react_user_id=1)
         assert body.to_json() == ('{"type": "request_modal", "action_time": "2021-01-01", "message": {"id": "123", "text": "msg", "user_id": '
-                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text",'
+                                  '"1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": [{"type": "text", '
                                   '"text": "block", "markdown": false}]}, "value": "value", "react_user_id": 1}')
 
     def test_request_modal_reactive_body_to_dict(self):
