@@ -28,7 +28,7 @@ aiosonic = ">=0.10,<0.14"
 click = { version = ">=7,<9", optional = true }
 
 [tool.poetry.dev-dependencies]
-pre-commit = "^2.13.0"
+pre-commit = "^2.14.0"
 towncrier = "^21.3.0"
 pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
