@@ -18,7 +18,7 @@ Miscellaneous
 
 - Changed aiosonic dependency (`#85 <https://github.com/skyoo2003/kakaowork-py/issues/85>`_)
 
-  - aiosonic>=0.10,<0.12
+  - aiosonic>=0.10,<0.14
 
 
 Kakaowork 0.3.3 (2021-06-29)
