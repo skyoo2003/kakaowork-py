@@ -1,3 +1,12 @@
+Kakaowork 0.4.1 (2021-10-13)
+============================
+
+Miscellaneous
+-------------
+
+- Python 3.10 support (`#127 <https://github.com/skyoo2003/kakaowork-py/issues/127>`_)
+
+
 Kakaowork 0.4.0 (2021-08-04)
 ============================
 
