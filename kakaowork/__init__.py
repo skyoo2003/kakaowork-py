@@ -11,4 +11,4 @@ from kakaowork.models import (ErrorCode, ConversationType, ColorTone, ProfileNam
                               UserField, ConversationField, MessageField, DepartmentField, SpaceField, BotField, BaseResponse, UserResponse, UserListResponse,
                               ConversationResponse, ConversationListResponse, MessageResponse, DepartmentListResponse, SpaceResponse, BotResponse)
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
