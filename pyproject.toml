@@ -38,7 +38,7 @@ pytest-asyncio = "^0.16.0"
 yapf = "^0.31.0"
 flake8 = "^4.0.1"
 mypy = "^0.910"
-coverage = { version = "^6.0", extras = ["toml"] }
+coverage = { version = "^6.1", extras = ["toml"] }
 tox = "^3.24.4"
 sphinx = "^4.2.0"
 types-pytz = "^2021.3.0"
