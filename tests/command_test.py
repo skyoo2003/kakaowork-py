@@ -87,11 +87,11 @@ class TestDepartmentsCommand:
         assert res.exit_code == 1
         assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
 
-        res = cli_runner.invoke(departments, ['list', '--limit', 0])
+        res = cli_runner.invoke(departments, ['list', '--limit', '0'])
         assert res.exit_code == 2
         assert "Error: Invalid value for '-l' / '--limit': 0 is not in the range" in res.output
 
-        res = cli_runner.invoke(departments, ['list', '--limit', 101])
+        res = cli_runner.invoke(departments, ['list', '--limit', '101'])
         assert res.exit_code == 2
         assert "Error: Invalid value for '-l' / '--limit': 101 is not in the range" in res.output
 

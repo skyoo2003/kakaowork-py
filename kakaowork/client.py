@@ -1,3 +1,5 @@
+# pydocstyle: noqa
+
 import json
 import time
 import asyncio
@@ -183,6 +185,21 @@ class Kakaowork:
                 r = self.client.http.request(
                     'POST',
                     f'{self.client.base_url}{self.base_path}.send',
+                    body=json.dumps(payload, default=json_default).encode('utf-8'),
+                )
+            self.client._respect_rate_limit(r)
+            return MessageResponse.from_json(r.data)
+
+        def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            payload = {
+                'email': email,
+                'text': text,
+                'blocks': blocks or [],
+            }
+            with self.client.limiter:
+                r = self.client.http.request(
+                    'POST',
+                    f'{self.client.base_url}{self.base_path}.send_by_email',
                     body=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
@@ -440,6 +457,22 @@ class AsyncKakaowork:
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.send',
+                    method='POST',
+                    headers=self.client.headers,
+                    data=json.dumps(payload, default=json_default).encode('utf-8'),
+                )
+            await self.client._respect_rate_limit(r)
+            return MessageResponse.from_json(await r.content())
+
+        async def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            payload = {
+                'email': email,
+                'text': text,
+                'blocks': blocks or [],
+            }
+            async with self.client.limiter:
+                r = await self.client.http.request(
+                    url=f'{self.client.base_url}{self.base_path}.send_by_email',
                     method='POST',
                     headers=self.client.headers,
                     data=json.dumps(payload, default=json_default).encode('utf-8'),

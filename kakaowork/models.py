@@ -121,8 +121,8 @@ class UserField(NamedTuple):
     department: Optional[str] = None
     position: Optional[str] = None
     responsibility: Optional[str] = None
-    tels: Optional[str] = None
-    mobiles: Optional[str] = None
+    tels: Optional[List[str]] = None
+    mobiles: Optional[List[str]] = None
     work_start_time: Optional[datetime] = None
     work_end_time: Optional[datetime] = None
     vacation_start_time: Optional[datetime] = None
