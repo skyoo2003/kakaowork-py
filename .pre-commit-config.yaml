@@ -28,7 +28,7 @@ repos:
       - id: pydocstyle
         name: pydocstyle
         language: system
-        entry: poetry run pydocstyle --config=.pydocstyle
+        entry: poetry run pydocstyle
         files: ".py$"
         exclude: "tests"
       - id: mypy
