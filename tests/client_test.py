@@ -57,17 +57,17 @@ class TestKakaowork:
 class TestKakaoworkUsers:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
-    user_json = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
+    user_json = ('{"success": true, "error": null, "user": {"id": "1234", "space_id": "12", "name": "name", '
                  '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                  '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                  '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
-    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": "1234", "space_id": "12", "name": "name", '
                       '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                       '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                       '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
     user_field = UserField(
-        id=1234,
-        space_id=12,
+        id="1234",
+        space_id="12",
         identifications=[UserIdentificationField(type='email', value='user@localhost')],
         name='name',
         nickname='nickname',
@@ -212,7 +212,7 @@ class TestKakaoworkConversations:
                          '"avatar_url": "http://localhost/image.png", "name": "name"}}')
     conversation_list_json = ('{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
                               '"avatar_url": "http://localhost/image.png", "name": "name"}]}')
-    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": "1234", "space_id": "12", "name": "name", '
                       '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                       '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                       '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
@@ -224,8 +224,8 @@ class TestKakaoworkConversations:
         avatar_url='http://localhost/image.png',
     )
     user_field = UserField(
-        id=1234,
-        space_id=12,
+        id='1234',
+        space_id='12',
         identifications=[UserIdentificationField(type='email', value='user@localhost')],
         name='name',
         nickname='nickname',
@@ -365,6 +365,25 @@ class TestKakaoworkMessages:
         assert ret.error is None
         assert ret.message == self.message_field
 
+    def test_kakaowork_messages_send_by_email(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.message_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.messages.send_by_email(email='nobody@email.com', text='msg')
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/messages.send_by_email',
+            body=b'{"email": "nobody@email.com", "text": "msg", "blocks": []}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+        assert ret.message == self.message_field
+
 
 class TestKakaoworkDepartments:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
@@ -494,17 +513,17 @@ class TestAsyncKakaowork:
 class TestAsyncKakaoworkUsers:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true, "error": null}'
-    user_json = ('{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", '
+    user_json = ('{"success": true, "error": null, "user": {"id": "1234", "space_id": "12", "name": "name", '
                  '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                  '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                  '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
-    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": "1234", "space_id": "12", "name": "name", '
                       '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                       '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                       '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
     user_field = UserField(
-        id=1234,
-        space_id=12,
+        id='1234',
+        space_id='12',
         identifications=[UserIdentificationField(type='email', value='user@localhost')],
         name='name',
         nickname='nickname',
@@ -655,7 +674,7 @@ class TestAsyncKakaoworkConversations:
                          '"avatar_url": "http://localhost/image.png", "name": "name"}}')
     conversation_list_json = ('{"success": true, "error": null, "cursor": null, "conversations": [{"id": "1", "type": "dm", "users_count": 1, '
                               '"avatar_url": "http://localhost/image.png", "name": "name"}]}')
-    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", '
+    user_list_json = ('{"success": true, "error": null, "cursor": null, "users": [{"id": "1234", "space_id": "12", "name": "name", '
                       '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
                       '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
                       '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')
@@ -667,8 +686,8 @@ class TestAsyncKakaoworkConversations:
         avatar_url='http://localhost/image.png',
     )
     user_field = UserField(
-        id=1234,
-        space_id=12,
+        id='1234',
+        space_id='12',
         identifications=[UserIdentificationField(type='email', value='user@localhost')],
         name='name',
         nickname='nickname',
@@ -813,6 +832,26 @@ class TestAsyncKakaoworkMessages:
             method='POST',
             headers=client.headers,
             data=b'{"conversation_id": 1, "text": "msg", "blocks": []}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+        assert ret.message == self.message_field
+
+    @pytest.mark.asyncio
+    async def test_async_kakaowork_messages_send_by_email(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.message_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.messages.send_by_email(email='nobody@email.com', text='msg')
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/messages.send_by_email',
+            method='POST',
+            headers=client.headers,
+            data=b'{"email": "nobody@email.com", "text": "msg", "blocks": []}',
         )
         assert ret.success is True
         assert ret.error is None

@@ -42,7 +42,7 @@ coverage = { version = "^6.1", extras = ["toml"] }
 tox = "^3.24.4"
 sphinx = "^4.2.0"
 types-pytz = "^2021.3.0"
-pydocstyle = "^6.1.1"
+pydocstyle = { version = "^6.1.1", extras = ["toml"] }
 
 [tool.poetry.extras]
 cli = ['click']
@@ -68,6 +68,12 @@ directory = ".report/html"
 
 [tool.coverage.xml]
 output = ".report/coverage.xml"
+
+[tool.pydocstyle]
+inherit = false
+ignore = "D100,D203,D204,D213,D215,D400,D401,D404,D406,D407,D408,D409,D413" # D100 + google convention. See http://www.pydocstyle.org/en/stable/error_codes.html#default-conventions
+match = "\\.*(?!_test)\\\\.py|(!?client|models|blockkit)\\.*\\\\.py"
+match_dir = "kakaowork"
 
 [tool.towncrier]
 package = "kakaowork"

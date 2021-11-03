@@ -10,15 +10,14 @@ install:
 	poetry install -E cli
 
 test:
-	poetry run pytest -v -s $(filter-out $@, $(MAKECMDGOALS))
+	poetry run pytest kakaowork tests
 
 lint:
 	poetry run flake8 kakaowork tests
 	poetry run pydocstyle kakaowork
-	poetry run pre-commit run --all-files --show-diff-on-failure
 
 typecheck:
-	poetry run mypy kakaowork
+	poetry run mypy kakaowork tests
 
 build:
 	poetry build
