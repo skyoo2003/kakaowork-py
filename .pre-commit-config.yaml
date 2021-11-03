@@ -18,21 +18,31 @@ repos:
       - id: mixed-line-ending
       - id: name-tests-test
       - id: trailing-whitespace
-  - repo: https://github.com/pycqa/flake8
-    rev: 4.0.1
+  - repo: local
     hooks:
       - id: flake8
-  - repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.31.0
-    hooks:
-      - id: yapf
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.1.1
-    hooks:
-      # The pydocstyle hook's args must have the same contents as .pydocstyle
-      # See http://www.pydocstyle.org/en/stable/usage.html#usage-with-the-pre-commit-git-hooks-framework
+        name: flake8
+        language: system
+        entry: poetry run flake8
+        files: ".py$"
       - id: pydocstyle
-        args:
-          - --ignore=D100,D203,D204,D213,D215,D400,D401,D404,D406,D407,D408,D409,D413
-          - --match='^(?!client|models|blockkit).*\.py$'
-          - --match-dir=kakaowork
+        name: pydocstyle
+        language: system
+        entry: poetry run pydocstyle --config=.pydocstyle
+        files: ".py$"
+        exclude: "tests"
+      - id: mypy
+        name: mypy
+        language: system
+        entry: poetry run mypy
+        files: ".py$"
+      - id: yapf
+        name: yapf
+        language: system
+        entry: poetry run yapf --parallel --in-place
+        files: ".py$"
+      - id: pytest
+        name: pytest
+        language: system
+        entry: poetry run pytest
+        files: ".py$"
