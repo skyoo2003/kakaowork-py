@@ -1,7 +1,9 @@
 import json
+import warnings
 from shlex import shlex
+from functools import wraps
 from datetime import datetime
-from typing import Union, Any, Dict, Sequence
+from typing import Union, Any, List, Dict, Sequence, Callable
 
 from pytz import utc
 
@@ -234,3 +236,21 @@ def json_default(value: Any) -> Any:
     elif isinstance(value, datetime):
         return int(value.timestamp())
     raise TypeError('not JSON serializable')
+
+
+class _Deprecated:
+    def __init__(self, *, reason: str) -> None:
+        self.reason = reason
+
+    def __call__(self, f: Callable) -> Any:
+        @wraps(f)
+        def wrapper(*args: List, **kwargs: Dict):
+            warnings.simplefilter('always', DeprecationWarning)
+            warnings.warn(self.reason, category=DeprecationWarning, stacklevel=2)
+            warnings.simplefilter('default', DeprecationWarning)
+            return f(*args, **kwargs)
+
+        return wrapper
+
+
+deprecated = _Deprecated
