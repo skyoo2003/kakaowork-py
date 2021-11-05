@@ -1,3 +1,18 @@
+Kakaowork 0.5.0 (2021-11-05)
+============================
+
+New Features
+------------
+
+- Added Kakaowork API: messages.send_by_email (`#130 <https://github.com/skyoo2003/kakaowork-py/issues/130>`_)
+
+
+Enhancement
+-----------
+
+- Support for TextBlock API format changed from KakaoWork 1.7 or higher (`#131 <https://github.com/skyoo2003/kakaowork-py/issues/131>`_)
+
+
 Kakaowork 0.4.1 (2021-10-13)
 ============================
 
