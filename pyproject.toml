@@ -23,9 +23,10 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
-urllib3 = "^1.14.0"
+urllib3 = ">=1.14,<2"
 pytz = ">=2015.7"
-aiosonic = ">=0.10,<0.14"
+aiosonic = ">=0.10,<1"
+pydantic = ">=1.6.2,<2"
 click = { version = ">=7,<9", optional = true }
 
 [tool.poetry.dev-dependencies]
