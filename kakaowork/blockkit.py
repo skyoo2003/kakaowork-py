@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from kakaowork.consts import StrEnum
 from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
-from kakaowork.utils import exist_kv, json_default
+from kakaowork.utils import exist_kv, json_default, deprecated
 
 
 @unique
@@ -53,6 +53,52 @@ class BlockType(StrEnum):
         elif bt == cls.SELECT:
             return SelectBlock
         raise InvalidBlockType()
+
+
+class TextInlineType(StrEnum):
+    STYLED = 'styled'
+    LINK = 'link'
+
+
+class TextInlineColor(StrEnum):
+    DEFAULT = 'default'
+    GREY = 'grey'
+    BLUE = 'blue'
+    RED = 'red'
+
+    @classmethod
+    def _missing_(cls, value: Any) -> 'TextInlineColor':
+        return cls.DEFAULT
+
+
+class TextInline(NamedTuple):
+    type: TextInlineType
+    text: str
+    bold: Optional[bool] = None
+    italic: Optional[bool] = None
+    strike: Optional[bool] = None
+    color: Optional[Union[TextInlineColor, str]] = None
+    url: Optional[str] = None
+
+    def validate(self) -> bool:
+        if self.type is TextInlineType.STYLED and self.url is not None:
+            return False
+        elif self.type is TextInlineType.LINK and not all([self.bold is None, self.italic is None, self.strike is None, self.color is None]):
+            return False
+        return True
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {k: v for k, v in self._asdict().items() if v is not None}
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'TextInline':
+        if not value:
+            raise NoValueError('No value to type cast')
+        return cls(**dict(
+            value,
+            type=TextInlineType(value['type']),
+            color=TextInlineColor(value['color']) if 'color' in value else None,
+        ))
 
 
 @unique
@@ -136,21 +182,47 @@ class Block(ABC):
 class TextBlock(Block):
     max_len_text = 500
 
-    def __init__(self, *, text: str, markdown: Optional[bool] = False):
+    def __init__(self, *, text: str, markdown: Optional[bool] = False, inlines: Optional[List[TextInline]] = None):
         super().__init__(type=BlockType.TEXT)
         self.text = text
-        self.markdown = markdown if markdown is not None else False
+        self._markdown = markdown
+        self.inlines = inlines
+
+    # WORKAROUND: https://github.com/python/mypy/issues/1362
+    @property  # type: ignore
+    @deprecated(reason="The 'markdown' property is replaced by 'inlines' after Kakaowork 1.7 or higher.")
+    def markdown(self) -> Optional[bool]:
+        return self._markdown
+
+    # WORKAROUND: https://github.com/python/mypy/issues/1362
+    @markdown.setter  # type: ignore
+    @deprecated(reason="The 'markdown' property is replaced by 'inlines' after Kakaowork 1.7 or higher.")
+    def markdown(self, value: Optional[bool]) -> None:
+        self._markdown = value
 
     def to_dict(self):
-        return dict(
+        kwargs = dict(
             super().to_dict(),
             text=self.text,
-            markdown=self.markdown,
+            markdown=self._markdown,
+            inlines=[item.to_dict() for item in self.inlines] if self.inlines else None,
         )
+        return {k: v for k, v in kwargs.items() if v is not None}
 
     def validate(self) -> bool:
         if not self.text or len(self.text) > self.max_len_text:
             return False
+        # The 'markdown' property is not affected when the 'inlines' property is defined.
+        if self._markdown and self.inlines is not None:
+            return False
+        if self.inlines:
+            len_inlines = 0
+            for inline in self.inlines:
+                if not inline.validate():
+                    return False
+                len_inlines += len(inline.text)
+            if len_inlines > self.max_len_text:
+                return False
         return True
 
     @classmethod
@@ -160,10 +232,10 @@ class TextBlock(Block):
         if 'type' not in value or value['type'] != BlockType.TEXT:
             raise InvalidBlockType('No type or invalid')
         value = {k: v for k, v in value.items() if k != 'type'}
-
         return cls(**dict(
             value,
             markdown=value['markdown'] if exist_kv('markdown', value) else False,
+            inlines=[TextInline.from_dict(item) for item in value['inlines']] if exist_kv('inlines', value) else None,
         ))
 
 

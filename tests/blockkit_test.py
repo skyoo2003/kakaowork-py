@@ -1,4 +1,5 @@
 import json
+import warnings
 from unittest.mock import mock_open
 
 import pytest
@@ -10,6 +11,9 @@ from kakaowork.blockkit import (
     ButtonActionType,
     HeaderStyle,
     BlockKitType,
+    TextInlineType,
+    TextInlineColor,
+    TextInline,
     TextBlock,
     ImageLinkBlock,
     ButtonBlock,
@@ -28,18 +32,59 @@ from kakaowork.blockkit import (
 from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
 
 
+class TestTextInlineColor:
+    def test_missing(self):
+        assert TextInlineColor('#####') is TextInlineColor.DEFAULT
+
+
+class TestTextInline:
+    def test_validate(self):
+        assert TextInline(type=TextInlineType.STYLED, text='msg', bold=True).validate() is True
+        assert TextInline(type=TextInlineType.STYLED, text='msg', url='http://localhost').validate() is False
+        assert TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost').validate() is True
+        assert TextInline(type=TextInlineType.LINK, text='msg', bold=True).validate() is False
+        assert TextInline(type=TextInlineType.LINK, text='msg', bold=True, italic=True, strike=True, color=False).validate() is False
+
+    def test_to_dict(self):
+        inline = TextInline(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY)
+        assert inline.to_dict() == {'type': 'styled', 'text': 'msg', 'bold': True, 'color': 'grey'}
+
+        inline = TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
+        assert inline.to_dict() == {'type': 'link', 'text': 'msg', 'url': 'http://localhost'}
+
+    def test_from_dict(self):
+        inline = TextInline.from_dict({'type': 'styled', 'text': 'msg', 'bold': True, 'color': 'grey'})
+        assert inline == TextInline(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY)
+
+        inline = TextInline.from_dict({'type': 'link', 'text': 'msg', 'url': 'http://localhost'})
+        assert inline == TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
+
+
 class TestTextBlock:
     def test_text_block_properties(self):
         text = '"hello"'
         block = TextBlock(text=text, markdown=False)
         assert block.type == BlockType.TEXT
         assert block.text == text
-        assert block.markdown is False
+        with warnings.catch_warnings(record=True) as w:
+            assert block.markdown is False
+            assert len(w) == 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+
+        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
+        block = TextBlock(text=text, inlines=inlines)
+        assert block.type == BlockType.TEXT
+        assert block.text == text
+        assert block.inlines == inlines
 
     def test_text_block_validate(self):
         assert TextBlock(text="", markdown=False).validate() is False
         assert TextBlock(text="a" * 501, markdown=False).validate() is False
         assert TextBlock(text="hello", markdown=False).validate() is True
+
+        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
+        assert TextBlock(text='hello', inlines=inlines).validate() is True
+        assert TextBlock(text='hello', markdown=True, inlines=inlines).validate() is False
 
     def test_text_block_to_dict(self):
         block = TextBlock(text="hello", markdown=False)
@@ -49,9 +94,26 @@ class TestTextBlock:
             'markdown': False,
         }
 
+        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
+        block = TextBlock(text="hello", inlines=inlines)
+        assert block.to_dict() == {
+            'type': 'text',
+            'text': 'hello',
+            'markdown': False,
+            'inlines': [{
+                'type': 'styled',
+                'text': 'msg',
+                'bold': True,
+            }]
+        }
+
     def test_text_block_to_json(self):
         block = TextBlock(text="hello", markdown=False)
         assert block.to_json() == '{"type": "text", "text": "hello", "markdown": false}'
+
+        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
+        block = TextBlock(text="hello", inlines=inlines)
+        assert block.to_json() == ('{"type": "text", "text": "hello", "markdown": false, "inlines": ' '[{"type": "styled", "text": "msg", "bold": true}]}')
 
     def test_text_block_from_dict(self):
         with pytest.raises(NoValueError):
@@ -62,6 +124,17 @@ class TestTextBlock:
             assert TextBlock.from_dict({"type": "1234", "text": "hello", "markdown": False})
         assert TextBlock.from_dict({"type": "text", "text": "hello", "markdown": False}) == TextBlock(text="hello", markdown=False)
         assert TextBlock.from_dict({"type": "text", "text": "# title", "markdown": True}) == TextBlock(text="# title", markdown=True)
+
+        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
+        assert TextBlock.from_dict({
+            "type": "text",
+            "text": "hello",
+            "inlines": [{
+                "type": "styled",
+                "text": "msg",
+                "bold": True,
+            }]
+        }) == TextBlock(text='hello', inlines=inlines)
 
 
 class TestImageLinkBlock:
