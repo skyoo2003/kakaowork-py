@@ -1,0 +1,4 @@
+Update dependencies
+
+- urllib3 = ">=1.14,<2"
+- aiosonic = ">=0.10,<1"
