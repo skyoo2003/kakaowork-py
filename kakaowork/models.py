@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, NamedTuple, Union, Any, Dict, List, Sequence
 
 from pytz import utc, timezone
+from pydantic import BaseModel, validator
 
 from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
@@ -48,6 +49,10 @@ class ErrorCode(StrEnum):
     TEXT_TOO_LONG = 'text_too_long'
     INVALID_BLOCKS = 'invalid_blocks'
 
+    @classmethod
+    def _missing_(cls, value: Any) -> 'ErrorCode':
+        return cls.UNKNOWN
+
 
 class ConversationType(StrEnum):
     DM = 'dm'
@@ -75,42 +80,35 @@ class BotStatus(StrEnum):
     DEACTIVATED = 'deactivated'
 
 
-class ErrorField(NamedTuple):
+class ErrorField(BaseModel):
     code: ErrorCode
     message: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
         if not value:
             raise NoValueError('No value to type cast')
-        try:
-            code = ErrorCode(value['code']) if exist_kv('code', value) else None
-        except ValueError:
-            code = ErrorCode.UNKNOWN
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            code=code,
-        ))
+        return cls(**value)
 
 
-class UserIdentificationField(NamedTuple):
+class UserIdentificationField(BaseModel):
     type: str
     value: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(_drop_missing(value, cls._fields)))
+        return cls(**value)
 
 
-class UserField(NamedTuple):
+class UserField(BaseModel):
     id: str
     space_id: str
     name: str
@@ -130,8 +128,7 @@ class UserField(NamedTuple):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            dict(self._asdict()),
-            identifications=[uid.to_dict() for uid in self.identifications] if self.identifications else None,
+            self.dict(exclude_none=True),
             work_start_time=int(self.work_start_time.timestamp()) if self.work_start_time else None,
             work_end_time=int(self.work_end_time.timestamp()) if self.work_end_time else None,
             vacation_start_time=int(self.vacation_start_time.timestamp()) if self.vacation_start_time else None,
@@ -142,17 +139,10 @@ class UserField(NamedTuple):
     def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            identifications=[UserIdentificationField.from_dict(item) for item in value['identifications']] if exist_kv('identifications', value) else None,
-            work_start_time=to_kst(value['work_start_time']) if exist_kv('work_start_time', value) else None,
-            work_end_time=to_kst(value['work_end_time']) if exist_kv('work_end_time', value) else None,
-            vacation_start_time=to_kst(value['vacation_start_time']) if exist_kv('vacation_start_time', value) else None,
-            vacation_end_time=to_kst(value['vacation_end_time']) if exist_kv('vacation_end_time', value) else None,
-        ))
+        return cls(**value)
 
 
-class ConversationField(NamedTuple):
+class ConversationField(BaseModel):
     id: str
     type: ConversationType
     users_count: int
@@ -160,19 +150,16 @@ class ConversationField(NamedTuple):
     name: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            type=ConversationType(value['type']),
-        ))
+        return cls(**value)
 
 
-class MessageField(NamedTuple):
+class MessageField(BaseModel):
     id: str
     text: str
     user_id: str
@@ -182,12 +169,13 @@ class MessageField(NamedTuple):
     blocks: Optional[List[Block]] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            dict(self._asdict()),
-            send_time=int(self.send_time.timestamp()) if self.send_time else None,
-            update_time=int(self.update_time.timestamp()) if self.update_time else None,
-            blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
-        )
+        return self.dict(exclude_none=True)
+        # return dict(
+            # dict(self._asdict()),
+            # send_time=int(self.send_time.timestamp()) if self.send_time else None,
+            # update_time=int(self.update_time.timestamp()) if self.update_time else None,
+            # blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
+        # )
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':

@@ -1,9 +1,12 @@
 import os
 import json
 from enum import unique
+from functools import reduce
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, NamedTuple, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
+
 from urllib.parse import urlparse
+from pydantic import BaseModel, root_validator, validator
 
 from kakaowork.consts import StrEnum
 from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
@@ -71,7 +74,7 @@ class TextInlineColor(StrEnum):
         return cls.DEFAULT
 
 
-class TextInline(NamedTuple):
+class TextInline(BaseModel):
     type: TextInlineType
     text: str
     bold: Optional[bool] = None
@@ -80,25 +83,29 @@ class TextInline(NamedTuple):
     color: Optional[Union[TextInlineColor, str]] = None
     url: Optional[str] = None
 
-    def validate(self) -> bool:
-        if self.type is TextInlineType.STYLED and self.url is not None:
-            return False
-        elif self.type is TextInlineType.LINK and not all([self.bold is None, self.italic is None, self.strike is None, self.color is None]):
-            return False
-        return True
+    @root_validator
+    def _check_conflict_props(cls, values: Dict) -> Dict:
+        if values['type'] is TextInlineType.STYLED and values.get('url') is not None:
+            raise ValueError("If the 'type' property is 'styled', the 'url' property can't be set")
+        elif values['type'] is TextInlineType.LINK:
+            only_url_set = all([
+                values.get('bold') is None,
+                values.get('italic') is None,
+                values.get('strik') is None,
+                values.get('color') is None,
+            ])
+            if not only_url_set:
+                raise ValueError("If the 'type' property is 'link', the 'url' property only can be set")
+        return values
 
     def to_dict(self) -> Dict[str, Any]:
-        return {k: v for k, v in self._asdict().items() if v is not None}
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'TextInline':
         if not value:
             raise NoValueError('No value to type cast')
-        return cls(**dict(
-            value,
-            type=TextInlineType(value['type']),
-            color=TextInlineColor(value['color']) if 'color' in value else None,
-        ))
+        return cls(**value)
 
 
 @unique
@@ -130,12 +137,12 @@ class BlockKitType(StrEnum):
     MODAL = 'modal'
 
 
-class SelectBlockOption(NamedTuple):
+class SelectBlockOption(BaseModel):
     text: str
     value: str
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._asdict()
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'SelectBlockOption':
@@ -144,9 +151,8 @@ class SelectBlockOption(NamedTuple):
         return cls(**value)
 
 
-class Block(ABC):
-    def __init__(self, *, type: BlockType):
-        self.type = type
+class Block(BaseModel, ABC):
+    type: BlockType
 
     def __str__(self):
         return self.to_json()
@@ -164,14 +170,10 @@ class Block(ABC):
         return True
 
     def to_dict(self) -> Dict[str, Any]:
-        return {'type': self.type}
+        return self.dict(exclude_none=True)
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict(), default=json_default)
-
-    @abstractmethod
-    def validate(self) -> bool:
-        raise NotImplementedError()
+        return self.json(exclude_none=True, default=json_default)
 
     @classmethod
     @abstractmethod
@@ -180,50 +182,53 @@ class Block(ABC):
 
 
 class TextBlock(Block):
-    max_len_text = 500
+    _max_len_text: int = 500
+    _markdown: Optional[bool] = None
 
-    def __init__(self, *, text: str, markdown: Optional[bool] = False, inlines: Optional[List[TextInline]] = None):
-        super().__init__(type=BlockType.TEXT)
-        self.text = text
+    text: str
+    inlines: Optional[List[TextInline]] = None
+
+    class Config:
+        underscore_attrs_are_private = True
+
+    def __init__(self, markdown: Optional[bool] = None, **data):
         self._markdown = markdown
-        self.inlines = inlines
+        super().__init__(**data)
 
-    # WORKAROUND: https://github.com/python/mypy/issues/1362
     @property  # type: ignore
-    @deprecated(reason="The 'markdown' property is replaced by 'inlines' after Kakaowork 1.7 or higher.")
+    @deprecated(reason="The 'markdown' property is replaced by 'inlines' from Kakaowork 1.7 or higher.")
     def markdown(self) -> Optional[bool]:
         return self._markdown
 
-    # WORKAROUND: https://github.com/python/mypy/issues/1362
     @markdown.setter  # type: ignore
-    @deprecated(reason="The 'markdown' property is replaced by 'inlines' after Kakaowork 1.7 or higher.")
+    @deprecated(reason="The 'markdown' property is replaced by 'inlines' from Kakaowork 1.7 or higher.")
     def markdown(self, value: Optional[bool]) -> None:
         self._markdown = value
 
-    def to_dict(self):
-        kwargs = dict(
-            super().to_dict(),
-            text=self.text,
-            markdown=self._markdown,
-            inlines=[item.to_dict() for item in self.inlines] if self.inlines else None,
-        )
-        return {k: v for k, v in kwargs.items() if v is not None}
+    @root_validator
+    def _check_deprecation(cls, values: Dict) -> Dict:
+        if values['_markdown'] and values['inlines'] is not None:
+            raise ValueError("The 'markdown' property can't be set with the 'inlines' property")
+        return values
 
-    def validate(self) -> bool:
-        if not self.text or len(self.text) > self.max_len_text:
-            return False
-        # The 'markdown' property is not affected when the 'inlines' property is defined.
-        if self._markdown and self.inlines is not None:
-            return False
-        if self.inlines:
-            len_inlines = 0
-            for inline in self.inlines:
-                if not inline.validate():
-                    return False
-                len_inlines += len(inline.text)
+    @validator('text')
+    def _check_len_text(cls, value: str) -> str:
+        if not value:
+            raise ValueError("The 'text' property should be exists")
+        if len(value) > self._max_len_text:
+            raise ValueError(f"The 'text' property's length should be less than or equal to {self._max_len_text}")
+        return value
+
+    @validator('inlines')
+    def _check_len_text_inlines(cls, value: Optional[List[TextInline]]) -> Optional[List[TextInline]]:
+        if value is not None:
+            len_inlines = reduce(lambda acc, text: acc + len(text), map(lambda i: i.text, self.inlines), 0)
             if len_inlines > self.max_len_text:
-                return False
-        return True
+                raise ValueError(f"The 'inlines' property's all texts should be less than or equal to {self._max_len_text}")
+        return value
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> 'TextBlock':
@@ -231,12 +236,7 @@ class TextBlock(Block):
             raise NoValueError('No value to type cast')
         if 'type' not in value or value['type'] != BlockType.TEXT:
             raise InvalidBlockType('No type or invalid')
-        value = {k: v for k, v in value.items() if k != 'type'}
-        return cls(**dict(
-            value,
-            markdown=value['markdown'] if exist_kv('markdown', value) else False,
-            inlines=[TextInline.from_dict(item) for item in value['inlines']] if exist_kv('inlines', value) else None,
-        ))
+        return cls(**value)
 
 
 class ImageLinkBlock(Block):

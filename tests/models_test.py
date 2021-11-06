@@ -67,16 +67,6 @@ class TestErrorField:
         assert error.code == ErrorCode.UNKNOWN
         assert error.message == 'unknwon error'
 
-        with warnings.catch_warnings(record=True) as w:
-            ErrorField.from_dict({
-                'code': 'api_not_found',
-                'message': 'api not found',
-                '_extra': 'extra!!',
-            })
-            assert len(w) == 1
-            assert issubclass(w[-1].category, RuntimeWarning)
-            assert str(w[-1].message) == 'There are missing fields: _extra'
-
 
 class TestUserIdentificationField:
     def test_user_identification_to_dict(self):
@@ -93,16 +83,6 @@ class TestUserIdentificationField:
         })
         assert uid.type == 'gmail'
         assert uid.value == 'user@localhost'
-
-        with warnings.catch_warnings(record=True) as w:
-            UserIdentificationField.from_dict({
-                'type': 'gmail',
-                'value': 'user@localhost',
-                '_extra': 'extra!!',
-            })
-            assert len(w) == 1
-            assert issubclass(w[-1].category, RuntimeWarning)
-            assert str(w[-1].message) == 'There are missing fields: _extra'
 
 
 class TestUserField:
@@ -187,32 +167,6 @@ class TestUserField:
         assert user.work_end_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
         assert user.work_start_time == to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc))
 
-        with warnings.catch_warnings(record=True) as w:
-            UserField.from_dict({
-                'avatar_url': None,
-                'department': 'test',
-                'id': '1234',
-                'identifications': [{
-                    'type': 'email',
-                    'value': 'user@localhost'
-                }],
-                'mobiles': [],
-                'name': 'noname',
-                'nickname': None,
-                'position': None,
-                'responsibility': 'leader',
-                'space_id': '123',
-                'tels': [],
-                'vacation_end_time': 1617889170,
-                'vacation_start_time': 1617889170,
-                'work_end_time': 1617889170,
-                'work_start_time': 1617889170,
-                '_extra': 'extra!!',
-            })
-            assert len(w) == 1
-            assert issubclass(w[-1].category, RuntimeWarning)
-            assert str(w[-1].message) == 'There are missing fields: _extra'
-
 
 class TestConversationField:
     def test_conversation_field_to_dict(self):
@@ -247,19 +201,6 @@ class TestConversationField:
         assert conversation.users_count == 2
         assert conversation.avatar_url is None
         assert conversation.name == 'noname'
-
-        with warnings.catch_warnings(record=True) as w:
-            ConversationField.from_dict({
-                'id': '1',
-                'type': 'dm',
-                'users_count': 2,
-                'avatar_url': None,
-                'name': 'noname',
-                '_extra': 'extra!!',
-            })
-            assert len(w) == 1
-            assert issubclass(w[-1].category, RuntimeWarning)
-            assert str(w[-1].message) == 'There are missing fields: _extra'
 
 
 class TestMessageField:
@@ -1018,7 +959,7 @@ class TestUserResponse:
         )
         r = UserResponse(success=True, user=user)
         assert r.to_json() == (
-            '{"success": true, "error": null, "user": {"id": 1234, "space_id": 12, "name": "name", "display_name": "dp", '
+            '{"success": true, "error": null, "user": {"id": "1234", "space_id": "12", "name": "name", "display_name": "dp", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
             '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}}')
@@ -1102,8 +1043,8 @@ class TestUserListResponse:
         assert r.users is None
 
         user = UserField(
-            id=1234,
-            space_id=12,
+            id='1234',
+            space_id='12',
             identifications=[UserIdentificationField(type='email', value='user@localhost')],
             name='name',
             nickname='nickname',
@@ -1133,8 +1074,8 @@ class TestUserListResponse:
         assert r.to_json() == '{"success": false, "error": {"code": "api_not_found", "message": "api not found"}, "cursor": null, "users": null}'
 
         user = UserField(
-            id=1234,
-            space_id=12,
+            id='1234',
+            space_id='12',
             identifications=[UserIdentificationField(type='email', value='user@localhost')],
             name='name',
             display_name='dp',
@@ -1152,7 +1093,7 @@ class TestUserListResponse:
         )
         r = UserListResponse(success=True, users=[user])
         assert r.to_json() == (
-            '{"success": true, "error": null, "cursor": null, "users": [{"id": 1234, "space_id": 12, "name": "name", "display_name": "dp", '
+            '{"success": true, "error": null, "cursor": null, "users": [{"id": "1234", "space_id": "12", "name": "name", "display_name": "dp", '
             '"identifications": [{"type": "email", "value": "user@localhost"}], "nickname": "nickname", "avatar_url": "http://localhost/image.png", '
             '"department": "dep", "position": "position", "responsibility": "resp", "tels": [], "mobiles": [], "work_start_time": 1617889170, '
             '"work_end_time": 1617889170, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}')

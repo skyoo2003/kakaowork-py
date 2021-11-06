@@ -38,12 +38,16 @@ class TestTextInlineColor:
 
 
 class TestTextInline:
-    def test_validate(self):
-        assert TextInline(type=TextInlineType.STYLED, text='msg', bold=True).validate() is True
-        assert TextInline(type=TextInlineType.STYLED, text='msg', url='http://localhost').validate() is False
-        assert TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost').validate() is True
-        assert TextInline(type=TextInlineType.LINK, text='msg', bold=True).validate() is False
-        assert TextInline(type=TextInlineType.LINK, text='msg', bold=True, italic=True, strike=True, color=False).validate() is False
+    def test_root_validate(self):
+        TextInline(type=TextInlineType.STYLED, text='msg', bold=True)
+        with pytest.raises(ValueError):
+            TextInline(type=TextInlineType.STYLED, text='msg', url='http://localhost')
+
+        TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
+        with pytest.raises(ValueError):
+            TextInline(type=TextInlineType.LINK, text='msg', bold=True)
+        with pytest.raises(ValueError):
+            TextInline(type=TextInlineType.LINK, text='msg', bold=True, italic=True, strike=True, color=False)
 
     def test_to_dict(self):
         inline = TextInline(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY)
