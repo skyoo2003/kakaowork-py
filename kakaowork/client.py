@@ -190,6 +190,26 @@ class Kakaowork:
             self.client._respect_rate_limit(r)
             return MessageResponse.from_json(r.data)
 
+        def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            if not (email or key):
+                raise ValueError("Either 'email' or 'key' must exist.")
+            payload = {
+                'text': text,
+                'blocks': blocks or [],
+            }
+            if email is not None:
+                payload['email'] = email
+            if key is not None:
+                payload['key'] = key
+            with self.client.limiter:
+                r = self.client.http.request(
+                    'POST',
+                    f'{self.client.base_url}{self.base_path}.send_by',
+                    body=json.dumps(payload, default=json_default).encode('utf-8'),
+                )
+            self.client._respect_rate_limit(r)
+            return MessageResponse.from_json(r.data)
+
         def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
             payload = {
                 'email': email,
@@ -457,6 +477,27 @@ class AsyncKakaowork:
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.send',
+                    method='POST',
+                    headers=self.client.headers,
+                    data=json.dumps(payload, default=json_default).encode('utf-8'),
+                )
+            await self.client._respect_rate_limit(r)
+            return MessageResponse.from_json(await r.content())
+
+        async def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            if not (email or key):
+                raise ValueError("Either 'email' or 'key' must exist.")
+            payload = {
+                'text': text,
+                'blocks': blocks or [],
+            }
+            if email is not None:
+                payload['email'] = email
+            if key is not None:
+                payload['key'] = key
+            async with self.client.limiter:
+                r = await self.client.http.request(
+                    url=f'{self.client.base_url}{self.base_path}.send_by',
                     method='POST',
                     headers=self.client.headers,
                     data=json.dumps(payload, default=json_default).encode('utf-8'),
