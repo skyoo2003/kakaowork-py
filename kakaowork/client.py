@@ -18,8 +18,11 @@ from kakaowork.consts import (
     BASE_PATH_DEPARTMENTS,
     BASE_PATH_SPACES,
     BASE_PATH_BOTS,
+    BASE_PATH_BATCH,
 )
 from kakaowork.models import (
+    WorkTimeField,
+    VacationTimeField,
     BaseResponse,
     UserResponse,
     UserListResponse,
@@ -265,6 +268,72 @@ class Kakaowork:
             time.sleep(wait_time)
             self.limiter.reset(capacity=capacity)
 
+    class Batch:
+        def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_BATCH):
+            self.client = client
+            self.base_path = base_path
+
+        class Users:
+            def __init__(self, batch: 'Kakaowork.Batch'):
+                self.client = batch.client
+                self.base_path = f'{batch.base_path}/users'
+
+            def set_work_time(self, items: List[WorkTimeField]) -> BaseResponse:
+                payload = {
+                    'user_work_times': [item.to_dict() for item in items],
+                }
+                with self.client.limiter:
+                    r = self.client.http.request(
+                        'POST',
+                        f'{self.client.base_url}{self.base_path}.set_work_time',
+                        body=json.dumps(payload).encode('utf-8'),
+                    )
+                self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(r.data)
+
+            def set_vacation_time(self, items: List[VacationTimeField]) -> BaseResponse:
+                payload = {
+                    'user_vacation_times': [item.to_dict() for item in items],
+                }
+                with self.client.limiter:
+                    r = self.client.http.request(
+                        'POST',
+                        f'{self.client.base_url}{self.base_path}.set_vacation_time',
+                        body=json.dumps(payload).encode('utf-8'),
+                    )
+                self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(r.data)
+
+            def reset_work_time(self, *, user_ids: List[int]) -> BaseResponse:
+                payload = {
+                    'user_ids': user_ids,
+                }
+                with self.client.limiter:
+                    r = self.client.http.request(
+                        'POST',
+                        f'{self.client.base_url}{self.base_path}.reset_work_time',
+                        body=json.dumps(payload).encode('utf-8'),
+                    )
+                self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(r.data)
+
+            def reset_vacation_time(self, *, user_ids: List[int]) -> BaseResponse:
+                payload = {
+                    'user_ids': user_ids,
+                }
+                with self.client.limiter:
+                    r = self.client.http.request(
+                        'POST',
+                        f'{self.client.base_url}{self.base_path}.reset_vacation_time',
+                        body=json.dumps(payload).encode('utf-8'),
+                    )
+                self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(r.data)
+
+        @property
+        def users(self) -> Users:
+            return self.Users(self)
+
     @property
     def headers(self) -> Dict[str, Any]:
         return {
@@ -295,6 +364,10 @@ class Kakaowork:
     @property
     def bots(self) -> Bots:
         return self.Bots(self)
+
+    @property
+    def batch(self) -> Batch:
+        return self.Batch(self)
 
 
 class AsyncKakaowork:
@@ -527,6 +600,76 @@ class AsyncKakaowork:
             await self.client._respect_rate_limit(r)
             return BotResponse.from_json(await r.content())
 
+    class Batch:
+        def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_BATCH):
+            self.client = client
+            self.base_path = base_path
+
+        class Users:
+            def __init__(self, batch: 'AsyncKakaowork.Batch'):
+                self.client = batch.client
+                self.base_path = f'{batch.base_path}/users'
+
+            async def set_work_time(self, items: List[WorkTimeField]) -> BaseResponse:
+                payload = {
+                    'user_work_times': [item.to_dict() for item in items],
+                }
+                async with self.client.limiter:
+                    r = await self.client.http.request(
+                        url=f'{self.client.base_url}{self.base_path}.set_work_time',
+                        method='POST',
+                        headers=self.client.headers,
+                        data=json.dumps(payload).encode('utf-8'),
+                    )
+                await self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(await r.content())
+
+            async def set_vacation_time(self, items: List[VacationTimeField]) -> BaseResponse:
+                payload = {
+                    'user_vacation_times': [item.to_dict() for item in items],
+                }
+                async with self.client.limiter:
+                    r = await self.client.http.request(
+                        url=f'{self.client.base_url}{self.base_path}.set_vacation_time',
+                        method='POST',
+                        headers=self.client.headers,
+                        data=json.dumps(payload).encode('utf-8'),
+                    )
+                await self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(await r.content())
+
+            async def reset_work_time(self, *, user_ids: List[int]) -> BaseResponse:
+                payload = {
+                    'user_ids': user_ids,
+                }
+                async with self.client.limiter:
+                    r = await self.client.http.request(
+                        url=f'{self.client.base_url}{self.base_path}.reset_work_time',
+                        method='POST',
+                        headers=self.client.headers,
+                        data=json.dumps(payload).encode('utf-8'),
+                    )
+                await self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(await r.content())
+
+            async def reset_vacation_time(self, *, user_ids: List[int]) -> BaseResponse:
+                payload = {
+                    'user_ids': user_ids,
+                }
+                async with self.client.limiter:
+                    r = await self.client.http.request(
+                        url=f'{self.client.base_url}{self.base_path}.reset_vacation_time',
+                        method='POST',
+                        headers=self.client.headers,
+                        data=json.dumps(payload).encode('utf-8'),
+                    )
+                await self.client._respect_rate_limit(r)
+                return BaseResponse.from_json(await r.content())
+
+        @property
+        def users(self) -> Users:
+            return self.Users(self)
+
     def __init__(self, *, app_key: str, base_url: Optional[str] = BASE_URL):
         self.app_key = app_key
         self.base_url = base_url
@@ -573,3 +716,7 @@ class AsyncKakaowork:
     @property
     def bots(self) -> Bots:
         return self.Bots(self)
+
+    @property
+    def batch(self) -> Batch:
+        return self.Batch(self)

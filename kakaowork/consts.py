@@ -23,6 +23,7 @@ BASE_PATH_MESSAGES = '/v1/messages'
 BASE_PATH_DEPARTMENTS = '/v1/departments'
 BASE_PATH_SPACES = '/v1/spaces'
 BASE_PATH_BOTS = '/v1/bots'
+BASE_PATH_BATCH = '/v1/batch'
 
 KST = timezone('Asia/Seoul')
 

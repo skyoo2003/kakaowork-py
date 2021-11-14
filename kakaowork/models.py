@@ -275,6 +275,52 @@ class BotField(NamedTuple):
         ))
 
 
+class WorkTimeField(NamedTuple):
+    user_id: int
+    work_start_time: datetime
+    work_end_time: datetime
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            dict(self._asdict()),
+            work_start_time=int(self.work_start_time.timestamp()),
+            work_end_time=int(self.work_end_time.timestamp()),
+        )
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'WorkTimeField':
+        if not value:
+            raise NoValueError('No value to type cast')
+        return cls(**dict(
+            _drop_missing(value, cls._fields),
+            work_start_time=to_kst(value['work_start_time']),
+            work_end_time=to_kst(value['work_end_time']),
+        ))
+
+
+class VacationTimeField(NamedTuple):
+    user_id: int
+    vacation_start_time: datetime
+    vacation_end_time: datetime
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            dict(self._asdict()),
+            vacation_start_time=int(self.vacation_start_time.timestamp()),
+            vacation_end_time=int(self.vacation_end_time.timestamp()),
+        )
+
+    @classmethod
+    def from_dict(cls, value: Dict[str, Any]) -> 'VacationTimeField':
+        if not value:
+            raise NoValueError('No value to type cast')
+        return cls(**dict(
+            _drop_missing(value, cls._fields),
+            vacation_start_time=to_kst(value['vacation_start_time']),
+            vacation_end_time=to_kst(value['vacation_end_time']),
+        ))
+
+
 class ReactiveType(StrEnum):
     SUBMIT_ACTION = "submit_action"
     SUBMIT_MODAL = "submission"
