@@ -365,6 +365,25 @@ class TestKakaoworkMessages:
         assert ret.error is None
         assert ret.message == self.message_field
 
+    def test_kakaowork_messages_send_by(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.message_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.messages.send_by(text='msg', email='nobody@email.com')
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/messages.send_by',
+            body=b'{"text": "msg", "blocks": [], "email": "nobody@email.com"}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+        assert ret.message == self.message_field
+
     def test_kakaowork_messages_send_by_email(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
@@ -832,6 +851,26 @@ class TestAsyncKakaoworkMessages:
             method='POST',
             headers=client.headers,
             data=b'{"conversation_id": 1, "text": "msg", "blocks": []}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+        assert ret.message == self.message_field
+
+    @pytest.mark.asyncio
+    async def test_kakaowork_messages_send_by(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.message_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.messages.send_by(text='msg', email='nobody@email.com')
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/messages.send_by',
+            method='POST',
+            headers=client.headers,
+            data=b'{"text": "msg", "blocks": [], "email": "nobody@email.com"}',
         )
         assert ret.success is True
         assert ret.error is None
