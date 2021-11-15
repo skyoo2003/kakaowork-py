@@ -187,6 +187,42 @@ class BotField(BaseModel):
     status: BotStatus
 
 
+class WorkTimeField(BaseModel):
+    user_id: int
+    work_start_time: datetime
+    work_end_time: datetime
+
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
+
+    def __init__(self, *, work_start_time: Optional[Union[datetime, int]] = None, work_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+        if work_start_time:
+            data['work_start_time'] = to_kst(work_start_time)
+        if work_end_time:
+            data['work_end_time'] = to_kst(work_end_time)
+        super().__init__(**data)
+
+
+class VacationTimeField(BaseModel):
+    user_id: int
+    vacation_start_time: datetime
+    vacation_end_time: datetime
+
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
+
+    def __init__(self, *, vacation_start_time: Optional[Union[datetime, int]] = None, vacation_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+        if vacation_start_time:
+            data['vacation_start_time'] = to_kst(vacation_start_time)
+        if vacation_end_time:
+            data['vacation_end_time'] = to_kst(vacation_end_time)
+        super().__init__(**data)
+
+
 class ReactiveType(StrEnum):
     SUBMIT_ACTION = "submit_action"
     SUBMIT_MODAL = "submission"

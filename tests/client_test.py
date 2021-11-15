@@ -30,6 +30,8 @@ from kakaowork.models import (
     DepartmentField,
     SpaceField,
     BotField,
+    WorkTimeField,
+    VacationTimeField,
 )
 from kakaowork.utils import to_kst
 from tests import _async_return
@@ -507,6 +509,95 @@ class TestKakaoworkBots:
         assert ret.success is True
         assert ret.error is None
         assert ret.info == self.bot_field
+
+
+class TestKakaoworkBatch:
+    headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
+    base_json = '{"success": true}'
+
+    def test_users_set_work_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.base_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.batch.users.set_work_time([
+            WorkTimeField(
+                user_id=1,
+                work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+                work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            ),
+        ])
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/batch/users.set_work_time',
+            body=b'{"user_work_times": [{"user_id": 1, "work_start_time": 1617889170, "work_end_time": 1617889170}]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    def test_users_set_vacation_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.base_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.batch.users.set_vacation_time([
+            VacationTimeField(
+                user_id=1,
+                vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+                vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            ),
+        ])
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/batch/users.set_vacation_time',
+            body=b'{"user_vacation_times": [{"user_id": 1, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    def test_users_reset_work_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.base_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.batch.users.reset_work_time(user_ids=[1])
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/batch/users.reset_work_time',
+            body=b'{"user_ids": [1]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    def test_users_reset_vacation_time(self, mocker: MockerFixture):
+        client = Kakaowork(app_key='dummy')
+        resp = urllib3.HTTPResponse(
+            body=self.base_json,
+            status=200,
+            headers=self.headers,
+        )
+        req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
+        ret = client.batch.users.reset_vacation_time(user_ids=[1])
+
+        req.assert_called_once_with(
+            'POST',
+            'https://api.kakaowork.com/v1/batch/users.reset_vacation_time',
+            body=b'{"user_ids": [1]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
 
 
 class TestAsyncKakaowork:
@@ -1003,3 +1094,96 @@ class TestAsyncKakaoworkBots:
         assert ret.success is True
         assert ret.error is None
         assert ret.info == self.bot_field
+
+
+class TestAsyncKakaoworkBatch:
+    headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
+    base_json = '{"success": true}'
+
+    @pytest.mark.asyncio
+    async def test_users_set_work_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.base_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.batch.users.set_work_time([
+            WorkTimeField(
+                user_id=1,
+                work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+                work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            ),
+        ])
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/batch/users.set_work_time',
+            method='POST',
+            headers=client.headers,
+            data=b'{"user_work_times": [{"user_id": 1, "work_start_time": 1617889170, "work_end_time": 1617889170}]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    @pytest.mark.asyncio
+    async def test_users_set_vacation_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.base_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.batch.users.set_vacation_time([
+            VacationTimeField(
+                user_id=1,
+                vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+                vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            ),
+        ])
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/batch/users.set_vacation_time',
+            method='POST',
+            headers=client.headers,
+            data=b'{"user_vacation_times": [{"user_id": 1, "vacation_start_time": 1617889170, "vacation_end_time": 1617889170}]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    @pytest.mark.asyncio
+    async def test_users_reset_work_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.base_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.batch.users.reset_work_time(user_ids=[1])
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/batch/users.reset_work_time',
+            method='POST',
+            headers=client.headers,
+            data=b'{"user_ids": [1]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
+
+    @pytest.mark.asyncio
+    async def test_users_reset_vacation_time(self, mocker: MockerFixture):
+        client = AsyncKakaowork(app_key='dummy')
+        resp = aiosonic.HttpResponse()
+        resp.body = self.base_json.encode('utf-8')
+        resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
+        resp.headers.update(self.headers)
+        req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
+        ret = await client.batch.users.reset_vacation_time(user_ids=[1])
+
+        req.assert_called_once_with(
+            url='https://api.kakaowork.com/v1/batch/users.reset_vacation_time',
+            method='POST',
+            headers=client.headers,
+            data=b'{"user_ids": [1]}',
+        )
+        assert ret.success is True
+        assert ret.error is None
