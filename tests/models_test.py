@@ -5,7 +5,6 @@ import pytest
 from pytz import utc
 from pydantic import ValidationError
 
-from kakaowork.exceptions import NoValueError
 from kakaowork.blockkit import (
     BlockType,
     TextBlock,

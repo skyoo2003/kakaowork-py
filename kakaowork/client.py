@@ -1,5 +1,3 @@
-# pydocstyle: noqa
-
 import json
 import time
 import asyncio

@@ -12,7 +12,3 @@ class InvalidBlock(KakaoworkError):
 
 class InvalidReactiveBody(KakaoworkError):
     """Invalid reactive body."""
-
-
-class NoValueError(KakaoworkError):
-    """No value error."""

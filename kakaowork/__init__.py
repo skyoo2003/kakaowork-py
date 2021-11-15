@@ -24,7 +24,7 @@ from kakaowork.blockkit import (
     BlockKitBuilder,
 )
 
-from kakaowork.exceptions import (KakaoworkError, InvalidBlock, InvalidBlockType, NoValueError)
+from kakaowork.exceptions import (KakaoworkError, InvalidBlock, InvalidBlockType)
 
 from kakaowork.client import (Kakaowork, AsyncKakaowork)
 

@@ -29,7 +29,7 @@ from kakaowork.blockkit import (
     SelectBlock,
     BlockKitBuilder,
 )
-from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType
 
 
 class TestTextInlineColor:

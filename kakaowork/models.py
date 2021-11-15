@@ -1,29 +1,15 @@
 import json
-import warnings
-from abc import ABC, abstractclassmethod
+from abc import ABC
 from datetime import datetime
-from typing import Optional, NamedTuple, Union, Any, Dict, List, Sequence
+from typing import Optional, Union, Any, Dict, List
 
 from pytz import utc, timezone
 from pydantic import BaseModel, validator
 
 from kakaowork.consts import StrEnum
 from kakaowork.blockkit import Block, BlockType
-from kakaowork.exceptions import NoValueError, InvalidReactiveBody
-from kakaowork.utils import text2json, exist_kv, to_kst, json_default
-
-
-def _drop_missing(kv: Dict[str, Any], keys: Sequence[str]) -> Dict[str, Any]:
-    mk: List[str] = []  # missing keys
-    ret: Dict[str, Any] = {}
-    for k, v in kv.items():
-        if k not in keys:
-            mk.append(k)
-            continue
-        ret[k] = v
-    if mk:
-        warnings.warn(f'There are missing fields: {",".join(mk)}', category=RuntimeWarning, stacklevel=2)
-    return ret
+from kakaowork.exceptions import InvalidReactiveBody
+from kakaowork.utils import to_kst
 
 
 class ErrorCode(StrEnum):

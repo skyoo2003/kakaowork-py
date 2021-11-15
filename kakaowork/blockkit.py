@@ -2,10 +2,9 @@ import os
 import json
 from enum import unique
 from functools import reduce
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, List, Optional, Type, Union, ClassVar, Iterable
 
-from urllib.parse import urlparse
 from pydantic import (
     BaseModel,
     root_validator,
@@ -14,8 +13,7 @@ from pydantic import (
 )
 
 from kakaowork.consts import StrEnum
-from kakaowork.exceptions import InvalidBlock, InvalidBlockType, NoValueError
-from kakaowork.utils import exist_kv, json_default, deprecated
+from kakaowork.exceptions import InvalidBlock, InvalidBlockType
 
 
 @unique
