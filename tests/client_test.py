@@ -335,7 +335,7 @@ class TestKakaoworkMessages:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     message_json = (
         '{"success": true, "error": null, '
-        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}')
+        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": []}}')
     message_field = MessageField(
         id='1',
         text='msg',
@@ -806,7 +806,7 @@ class TestAsyncKakaoworkMessages:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     message_json = (
         '{"success": true, "error": null, '
-        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": null}}')
+        '"message": {"id": "1", "text": "msg", "user_id": "1", "conversation_id": 1, "send_time": 1617889170, "update_time": 1617889170, "blocks": []}}')
     message_field = MessageField(
         id='1',
         text='msg',

@@ -84,28 +84,10 @@ class ErrorField(BaseModel):
     code: ErrorCode
     message: str
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(exclude_none=True)
-
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'ErrorField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**value)
-
 
 class UserIdentificationField(BaseModel):
     type: str
     value: str
-
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(exclude_none=True)
-
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'UserIdentificationField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**value)
 
 
 class UserField(BaseModel):
@@ -126,20 +108,27 @@ class UserField(BaseModel):
     vacation_start_time: Optional[datetime] = None
     vacation_end_time: Optional[datetime] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            self.dict(exclude_none=True),
-            work_start_time=int(self.work_start_time.timestamp()) if self.work_start_time else None,
-            work_end_time=int(self.work_end_time.timestamp()) if self.work_end_time else None,
-            vacation_start_time=int(self.vacation_start_time.timestamp()) if self.vacation_start_time else None,
-            vacation_end_time=int(self.vacation_end_time.timestamp()) if self.vacation_end_time else None,
-        )
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'UserField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**value)
+    def __init__(self,
+                 *,
+                 work_start_time: Optional[Union[datetime, int]] = None,
+                 work_end_time: Optional[Union[datetime, int]] = None,
+                 vacation_start_time: Optional[Union[datetime, int]] = None,
+                 vacation_end_time: Optional[Union[datetime, int]] = None,
+                 **data) -> None:
+        if work_start_time:
+            data['work_start_time'] = to_kst(work_start_time)
+        if work_end_time:
+            data['work_end_time'] = to_kst(work_end_time)
+        if vacation_start_time:
+            data['vacation_start_time'] = to_kst(vacation_start_time)
+        if vacation_end_time:
+            data['vacation_end_time'] = to_kst(vacation_end_time)
+        super().__init__(**data)
 
 
 class ConversationField(BaseModel):
@@ -148,15 +137,6 @@ class ConversationField(BaseModel):
     users_count: int
     avatar_url: Optional[str] = None
     name: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(exclude_none=True)
-
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'ConversationField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**value)
 
 
 class MessageField(BaseModel):
@@ -168,34 +148,27 @@ class MessageField(BaseModel):
     update_time: datetime
     blocks: Optional[List[Block]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return self.dict(exclude_none=True)
-        # return dict(
-            # dict(self._asdict()),
-            # send_time=int(self.send_time.timestamp()) if self.send_time else None,
-            # update_time=int(self.update_time.timestamp()) if self.update_time else None,
-            # blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
-        # )
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'MessageField':
-        if not value:
-            raise NoValueError('No value to type cast')
-
-        blocks: List[Block] = []
-        if exist_kv('blocks', value):
-            for kv in value['blocks']:
-                block_cls = BlockType.block_cls(kv['type'])
-                blocks.append(block_cls.from_dict(kv))
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            send_time=to_kst(value['send_time']) if exist_kv('send_time', value) else None,
-            update_time=to_kst(value['update_time']) if exist_kv('update_time', value) else None,
-            blocks=blocks,
-        ))
+    def __init__(self,
+                 *,
+                 send_time: Optional[Union[datetime, int]] = None,
+                 update_time: Optional[Union[datetime, int]] = None,
+                 blocks: Optional[List[Union[Block, Dict]]] = None,
+                 **data) -> None:
+        if send_time:
+            data['send_time'] = to_kst(send_time)
+        if update_time:
+            data['update_time'] = to_kst(update_time)
+        if blocks is not None:
+            data['blocks'] = [Block.new(block) for block in blocks]
+        super().__init__(**data)
 
 
-class DepartmentField(NamedTuple):
+class DepartmentField(BaseModel):
     id: str
     ids_path: str
     parent_id: str
@@ -209,17 +182,8 @@ class DepartmentField(NamedTuple):
     leader_ids: Optional[List[int]] = None
     ancestry: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'DepartmentField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**dict(_drop_missing(value, cls._fields)))
-
-
-class SpaceField(NamedTuple):
+class SpaceField(BaseModel):
     id: int
     kakaoi_org_id: int
     name: str
@@ -230,37 +194,11 @@ class SpaceField(NamedTuple):
     profile_position_format: ProfilePositionFormat
     logo_url: str
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'SpaceField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            color_tone=ColorTone(value['color_tone']),
-            profile_name_format=ProfileNameFormat(value['profile_name_format']),
-            profile_position_format=ProfilePositionFormat(value['profile_position_format']),
-        ))
-
-
-class BotField(NamedTuple):
+class BotField(BaseModel):
     bot_id: int
     title: str
     status: BotStatus
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self._asdict())
-
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'BotField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            status=BotStatus(value['status']),
-        ))
 
 
 class ReactiveType(StrEnum):
@@ -269,15 +207,20 @@ class ReactiveType(StrEnum):
     REQUEST_MODAL = "request_modal"
 
 
-class BaseReactiveBody(ABC, object):
-    def __init__(self, *, type: ReactiveType, action_time: str, message: MessageField, value: str) -> None:
-        self.type = type
-        self.action_time = action_time
-        self.message = message
-        self.value = value
+class BaseReactiveBody(BaseModel, ABC):
+    type: ReactiveType
+    action_time: str
+    message: MessageField
+    value: str
+
+    class Config:
+        validate_assignment = True
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
     def __str__(self):
-        return self.to_json()
+        return self.json(exclude_none=True)
 
     def __repr__(self):
         return str(self)
@@ -285,143 +228,74 @@ class BaseReactiveBody(ABC, object):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, BaseReactiveBody):
             return False
-        return self.to_dict() == value.to_dict()
-
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict(), default=json_default)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            type=self.type,
-            action_time=self.action_time,
-            message=self.message.to_dict(),
-            value=self.value,
-        )
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'BaseReactiveBody':
-        data = dict(text2json(value))
-        if 'type' not in data:
-            raise InvalidReactiveBody('No type')
-        return cls(**dict(
-            data,
-            type=ReactiveType(data['type']),
-            message=MessageField.from_dict(data['message']),
-        ))
+        return self.dict(exclude_none=True) == value.dict(exclude_none=True)
 
 
 class SubmitActionReactiveBody(BaseReactiveBody):
-    def __init__(self, *, action_time: str, message: MessageField, value: str, action_name: str, react_user_id: int) -> None:
-        super().__init__(type=ReactiveType.SUBMIT_ACTION, action_time=action_time, message=message, value=value)
-        self.action_name = action_name
-        self.react_user_id = react_user_id
+    action_name: str
+    react_user_id: int
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            action_name=self.action_name,
-            react_user_id=self.react_user_id,
-        )
+    def __init__(self, **data) -> None:
+        if 'type' not in data:
+            data['type'] = ReactiveType.SUBMIT_ACTION
+        super().__init__(**data)
 
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'SubmitActionReactiveBody':
-        data = dict(text2json(value))
-        if 'type' not in data or data['type'] != ReactiveType.SUBMIT_ACTION:
-            raise InvalidReactiveBody('No type or invalid')
-        data = {k: v for k, v in data.items() if k != 'type'}
-        return cls(**dict(
-            data,
-            message=MessageField.from_dict(data['message']),
-            action_name=data['action_name'],
-            react_user_id=int(data['react_user_id']),
-        ))
+    @validator('type')
+    def _check_type(cls, value: ReactiveType) -> ReactiveType:
+        if value != ReactiveType.SUBMIT_ACTION:
+            raise ValueError(f"The 'type' should be f{ReactiveType.SUBMIT_ACTION}")
+        return value
 
 
 class SubmitModalReactiveBody(BaseReactiveBody):
-    def __init__(self, *, action_time: str, message: MessageField, value: str, actions: Dict[str, Any], react_user_id: int) -> None:
-        super().__init__(type=ReactiveType.SUBMIT_MODAL, action_time=action_time, message=message, value=value)
-        self.actions = actions
-        self.react_user_id = react_user_id
+    actions: Dict[str, Any]
+    react_user_id: int
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            actions=self.actions,
-            react_user_id=self.react_user_id,
-        )
+    def __init__(self, **data) -> None:
+        if 'type' not in data:
+            data['type'] = ReactiveType.SUBMIT_MODAL
+        super().__init__(**data)
 
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'SubmitModalReactiveBody':
-        data = dict(text2json(value))
-        if 'type' not in data or data['type'] != ReactiveType.SUBMIT_MODAL:
-            raise InvalidReactiveBody('No type or invalid')
-        data = {k: v for k, v in data.items() if k != 'type'}
-        return cls(**dict(
-            data,
-            message=MessageField.from_dict(data['message']),
-            actions=data['actions'],
-            react_user_id=int(data['react_user_id']),
-        ))
+    @validator('type')
+    def _check_type(cls, value: ReactiveType) -> ReactiveType:
+        if value != ReactiveType.SUBMIT_MODAL:
+            raise ValueError(f"The 'type' should be f{ReactiveType.SUBMIT_MODAL}")
+        return value
 
 
 class RequestModalReactiveBody(BaseReactiveBody):
-    def __init__(self, *, action_time: str, message: MessageField, value: str, react_user_id: int) -> None:
-        super().__init__(type=ReactiveType.REQUEST_MODAL, action_time=action_time, message=message, value=value)
-        self.react_user_id = react_user_id
+    react_user_id: int
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            react_user_id=self.react_user_id,
-        )
+    def __init__(self, **data) -> None:
+        if 'type' not in data:
+            data['type'] = ReactiveType.REQUEST_MODAL
+        super().__init__(**data)
 
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveBody':
-        data = dict(text2json(value))
-        if 'type' not in data or data['type'] != ReactiveType.REQUEST_MODAL:
-            raise InvalidReactiveBody('No type or invalid')
-        data = {k: v for k, v in data.items() if k != 'type'}
-        return cls(**dict(
-            data,
-            message=MessageField.from_dict(data['message']),
-            react_user_id=int(data['react_user_id']),
-        ))
+    @validator('type')
+    def _check_type(cls, value: ReactiveType) -> ReactiveType:
+        if value != ReactiveType.REQUEST_MODAL:
+            raise ValueError(f"The 'type' should be f{ReactiveType.REQUEST_MODAL}")
+        return value
 
 
-class ModalReactiveView(NamedTuple):
+class ModalReactiveView(BaseModel):
     title: str
     accept: str
     decline: str
     blocks: List[Block]
     value: str
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            dict(self._asdict()),
-            blocks=[b.to_dict() for b in self.blocks] if self.blocks else None,
-        )
-
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'ModalReactiveView':
-        if not value:
-            raise NoValueError('No value to type cast')
-        blocks: List[Block] = []
-        if exist_kv('blocks', value):
-            for kv in value['blocks']:
-                block_cls = BlockType.block_cls(kv['type'])
-                blocks.append(block_cls.from_dict(kv))
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            blocks=blocks,
-        ))
+    def __init__(self, *, blocks: Optional[List[Union[Block, Dict]]] = None, **data) -> None:
+        if blocks is not None:
+            data['blocks'] = [Block.new(block) for block in blocks]
+        super().__init__(**data)
 
 
-class RequestModalReactiveResponse(object):
-    def __init__(self, *, view: ModalReactiveView) -> None:
-        self.view = view
+class RequestModalReactiveResponse(BaseModel):
+    view: ModalReactiveView
 
     def __str__(self):
-        return self.to_json()
+        return self.json(exclude_none=True)
 
     def __repr__(self):
         return str(self)
@@ -429,30 +303,21 @@ class RequestModalReactiveResponse(object):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, RequestModalReactiveResponse):
             return False
-        return self.to_dict() == value.to_dict()
-
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict(), default=json_default)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(view=self.view.to_dict())
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'RequestModalReactiveResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            view=ModalReactiveView.from_dict(data['view']),
-        ))
+        return self.dict(exclude_none=True) == value.dict(exclude_none=True)
 
 
-class BaseResponse(ABC, object):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None):
-        self.success = success if success is not None else True
-        self.error = error
+class BaseResponse(BaseModel, ABC):
+    success: bool = True
+    error: Optional[ErrorField] = None
+
+    class Config:
+        validate_assignment = True
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
     def __str__(self):
-        return self.to_json()
+        return self.json(exclude_none=True)
 
     def __repr__(self):
         return str(self)
@@ -460,18 +325,9 @@ class BaseResponse(ABC, object):
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, BaseResponse):
             return False
-        return self.to_dict() == value.to_dict()
+        return self.dict(exclude_none=True) == value.dict(exclude_none=True)
 
-    def to_json(self) -> str:
-        return json.dumps(self.to_dict(), default=json_default)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            'success': self.success,
-            'error': self.error.to_dict() if self.error else None,
-        }
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.error:
             return '\n'.join([
                 f'Error code:\t{self.error.code}',
@@ -479,27 +335,11 @@ class BaseResponse(ABC, object):
             ])
         return 'OK'
 
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'BaseResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-        ))
-
 
 class UserResponse(BaseResponse):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, user: Optional[UserField] = None):
-        super().__init__(success=success, error=error)
-        self.user = user
+    user: Optional[UserField] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            user=self.user.to_dict() if self.user else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.user:
             return '\n'.join([
                 f'ID:\t{self.user.id}',
@@ -515,38 +355,14 @@ class UserResponse(BaseResponse):
                 f'Vacation start time:\t{self.user.vacation_start_time}',
                 f'Vacation end time:\t{self.user.vacation_end_time}',
             ])
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserResponse':
-        data = dict(text2json(value))
-        r = cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            user=UserField.from_dict(data['user']) if exist_kv('user', data) else None,
-        ))
-        return r
+        return super().plain()
 
 
 class UserListResponse(BaseResponse):
-    def __init__(self,
-                 *,
-                 success: Optional[bool] = None,
-                 error: Optional[ErrorField] = None,
-                 cursor: Optional[str] = None,
-                 users: Optional[List[UserField]] = None):
-        super().__init__(success=success, error=error)
-        self.cursor = cursor
-        self.users = users
+    cursor: Optional[str] = None
+    users: Optional[List[UserField]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            cursor=self.cursor,
-            users=[u.to_dict() for u in self.users] if self.users else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.users:
             outs = []
             for user in self.users:
@@ -566,30 +382,13 @@ class UserListResponse(BaseResponse):
                 ])
                 outs.append(out)
             return ('\n' + '-' * 30 + '\n').join(outs)
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'UserListResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            users=[UserField.from_dict(node) for node in data['users']] if exist_kv('users', data) else None,
-        ))
+        return super().plain()
 
 
 class ConversationResponse(BaseResponse):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, conversation: Optional[ConversationField] = None):
-        super().__init__(success=success, error=error)
-        self.conversation = conversation
+    conversation: Optional[ConversationField] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            conversation=self.conversation.to_dict() if self.conversation else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.conversation:
             return '\n'.join([
                 f'ID:\t{self.conversation.id}',
@@ -597,37 +396,14 @@ class ConversationResponse(BaseResponse):
                 f'Name:\t{self.conversation.name}',
                 f'Avatar URL:\t{self.conversation.avatar_url}',
             ])
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'ConversationResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            conversation=ConversationField.from_dict(data['conversation']) if exist_kv('conversation', data) else None,
-        ))
+        return super().plain()
 
 
 class ConversationListResponse(BaseResponse):
-    def __init__(self,
-                 *,
-                 success: Optional[bool] = None,
-                 error: Optional[ErrorField] = None,
-                 cursor: Optional[str] = None,
-                 conversations: Optional[List[ConversationField]] = None):
-        super().__init__(success=success, error=error)
-        self.cursor = cursor
-        self.conversations = conversations
+    cursor: Optional[str] = None
+    conversations: Optional[List[ConversationField]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            cursor=self.cursor,
-            conversations=[c.to_dict() for c in self.conversations] if self.conversations else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.conversations:
             outs = []
             for conversation in self.conversations:
@@ -639,30 +415,13 @@ class ConversationListResponse(BaseResponse):
                 ])
                 outs.append(out)
             return ('\n' + '-' * 30 + '\n').join(outs)
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'ConversationListResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            conversations=[ConversationField.from_dict(node) for node in data['conversations']] if exist_kv('conversations', data) else None,
-        ))
+        return super().plain()
 
 
 class MessageResponse(BaseResponse):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, message: Optional[MessageField] = None):
-        super().__init__(success=success, error=error)
-        self.message = message
+    message: Optional[MessageField] = None
 
-    def to_dict(self):
-        return dict(
-            super().to_dict(),
-            message=self.message.to_dict() if self.message else None,
-        )
-
-    def to_plain(self):
+    def plain(self):
         if self.message:
             return '\n'.join([
                 f'ID:\t{self.message.id}',
@@ -672,37 +431,14 @@ class MessageResponse(BaseResponse):
                 f'Text:\t{self.message.text}',
                 f'Blocks:\t{len(self.message.blocks) if self.message.blocks else "-"}',
             ])
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'MessageResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            message=MessageField.from_dict(data['message']) if exist_kv('message', data) else None,
-        ))
+        return super().plain()
 
 
 class DepartmentListResponse(BaseResponse):
-    def __init__(self,
-                 *,
-                 success: Optional[bool] = None,
-                 error: Optional[ErrorField] = None,
-                 cursor: Optional[str] = None,
-                 departments: Optional[List[DepartmentField]] = None):
-        super().__init__(success=success, error=error)
-        self.cursor = cursor
-        self.departments = departments
+    cursor: Optional[str] = None
+    departments: Optional[List[DepartmentField]] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            cursor=self.cursor,
-            departments=[d.to_dict() for d in self.departments] if self.departments else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.departments:
             outs = []
             for department in self.departments:
@@ -714,30 +450,13 @@ class DepartmentListResponse(BaseResponse):
                 ])
                 outs.append(out)
             return ('\n' + '-' * 30 + '\n').join(outs)
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]):
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            departments=[DepartmentField.from_dict(node) for node in data['departments']] if exist_kv('departments', data) else None,
-        ))
+        return super().plain()
 
 
 class SpaceResponse(BaseResponse):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, space: Optional[SpaceField] = None):
-        super().__init__(success=success, error=error)
-        self.space = space
+    space: Optional[SpaceField] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            space=self.space.to_dict() if self.space else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.space:
             return '\n'.join([
                 f'ID:\t{self.space.id}',
@@ -750,39 +469,13 @@ class SpaceResponse(BaseResponse):
                 f'Profile position format:\t{self.space.profile_position_format}',
                 f'Logo URL:\t{self.space.logo_url}',
             ])
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'SpaceResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            space=SpaceField.from_dict(data['space']) if exist_kv('space', data) else None,
-        ))
+        return super().plain()
 
 
 class BotResponse(BaseResponse):
-    def __init__(self, *, success: Optional[bool] = None, error: Optional[ErrorField] = None, info: Optional[BotField] = None):
-        super().__init__(success=success, error=error)
-        self.info = info
+    info: Optional[BotField] = None
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            super().to_dict(),
-            info=self.info.to_dict() if self.info else None,
-        )
-
-    def to_plain(self) -> str:
+    def plain(self) -> str:
         if self.info:
             return '\n'.join([f'ID:\t{self.info.bot_id}', f'Name:\t{self.info.title}', f'Status:\t{self.info.status}'])
-        return super().to_plain()
-
-    @classmethod
-    def from_json(cls, value: Union[str, bytes]) -> 'BotResponse':
-        data = dict(text2json(value))
-        return cls(**dict(
-            data,
-            error=ErrorField.from_dict(data['error']) if exist_kv('error', data) else None,
-            info=BotField.from_dict(data['info']) if exist_kv('info', data) else None,
-        ))
+        return super().plain()

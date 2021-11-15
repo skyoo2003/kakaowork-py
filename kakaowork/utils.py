@@ -232,7 +232,7 @@ def json_default(value: Any) -> Any:
     from kakaowork.blockkit import Block
 
     if isinstance(value, Block):
-        return value.to_dict()
+        return value.dict(exclude_none=True)
     elif isinstance(value, datetime):
         return int(value.timestamp())
     raise TypeError('not JSON serializable')

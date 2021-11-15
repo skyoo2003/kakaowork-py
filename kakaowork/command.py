@@ -68,7 +68,7 @@ class _BlockKitParamType(click.ParamType):
         else:  # Parse key-value pairs with space separators
             data = parse_kv_pairs(value)
         block_cls = BlockType.block_cls(data['type'])
-        return block_cls.from_dict(data)
+        return block_cls(**data)
 
     def __repr__(self) -> str:
         return 'BLOCKKIT'
@@ -80,7 +80,7 @@ class _CLIOptions:
 
 
 def _echo(ctx: click.Context, resp: BaseResponse) -> None:
-    click.echo(click.style(resp.to_plain(), fg=None if resp.success else 'red'))
+    click.echo(click.style(resp.plain(), fg=None if resp.success else 'red'))
     ctx.exit(0 if resp.success else 1)
 
 
@@ -115,10 +115,10 @@ def users_list(ctx: click.Context, limit: int):  # noqa: D103
         return _echo(ctx, r)
 
     def _generate_output(resp: UserListResponse):
-        yield resp.to_plain()
+        yield resp.plain()
         while resp.cursor is not None:
             resp = client.users.list(cursor=resp.cursor)
-            yield resp.to_plain()
+            yield resp.plain()
 
     click.echo_via_pager(_generate_output(r))
 
@@ -161,14 +161,14 @@ def users_set(ctx: click.Context,
     if work_time:
         start_time, end_time = work_time[0], work_time[1]
         r = client.users.set_work_time(user_id=user_id, work_start_time=start_time, work_end_time=end_time)
-        click.echo(click.style('Set work time: ' + r.to_plain(), fg=None if r.success else 'red'))
+        click.echo(click.style('Set work time: ' + r.plain(), fg=None if r.success else 'red'))
         if not r.success:
             ctx.exit(1)
 
     if vacation_time:
         start_time, end_time = vacation_time[0], vacation_time[1]
         r = client.users.set_vacation_time(user_id=user_id, vacation_start_time=start_time, vacation_end_time=end_time)
-        click.echo(click.style('Set vacation time: ' + r.to_plain(), fg=None if r.success else 'red'))
+        click.echo(click.style('Set vacation time: ' + r.plain(), fg=None if r.success else 'red'))
         if not r.success:
             ctx.exit(1)
 
@@ -199,10 +199,10 @@ def conversations_list(ctx: click.Context, limit: int):  # noqa: D103
         return _echo(ctx, r)
 
     def _generate_output(resp: ConversationListResponse):
-        yield resp.to_plain()
+        yield resp.plain()
         while resp.cursor is not None:
             resp = client.conversations.list(cursor=resp.cursor)
-            yield resp.to_plain()
+            yield resp.plain()
 
     click.echo_via_pager(_generate_output(r))
 
@@ -273,10 +273,10 @@ def departments_list(ctx: click.Context, limit: int):  # noqa: D103
         return _echo(ctx, r)
 
     def _generate_output(resp: DepartmentListResponse):
-        yield resp.to_plain()
+        yield resp.plain()
         while resp.cursor is not None:
             resp = client.departments.list(cursor=resp.cursor)
-            yield resp.to_plain()
+            yield resp.plain()
 
     click.echo_via_pager(_generate_output(r))
 
