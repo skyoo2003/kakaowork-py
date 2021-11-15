@@ -43,6 +43,8 @@ from kakaowork.models import (
     DepartmentField,
     SpaceField,
     BotField,
+    WorkTimeField,
+    VacationTimeField,
     BaseResponse,
     UserResponse,
     UserListResponse,
