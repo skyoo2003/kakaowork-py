@@ -99,48 +99,6 @@ def text2bool(text: Union[str, bytes]) -> bool:
     return s.strip().lower() in TRUE_STRS
 
 
-def text2json(text: Union[str, bytes]) -> Union[Dict[str, Any], Sequence[Any]]:
-    """Returns the text as a JSON object or array.
-
-    Args:
-        text: A text to be cast as a JSON object or array
-
-    Returns:
-        A value of Python dict or sequence type
-
-    Examples:
-        >>> text2json('{}')
-        {}
-        >>> text2json('{"key": "value"}')
-        {'key': 'value'}
-        >>> text2json('[1, 2, 3]')
-        [1, 2, 3]
-    """
-    json_str = text.decode('utf-8') if isinstance(text, bytes) else text
-    return json.loads(json_str)
-
-
-def exist_kv(key: str, node: Dict[str, Any]) -> bool:
-    """Returns whether a key and its value exist.
-
-    Args:
-        key: A key of a dict
-        node: dict node
-
-    Returns:
-        True if a key and its value exist, False otherwise.
-
-    Examples:
-        >>> exist_kv('', {})
-        False
-        >>> exist_kv('key', {'key': 'value'})
-        True
-    """
-    if key in node and node[key]:
-        return True
-    return False
-
-
 def to_kst(timestamp: Union[int, datetime]) -> datetime:
     """Returns KST(Korea Standard Time) from timestamp.
 
@@ -232,25 +190,7 @@ def json_default(value: Any) -> Any:
     from kakaowork.blockkit import Block
 
     if isinstance(value, Block):
-        return value.to_dict()
+        return value.dict(exclude_none=True)
     elif isinstance(value, datetime):
         return int(value.timestamp())
     raise TypeError('not JSON serializable')
-
-
-class _Deprecated:
-    def __init__(self, *, reason: str) -> None:
-        self.reason = reason
-
-    def __call__(self, f: Callable) -> Any:
-        @wraps(f)
-        def wrapper(*args: List, **kwargs: Dict):
-            warnings.simplefilter('always', DeprecationWarning)
-            warnings.warn(self.reason, category=DeprecationWarning, stacklevel=2)
-            warnings.simplefilter('default', DeprecationWarning)
-            return f(*args, **kwargs)
-
-        return wrapper
-
-
-deprecated = _Deprecated
