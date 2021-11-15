@@ -1,5 +1,3 @@
-# pydocstyle: noqa
-
 import json
 import time
 import asyncio
@@ -49,7 +47,7 @@ class Kakaowork:
                     fields={'user_id': user_id},
                 )
             self.client._respect_rate_limit(r)
-            return UserResponse.from_json(r.data)
+            return UserResponse.parse_raw(r.data)
 
         def find_by_email(self, email: str) -> UserResponse:
             with self.client.limiter:
@@ -59,7 +57,7 @@ class Kakaowork:
                     fields={'email': email},
                 )
             self.client._respect_rate_limit(r)
-            return UserResponse.from_json(r.data)
+            return UserResponse.parse_raw(r.data)
 
         def find_by_phone_number(self, phone_number: str) -> UserResponse:
             with self.client.limiter:
@@ -69,7 +67,7 @@ class Kakaowork:
                     fields={'phone_number': phone_number},
                 )
             self.client._respect_rate_limit(r)
-            return UserResponse.from_json(r.data)
+            return UserResponse.parse_raw(r.data)
 
         def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> UserListResponse:
             fields: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': str(limit)}
@@ -80,7 +78,7 @@ class Kakaowork:
                     fields=fields,
                 )
             self.client._respect_rate_limit(r)
-            return UserListResponse.from_json(r.data)
+            return UserListResponse.parse_raw(r.data)
 
         def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
@@ -95,7 +93,7 @@ class Kakaowork:
                     body=json.dumps(payload).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(r.data)
+            return BaseResponse.parse_raw(r.data)
 
         def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
@@ -110,7 +108,7 @@ class Kakaowork:
                     body=json.dumps(payload).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(r.data)
+            return BaseResponse.parse_raw(r.data)
 
     class Conversations:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
@@ -126,7 +124,7 @@ class Kakaowork:
                     body=json.dumps(payload).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return ConversationResponse.from_json(r.data)
+            return ConversationResponse.parse_raw(r.data)
 
         def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> ConversationListResponse:
             fields = {'cursor': cursor} if cursor else {'limit': str(limit)}
@@ -137,7 +135,7 @@ class Kakaowork:
                     fields=fields,
                 )
             self.client._respect_rate_limit(r)
-            return ConversationListResponse.from_json(r.data)
+            return ConversationListResponse.parse_raw(r.data)
 
         def users(self, *, conversation_id: int) -> UserListResponse:
             with self.client.limiter:
@@ -146,7 +144,7 @@ class Kakaowork:
                     f'{self.client.base_url}{self.base_path}/{conversation_id}/users',
                 )
             self.client._respect_rate_limit(r)
-            return UserListResponse.from_json(r.data)
+            return UserListResponse.parse_raw(r.data)
 
         def invite(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
             payload = {'user_ids': user_ids}
@@ -157,7 +155,7 @@ class Kakaowork:
                     body=json.dumps(payload).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(r.data)
+            return BaseResponse.parse_raw(r.data)
 
         def kick(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
             payload = {'user_ids': user_ids}
@@ -168,7 +166,7 @@ class Kakaowork:
                     body=json.dumps(payload).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(r.data)
+            return BaseResponse.parse_raw(r.data)
 
     class Messages:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_MESSAGES):
@@ -188,7 +186,7 @@ class Kakaowork:
                     body=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(r.data)
+            return MessageResponse.parse_raw(r.data)
 
         def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
             if not (email or key):
@@ -208,7 +206,7 @@ class Kakaowork:
                     body=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(r.data)
+            return MessageResponse.parse_raw(r.data)
 
         def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
             payload = {
@@ -223,7 +221,7 @@ class Kakaowork:
                     body=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(r.data)
+            return MessageResponse.parse_raw(r.data)
 
     class Departments:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
@@ -239,7 +237,7 @@ class Kakaowork:
                     fields=fields,
                 )
             self.client._respect_rate_limit(r)
-            return DepartmentListResponse.from_json(r.data)
+            return DepartmentListResponse.parse_raw(r.data)
 
     class Spaces:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_SPACES):
@@ -253,7 +251,7 @@ class Kakaowork:
                     f'{self.client.base_url}{self.base_path}.info',
                 )
             self.client._respect_rate_limit(r)
-            return SpaceResponse.from_json(r.data)
+            return SpaceResponse.parse_raw(r.data)
 
     class Bots:
         def __init__(self, client: 'Kakaowork', *, base_path: Optional[str] = BASE_PATH_BOTS):
@@ -267,7 +265,7 @@ class Kakaowork:
                     f'{self.client.base_url}{self.base_path}.info',
                 )
             self.client._respect_rate_limit(r)
-            return BotResponse.from_json(r.data)
+            return BotResponse.parse_raw(r.data)
 
     def __init__(self, *, app_key: str, base_url: Optional[str] = BASE_URL):
         self.app_key = app_key
@@ -332,7 +330,7 @@ class AsyncKakaowork:
                     params={'user_id': user_id},
                 )
             await self.client._respect_rate_limit(r)
-            return UserResponse.from_json(await r.content())
+            return UserResponse.parse_raw(await r.content())
 
         async def find_by_email(self, email: str) -> UserResponse:
             async with self.client.limiter:
@@ -343,7 +341,7 @@ class AsyncKakaowork:
                     params={'email': email},
                 )
             await self.client._respect_rate_limit(r)
-            return UserResponse.from_json(await r.content())
+            return UserResponse.parse_raw(await r.content())
 
         async def find_by_phone_number(self, phone_number: str) -> UserResponse:
             async with self.client.limiter:
@@ -354,7 +352,7 @@ class AsyncKakaowork:
                     params={'phone_number': phone_number},
                 )
             await self.client._respect_rate_limit(r)
-            return UserResponse.from_json(await r.content())
+            return UserResponse.parse_raw(await r.content())
 
         async def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> UserListResponse:
             params: Dict[str, Any] = {'cursor': cursor} if cursor else {'limit': str(limit)}
@@ -366,7 +364,7 @@ class AsyncKakaowork:
                     params=params,
                 )
             await self.client._respect_rate_limit(r)
-            return UserListResponse.from_json(await r.content())
+            return UserListResponse.parse_raw(await r.content())
 
         async def set_work_time(self, *, user_id: int, work_start_time: datetime, work_end_time: datetime) -> BaseResponse:
             payload = {
@@ -382,7 +380,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(await r.content())
+            return BaseResponse.parse_raw(await r.content())
 
         async def set_vacation_time(self, *, user_id: int, vacation_start_time: datetime, vacation_end_time: datetime) -> BaseResponse:
             payload = {
@@ -398,7 +396,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(await r.content())
+            return BaseResponse.parse_raw(await r.content())
 
     class Conversations:
         def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_CONVERSATIONS):
@@ -415,7 +413,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return ConversationResponse.from_json(await r.content())
+            return ConversationResponse.parse_raw(await r.content())
 
         async def list(self, *, cursor: Optional[str] = None, limit: Optional[int] = Limit.DEFAULT) -> ConversationListResponse:
             params = {'cursor': cursor} if cursor else {'limit': str(limit)}
@@ -427,7 +425,7 @@ class AsyncKakaowork:
                     params=params,
                 )
             await self.client._respect_rate_limit(r)
-            return ConversationListResponse.from_json(await r.content())
+            return ConversationListResponse.parse_raw(await r.content())
 
         async def users(self, *, conversation_id: int) -> UserListResponse:
             async with self.client.limiter:
@@ -437,7 +435,7 @@ class AsyncKakaowork:
                     headers=self.client.headers,
                 )
             await self.client._respect_rate_limit(r)
-            return UserListResponse.from_json(await r.content())
+            return UserListResponse.parse_raw(await r.content())
 
         async def invite(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
             payload = {'user_ids': user_ids}
@@ -449,7 +447,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(await r.content())
+            return BaseResponse.parse_raw(await r.content())
 
         async def kick(self, *, conversation_id: int, user_ids: List[int]) -> BaseResponse:
             payload = {'user_ids': user_ids}
@@ -461,7 +459,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return BaseResponse.from_json(await r.content())
+            return BaseResponse.parse_raw(await r.content())
 
     class Messages:
         def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_MESSAGES):
@@ -482,7 +480,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(await r.content())
+            return MessageResponse.parse_raw(await r.content())
 
         async def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
             if not (email or key):
@@ -503,7 +501,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(await r.content())
+            return MessageResponse.parse_raw(await r.content())
 
         async def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
             payload = {
@@ -519,7 +517,7 @@ class AsyncKakaowork:
                     data=json.dumps(payload, default=json_default).encode('utf-8'),
                 )
             await self.client._respect_rate_limit(r)
-            return MessageResponse.from_json(await r.content())
+            return MessageResponse.parse_raw(await r.content())
 
     class Departments:
         def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_DEPARTMENTS):
@@ -536,7 +534,7 @@ class AsyncKakaowork:
                     params=params,
                 )
             await self.client._respect_rate_limit(r)
-            return DepartmentListResponse.from_json(await r.content())
+            return DepartmentListResponse.parse_raw(await r.content())
 
     class Spaces:
         def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_SPACES):
@@ -551,7 +549,7 @@ class AsyncKakaowork:
                     headers=self.client.headers,
                 )
             await self.client._respect_rate_limit(r)
-            return SpaceResponse.from_json(await r.content())
+            return SpaceResponse.parse_raw(await r.content())
 
     class Bots:
         def __init__(self, client: 'AsyncKakaowork', *, base_path: Optional[str] = BASE_PATH_BOTS):
@@ -566,7 +564,7 @@ class AsyncKakaowork:
                     headers=self.client.headers,
                 )
             await self.client._respect_rate_limit(r)
-            return BotResponse.from_json(await r.content())
+            return BotResponse.parse_raw(await r.content())
 
     def __init__(self, *, app_key: str, base_url: Optional[str] = BASE_URL):
         self.app_key = app_key
