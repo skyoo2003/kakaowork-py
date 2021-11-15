@@ -1,4 +1,0 @@
-Replaced NamedTuple with pydantic.BaseModel.
-
-- Removed functions: to_dict/to_json/from_dict/from_json. Use pydantic methods now.
-- Renamed function: to_plain to plain

@@ -1,3 +1,36 @@
+Kakaowork 0.6.0 (2021-11-15)
+============================
+
+Breaking Changes
+----------------
+
+- Replaced NamedTuple with pydantic.BaseModel. (`#138 <https://github.com/skyoo2003/kakaowork-py/issues/138>`_)
+
+  - Removed functions: to_dict/to_json/from_dict/from_json. Use pydantic methods now.
+  - Renamed function: to_plain to plain.
+
+
+New Features
+------------
+
+- Added Kakaowork API: messages.send_by. (`#145 <https://github.com/skyoo2003/kakaowork-py/issues/145>`_)
+- Added Kakaowork APIs below. (`#146 <https://github.com/skyoo2003/kakaowork-py/issues/146>`_)
+
+  - /batch/users.set_work_time
+  - /batch/users.set_vacation_time
+  - /batch/users.reset_work_time
+  - /batch/users.reset_vacation_time
+
+
+Miscellaneous
+-------------
+
+- Update dependencies. (`#141 <https://github.com/skyoo2003/kakaowork-py/issues/141>`_)
+
+  - urllib3 = ">=1.14,<2"
+  - aiosonic = ">=0.10,<1"
+
+
 Kakaowork 0.5.0 (2021-11-05)
 ============================
 
