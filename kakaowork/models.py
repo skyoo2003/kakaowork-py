@@ -187,50 +187,40 @@ class BotField(BaseModel):
     status: BotStatus
 
 
-class WorkTimeField(NamedTuple):
+class WorkTimeField(BaseModel):
     user_id: int
     work_start_time: datetime
     work_end_time: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            dict(self._asdict()),
-            work_start_time=int(self.work_start_time.timestamp()),
-            work_end_time=int(self.work_end_time.timestamp()),
-        )
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'WorkTimeField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            work_start_time=to_kst(value['work_start_time']),
-            work_end_time=to_kst(value['work_end_time']),
-        ))
+    def __init__(self, *, work_start_time: Optional[Union[datetime, int]] = None, work_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+        if work_start_time:
+            data['work_start_time'] = to_kst(work_start_time)
+        if work_end_time:
+            data['work_end_time'] = to_kst(work_end_time)
+        super().__init__(**data)
 
 
-class VacationTimeField(NamedTuple):
+class VacationTimeField(BaseModel):
     user_id: int
     vacation_start_time: datetime
     vacation_end_time: datetime
 
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            dict(self._asdict()),
-            vacation_start_time=int(self.vacation_start_time.timestamp()),
-            vacation_end_time=int(self.vacation_end_time.timestamp()),
-        )
+    class Config:
+        json_encoders = {
+            datetime: lambda dt: int(dt.timestamp()),
+        }
 
-    @classmethod
-    def from_dict(cls, value: Dict[str, Any]) -> 'VacationTimeField':
-        if not value:
-            raise NoValueError('No value to type cast')
-        return cls(**dict(
-            _drop_missing(value, cls._fields),
-            vacation_start_time=to_kst(value['vacation_start_time']),
-            vacation_end_time=to_kst(value['vacation_end_time']),
-        ))
+    def __init__(self, *, vacation_start_time: Optional[Union[datetime, int]] = None, vacation_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+        if vacation_start_time:
+            data['vacation_start_time'] = to_kst(vacation_start_time)
+        if vacation_end_time:
+            data['vacation_end_time'] = to_kst(vacation_end_time)
+        super().__init__(**data)
 
 
 class ReactiveType(StrEnum):
