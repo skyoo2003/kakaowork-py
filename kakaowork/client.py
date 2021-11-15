@@ -298,29 +298,29 @@ class Kakaowork:
 
             def set_work_time(self, items: List[WorkTimeField]) -> BaseResponse:
                 payload = {
-                    'user_work_times': [item.to_dict() for item in items],
+                    'user_work_times': [item.dict(exclude_none=True) for item in items],
                 }
                 with self.client.limiter:
                     r = self.client.http.request(
                         'POST',
                         f'{self.client.base_url}{self.base_path}.set_work_time',
-                        body=json.dumps(payload).encode('utf-8'),
+                        body=json.dumps(payload, default=json_default).encode('utf-8'),
                     )
                 self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(r.data)
+                return BaseResponse.parse_raw(r.data)
 
             def set_vacation_time(self, items: List[VacationTimeField]) -> BaseResponse:
                 payload = {
-                    'user_vacation_times': [item.to_dict() for item in items],
+                    'user_vacation_times': [item.dict(exclude_none=True) for item in items],
                 }
                 with self.client.limiter:
                     r = self.client.http.request(
                         'POST',
                         f'{self.client.base_url}{self.base_path}.set_vacation_time',
-                        body=json.dumps(payload).encode('utf-8'),
+                        body=json.dumps(payload, default=json_default).encode('utf-8'),
                     )
                 self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(r.data)
+                return BaseResponse.parse_raw(r.data)
 
             def reset_work_time(self, *, user_ids: List[int]) -> BaseResponse:
                 payload = {
@@ -333,7 +333,7 @@ class Kakaowork:
                         body=json.dumps(payload).encode('utf-8'),
                     )
                 self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(r.data)
+                return BaseResponse.parse_raw(r.data)
 
             def reset_vacation_time(self, *, user_ids: List[int]) -> BaseResponse:
                 payload = {
@@ -346,7 +346,7 @@ class Kakaowork:
                         body=json.dumps(payload).encode('utf-8'),
                     )
                 self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(r.data)
+                return BaseResponse.parse_raw(r.data)
 
         @property
         def users(self) -> Users:
@@ -651,31 +651,31 @@ class AsyncKakaowork:
 
             async def set_work_time(self, items: List[WorkTimeField]) -> BaseResponse:
                 payload = {
-                    'user_work_times': [item.to_dict() for item in items],
+                    'user_work_times': [item.dict(exclude_none=True) for item in items],
                 }
                 async with self.client.limiter:
                     r = await self.client.http.request(
                         url=f'{self.client.base_url}{self.base_path}.set_work_time',
                         method='POST',
                         headers=self.client.headers,
-                        data=json.dumps(payload).encode('utf-8'),
+                        data=json.dumps(payload, default=json_default).encode('utf-8'),
                     )
                 await self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(await r.content())
+                return BaseResponse.parse_raw(await r.content())
 
             async def set_vacation_time(self, items: List[VacationTimeField]) -> BaseResponse:
                 payload = {
-                    'user_vacation_times': [item.to_dict() for item in items],
+                    'user_vacation_times': [item.dict(exclude_none=True) for item in items],
                 }
                 async with self.client.limiter:
                     r = await self.client.http.request(
                         url=f'{self.client.base_url}{self.base_path}.set_vacation_time',
                         method='POST',
                         headers=self.client.headers,
-                        data=json.dumps(payload).encode('utf-8'),
+                        data=json.dumps(payload, default=json_default).encode('utf-8'),
                     )
                 await self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(await r.content())
+                return BaseResponse.parse_raw(await r.content())
 
             async def reset_work_time(self, *, user_ids: List[int]) -> BaseResponse:
                 payload = {
@@ -689,7 +689,7 @@ class AsyncKakaowork:
                         data=json.dumps(payload).encode('utf-8'),
                     )
                 await self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(await r.content())
+                return BaseResponse.parse_raw(await r.content())
 
             async def reset_vacation_time(self, *, user_ids: List[int]) -> BaseResponse:
                 payload = {
@@ -703,7 +703,7 @@ class AsyncKakaowork:
                         data=json.dumps(payload).encode('utf-8'),
                     )
                 await self.client._respect_rate_limit(r)
-                return BaseResponse.from_json(await r.content())
+                return BaseResponse.parse_raw(await r.content())
 
         @property
         def users(self) -> Users:
