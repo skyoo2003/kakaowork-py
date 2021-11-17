@@ -174,19 +174,15 @@ class TestImageLinkBlock:
         assert block.url == url
 
     def test_validator(self):
-        ImageLinkBlock(url="http://localhost/image.png")
-
         with pytest.raises(ValidationError):
             ImageLinkBlock(url="")
 
         with pytest.raises(ValidationError):
             ImageLinkBlock(url="$*(#Y$(")
 
-        with pytest.raises(ValidationError):
-            ImageLinkBlock(url="http://localhost")
-
-        with pytest.raises(ValidationError):
-            ImageLinkBlock(url="http://localhost/")
+        ImageLinkBlock(url="http://localhost")
+        ImageLinkBlock(url="http://localhost/")
+        ImageLinkBlock(url="http://localhost/image.png")
 
     def test_to_dict(self):
         url = "http://localhost/image.png"
