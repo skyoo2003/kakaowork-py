@@ -152,6 +152,10 @@ class SelectBlockOption(BaseModel):
 class Block(BaseModel, ABC):
     type: BlockType
 
+    class Config:
+        underscore_attrs_are_private = True
+        validate_assignment = True
+
     def __str__(self):
         return self.json(exclude_none=True)
 
@@ -182,10 +186,6 @@ class TextBlock(Block):
     text: str
     markdown: Optional[bool] = None
     inlines: Optional[List[TextInline]] = None
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -220,20 +220,10 @@ class TextBlock(Block):
 class ImageLinkBlock(Block):
     url: AnyHttpUrl
 
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
-
     def __init__(self, **data) -> None:
         if 'type' not in data:
             data['type'] = BlockType.IMAGE_LINK
         super().__init__(**data)
-
-    @validator('url')
-    def _check_url_is_file(cls, value: AnyHttpUrl) -> AnyHttpUrl:
-        if not os.path.splitext(value.path or '')[1]:
-            raise ValueError("The 'url' property should contain a file extension")
-        return value
 
 
 class ButtonBlock(Block):
@@ -244,10 +234,6 @@ class ButtonBlock(Block):
     action_type: Optional[ButtonActionType] = None
     action_name: Optional[str] = None
     value: Optional[str] = None
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -264,10 +250,6 @@ class ButtonBlock(Block):
 
 
 class DividerBlock(Block):
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
-
     def __init__(self, **data) -> None:
         if 'type' not in data:
             data['type'] = BlockType.DIVIDER
@@ -279,10 +261,6 @@ class HeaderBlock(Block):
 
     text: str
     style: HeaderStyle
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data):
         if 'type' not in data:
@@ -302,10 +280,6 @@ class ActionBlock(Block):
     _max_len_elements: ClassVar[int] = 3
 
     elements: List[ButtonBlock] = []
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -328,10 +302,6 @@ class DescriptionBlock(Block):
     content: TextBlock
     accent: Optional[bool] = None
 
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
-
     def __init__(self, **data) -> None:
         if 'type' not in data:
             data['type'] = BlockType.DESCRIPTION
@@ -350,10 +320,6 @@ class SectionBlock(Block):
     content: TextBlock
     accessory: ImageLinkBlock
 
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
-
     def __init__(self, **data) -> None:
         if 'type' not in data:
             data['type'] = BlockType.SECTION
@@ -363,10 +329,6 @@ class SectionBlock(Block):
 class ContextBlock(Block):
     content: TextBlock
     image: ImageLinkBlock
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -379,10 +341,6 @@ class LabelBlock(Block):
 
     text: str
     markdown: bool
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -404,10 +362,6 @@ class InputBlock(Block):
     name: str
     required: Optional[bool] = None
     placeholder: Optional[str] = None
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
@@ -435,10 +389,6 @@ class SelectBlock(Block):
     options: List[SelectBlockOption]
     required: Optional[bool] = None
     placeholder: Optional[str] = None
-
-    class Config:
-        underscore_attrs_are_private = True
-        validate_assignment = True
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
