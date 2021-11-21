@@ -99,7 +99,7 @@ class TextInline(BaseModel):
             only_url_set = all([
                 values.get('bold') is None,
                 values.get('italic') is None,
-                values.get('strik') is None,
+                values.get('strike') is None,
                 values.get('color') is None,
             ])
             if not only_url_set:
