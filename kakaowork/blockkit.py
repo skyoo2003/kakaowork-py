@@ -83,7 +83,7 @@ class TextInline(BaseModel):
     bold: Optional[bool] = None
     italic: Optional[bool] = None
     strike: Optional[bool] = None
-    color: Optional[TextInlineColor] = None
+    color: Optional[Union[TextInlineColor, str]] = None
     url: Optional[str] = None
 
     class Config:
@@ -99,7 +99,7 @@ class TextInline(BaseModel):
             only_url_set = all([
                 values.get('bold') is None,
                 values.get('italic') is None,
-                values.get('strike') is None,
+                values.get('strik') is None,
                 values.get('color') is None,
             ])
             if not only_url_set:
@@ -230,7 +230,7 @@ class ButtonBlock(Block):
     _max_len_text: ClassVar[int] = 20
 
     text: str
-    style: ButtonStyle = ButtonStyle.DEFAULT
+    style: ButtonStyle
     action_type: Optional[ButtonActionType] = None
     action_name: Optional[str] = None
     value: Optional[str] = None
