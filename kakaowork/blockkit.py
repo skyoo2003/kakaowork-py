@@ -83,7 +83,7 @@ class TextInline(BaseModel):
     bold: Optional[bool] = None
     italic: Optional[bool] = None
     strike: Optional[bool] = None
-    color: Optional[Union[TextInlineColor, str]] = None
+    color: Optional[TextInlineColor] = None
     url: Optional[str] = None
 
     class Config:
@@ -230,7 +230,7 @@ class ButtonBlock(Block):
     _max_len_text: ClassVar[int] = 20
 
     text: str
-    style: ButtonStyle
+    style: ButtonStyle = ButtonStyle.DEFAULT
     action_type: Optional[ButtonActionType] = None
     action_name: Optional[str] = None
     value: Optional[str] = None
@@ -260,7 +260,7 @@ class HeaderBlock(Block):
     _max_len_text: ClassVar[int] = 20
 
     text: str
-    style: HeaderStyle
+    style: HeaderStyle = HeaderStyle.BLUE
 
     def __init__(self, **data):
         if 'type' not in data:
@@ -279,7 +279,7 @@ class HeaderBlock(Block):
 class ActionBlock(Block):
     _max_len_elements: ClassVar[int] = 3
 
-    elements: List[ButtonBlock] = []
+    elements: List[ButtonBlock]
 
     def __init__(self, **data) -> None:
         if 'type' not in data:
