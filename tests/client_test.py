@@ -769,7 +769,7 @@ class TestAsyncKakaoworkUsers:
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.users.info(1)
+        ret = await client.users.info(user_id=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.info',

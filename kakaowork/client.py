@@ -392,7 +392,7 @@ class AsyncKakaowork:
             self.client = client
             self.base_path = base_path
 
-        async def info(self, user_id: int) -> UserResponse:
+        async def info(self, *, user_id: int) -> UserResponse:
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.info',
@@ -572,7 +572,7 @@ class AsyncKakaowork:
             await self.client._respect_rate_limit(r)
             return MessageResponse.parse_raw(await r.content())
 
-        async def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+        async def send_by_email(self, email: str, *, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
             payload = drop_none({
                 'email': email,
                 'text': text,
