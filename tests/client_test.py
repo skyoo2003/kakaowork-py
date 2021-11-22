@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from contextlib import ExitStack as does_not_raise
 
 import pytest
 import urllib3
@@ -8,15 +9,6 @@ from pytz import utc
 from pytest_mock import MockerFixture
 
 from kakaowork.client import (Kakaowork, AsyncKakaowork)
-from kakaowork.consts import (
-    BASE_URL,
-    BASE_PATH_USERS,
-    BASE_PATH_CONVERSATIONS,
-    BASE_PATH_MESSAGES,
-    BASE_PATH_DEPARTMENTS,
-    BASE_PATH_SPACES,
-    BASE_PATH_BOTS,
-)
 from kakaowork.models import (
     ProfileNameFormat,
     ProfilePositionFormat,
@@ -38,11 +30,11 @@ from tests import _async_return
 
 
 class TestKakaowork:
-    def test_kakaowork_properties(self):
+    def test_properties(self):
         c = Kakaowork(app_key='dummy')
 
         assert c.app_key == 'dummy'
-        assert c.base_url == BASE_URL
+        assert c.base_url == 'https://api.kakaowork.com'
         assert isinstance(c.http, urllib3.PoolManager)
         assert c.headers == {
             'Authorization': 'Bearer dummy',
@@ -54,6 +46,7 @@ class TestKakaowork:
         assert isinstance(c.departments, Kakaowork.Departments)
         assert isinstance(c.spaces, Kakaowork.Spaces)
         assert isinstance(c.bots, Kakaowork.Bots)
+        assert isinstance(c.batch, Kakaowork.Batch)
 
 
 class TestKakaoworkUsers:
@@ -85,7 +78,12 @@ class TestKakaoworkUsers:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
-    def test_kakaowork_users_info(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.users.client is client
+        assert client.users.base_path == '/v1/users'
+
+    def test_info(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
@@ -93,7 +91,7 @@ class TestKakaoworkUsers:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.users.info(1)
+        ret = client.users.info(user_id=1)
 
         req.assert_called_once_with(
             'GET',
@@ -104,7 +102,7 @@ class TestKakaoworkUsers:
         assert ret.error is None
         assert ret.user == self.user_field
 
-    def test_kakaowork_users_find_by_email(self, mocker: MockerFixture):
+    def test_find_by_email(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
@@ -123,7 +121,7 @@ class TestKakaoworkUsers:
         assert ret.error is None
         assert ret.user == self.user_field
 
-    def test_kakaowork_users_find_by_phone_number(self, mocker: MockerFixture):
+    def test_find_by_phone_number(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_json,
@@ -142,7 +140,21 @@ class TestKakaoworkUsers:
         assert ret.error is None
         assert ret.user == self.user_field
 
-    def test_kakaowork_users_list(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,fields',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    def test_list(self, kwargs, fields, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_list_json,
@@ -150,19 +162,19 @@ class TestKakaoworkUsers:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.users.list(limit=1)
+        ret = client.users.list(**kwargs)
 
         req.assert_called_once_with(
             'GET',
             'https://api.kakaowork.com/v1/users.list',
-            fields={'limit': '1'},
+            fields=fields,
         )
         assert ret.success is True
         assert ret.error is None
         assert ret.cursor is None
         assert ret.users == [self.user_field]
 
-    def test_kakaowork_users_set_work_time(self, mocker: MockerFixture):
+    def test_set_work_time(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
@@ -184,7 +196,7 @@ class TestKakaoworkUsers:
         assert ret.success is True
         assert ret.error is None
 
-    def test_kakaowork_users_set_vacation_time(self, mocker: MockerFixture):
+    def test_set_vacation_time(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
@@ -243,7 +255,19 @@ class TestKakaoworkConversations:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
-    def test_kakaowork_conversations_open(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.conversations.client is client
+        assert client.conversations.base_path == '/v1/conversations'
+
+    @pytest.mark.parametrize(
+        'kwargs,body',
+        [
+            (dict(user_ids=[1]), b'{"user_id": 1}'),
+            (dict(user_ids=[1, 2]), b'{"user_ids": [1, 2]}'),
+        ],
+    )
+    def test_open(self, kwargs, body, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.conversation_json,
@@ -251,14 +275,28 @@ class TestKakaoworkConversations:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.conversations.open(user_ids=[1])
+        ret = client.conversations.open(**kwargs)
 
-        req.assert_called_once_with('POST', 'https://api.kakaowork.com/v1/conversations.open', body=b'{"user_id": 1}')
+        req.assert_called_once_with('POST', 'https://api.kakaowork.com/v1/conversations.open', body=body)
         assert ret.success is True
         assert ret.error is None
         assert ret.conversation == self.conversation_field
 
-    def test_kakaowork_conversations_list(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,fields',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    def test_list(self, kwargs, fields, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.conversation_list_json,
@@ -266,19 +304,19 @@ class TestKakaoworkConversations:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.conversations.list(limit=1)
+        ret = client.conversations.list(**kwargs)
 
         req.assert_called_once_with(
             'GET',
             'https://api.kakaowork.com/v1/conversations.list',
-            fields={'limit': '1'},
+            fields=fields,
         )
         assert ret.success is True
         assert ret.error is None
         assert ret.cursor is None
         assert ret.conversations == [self.conversation_field]
 
-    def test_kakaowork_conversations_users(self, mocker: MockerFixture):
+    def test_users(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.user_list_json,
@@ -296,7 +334,7 @@ class TestKakaoworkConversations:
         assert ret.error is None
         assert ret.users == [self.user_field]
 
-    def test_kakaowork_conversations_invite(self, mocker: MockerFixture):
+    def test_invite(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
@@ -314,7 +352,7 @@ class TestKakaoworkConversations:
         assert ret.success is True
         assert ret.error is None
 
-    def test_kakaowork_conversations_kick(self, mocker: MockerFixture):
+    def test_kick(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.base_json,
@@ -348,7 +386,19 @@ class TestKakaoworkMessages:
         blocks=[],
     )
 
-    def test_kakaowork_messages_send(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.messages.client is client
+        assert client.messages.base_path == '/v1/messages'
+
+    @pytest.mark.parametrize(
+        'kwargs,body',
+        [
+            (dict(conversation_id=1, text='msg'), b'{"conversation_id": 1, "text": "msg"}'),
+            (dict(conversation_id=1, text='msg', blocks=[]), b'{"conversation_id": 1, "text": "msg", "blocks": []}'),
+        ],
+    )
+    def test_send(self, kwargs, body, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.message_json,
@@ -356,18 +406,28 @@ class TestKakaoworkMessages:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.messages.send(conversation_id=1, text='msg')
+        ret = client.messages.send(**kwargs)
 
         req.assert_called_once_with(
             'POST',
             'https://api.kakaowork.com/v1/messages.send',
-            body=b'{"conversation_id": 1, "text": "msg", "blocks": []}',
+            body=body,
         )
         assert ret.success is True
         assert ret.error is None
         assert ret.message == self.message_field
 
-    def test_kakaowork_messages_send_by(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,body,raises',
+        [
+            (dict(text='msg'), b'{"text": "msg"}', pytest.raises(ValueError)),
+            (dict(text='msg', email='nobody@email.com'), b'{"email": "nobody@email.com", "text": "msg"}', does_not_raise()),
+            (dict(text='msg', email='nobody@email.com', blocks=[]), b'{"email": "nobody@email.com", "text": "msg", "blocks": []}', does_not_raise()),
+            (dict(text='msg', key='mykey'), b'{"key": "mykey", "text": "msg"}', does_not_raise()),
+            (dict(text='msg', key='mykey', blocks=[]), b'{"key": "mykey", "text": "msg", "blocks": []}', does_not_raise()),
+        ],
+    )
+    def test_send_by(self, kwargs, body, raises, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.message_json,
@@ -375,18 +435,30 @@ class TestKakaoworkMessages:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.messages.send_by(text='msg', email='nobody@email.com')
 
-        req.assert_called_once_with(
-            'POST',
-            'https://api.kakaowork.com/v1/messages.send_by',
-            body=b'{"text": "msg", "blocks": [], "email": "nobody@email.com"}',
-        )
-        assert ret.success is True
-        assert ret.error is None
-        assert ret.message == self.message_field
+        with raises:
+            ret = client.messages.send_by(**kwargs)
 
-    def test_kakaowork_messages_send_by_email(self, mocker: MockerFixture):
+        if isinstance(raises, does_not_raise):
+            req.assert_called_once_with(
+                'POST',
+                'https://api.kakaowork.com/v1/messages.send_by',
+                body=body,
+            )
+            assert ret.success is True
+            assert ret.error is None
+            assert ret.message == self.message_field
+        else:
+            req.assert_not_called()
+
+    @pytest.mark.parametrize(
+        'kwargs,body',
+        [
+            (dict(text='msg', email='nobody@email.com'), b'{"email": "nobody@email.com", "text": "msg"}'),
+            (dict(text='msg', email='nobody@email.com', blocks=[]), b'{"email": "nobody@email.com", "text": "msg", "blocks": []}'),
+        ],
+    )
+    def test_send_by_email(self, kwargs, body, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.message_json,
@@ -394,12 +466,12 @@ class TestKakaoworkMessages:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.messages.send_by_email(email='nobody@email.com', text='msg')
+        ret = client.messages.send_by_email(**kwargs)
 
         req.assert_called_once_with(
             'POST',
             'https://api.kakaowork.com/v1/messages.send_by_email',
-            body=b'{"email": "nobody@email.com", "text": "msg", "blocks": []}',
+            body=body,
         )
         assert ret.success is True
         assert ret.error is None
@@ -426,7 +498,26 @@ class TestKakaoworkDepartments:
         ancestry='',
     )
 
-    def test_kakaowork_departments_list(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.departments.client is client
+        assert client.departments.base_path == '/v1/departments'
+
+    @pytest.mark.parametrize(
+        'kwargs,fields',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    def test_list(self, kwargs, fields, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.department_list_json,
@@ -434,12 +525,12 @@ class TestKakaoworkDepartments:
             headers=self.headers,
         )
         req = mocker.patch('urllib3.PoolManager.request', return_value=resp)
-        ret = client.departments.list(limit=1)
+        ret = client.departments.list(**kwargs)
 
         req.assert_called_once_with(
             'GET',
             'https://api.kakaowork.com/v1/departments.list',
-            fields={'limit': '1'},
+            fields=fields,
         )
         assert ret.success is True
         assert ret.error is None
@@ -464,7 +555,12 @@ class TestKakaoworkSpaces:
         logo_url='http://localhost/image.png',
     )
 
-    def test_kakaowork_spaces_info(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.spaces.client is client
+        assert client.spaces.base_path == '/v1/spaces'
+
+    def test_info(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.space_json,
@@ -492,7 +588,12 @@ class TestKakaoworkBots:
         status=BotStatus.ACTIVATED,
     )
 
-    def test_kakaowork_bots_info(self, mocker: MockerFixture):
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.bots.client is client
+        assert client.bots.base_path == '/v1/bots'
+
+    def test_info(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
         resp = urllib3.HTTPResponse(
             body=self.bot_json,
@@ -514,6 +615,11 @@ class TestKakaoworkBots:
 class TestKakaoworkBatch:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true}'
+
+    def test_properties(self):
+        client = Kakaowork(app_key='dummy')
+        assert client.batch.client is client
+        assert client.batch.base_path == '/v1/batch'
 
     def test_users_set_work_time(self, mocker: MockerFixture):
         client = Kakaowork(app_key='dummy')
@@ -606,7 +712,7 @@ class TestAsyncKakaowork:
         c = AsyncKakaowork(app_key='dummy')
 
         assert c.app_key == 'dummy'
-        assert c.base_url == BASE_URL
+        assert c.base_url == 'https://api.kakaowork.com'
         assert isinstance(c.http, aiosonic.HTTPClient)
         assert c.headers == {
             'Authorization': 'Bearer dummy',
@@ -618,6 +724,7 @@ class TestAsyncKakaowork:
         assert isinstance(c.departments, AsyncKakaowork.Departments)
         assert isinstance(c.spaces, AsyncKakaowork.Spaces)
         assert isinstance(c.bots, AsyncKakaowork.Bots)
+        assert isinstance(c.batch, AsyncKakaowork.Batch)
 
 
 class TestAsyncKakaoworkUsers:
@@ -650,14 +757,20 @@ class TestAsyncKakaoworkUsers:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_users_info(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.users.client is client
+        assert client.users.base_path == '/v1/users'
+
+    @pytest.mark.asyncio
+    async def test_info(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.users.info(1)
+        ret = await client.users.info(user_id=1)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.info',
@@ -670,7 +783,7 @@ class TestAsyncKakaoworkUsers:
         assert ret.user == self.user_field
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_users_find_by_email(self, mocker: MockerFixture):
+    async def test_find_by_email(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
@@ -690,7 +803,7 @@ class TestAsyncKakaoworkUsers:
         assert ret.user == self.user_field
 
     @pytest.mark.asyncio
-    async def test_kakaowork_users_find_by_phone_number(self, mocker: MockerFixture):
+    async def test_find_by_phone_number(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_json.encode('utf-8')
@@ -710,20 +823,34 @@ class TestAsyncKakaoworkUsers:
         assert ret.user == self.user_field
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_users_list(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,params',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    async def test_list(self, kwargs, params, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.users.list(limit=1)
+        ret = await client.users.list(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/users.list',
             method='GET',
             headers=client.headers,
-            params={'limit': '1'},
+            params=params,
         )
         assert ret.success is True
         assert ret.error is None
@@ -731,7 +858,7 @@ class TestAsyncKakaoworkUsers:
         assert ret.users == [self.user_field]
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_users_set_work_time(self, mocker: MockerFixture):
+    async def test_set_work_time(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
@@ -754,7 +881,7 @@ class TestAsyncKakaoworkUsers:
         assert ret.error is None
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_users_set_vacation_time(self, mocker: MockerFixture):
+    async def test_set_vacation_time(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
@@ -814,40 +941,67 @@ class TestAsyncKakaoworkConversations:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_conversations_open(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.conversations.client is client
+        assert client.conversations.base_path == '/v1/conversations'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        'kwargs,data',
+        [
+            (dict(user_ids=[1]), b'{"user_id": 1}'),
+            (dict(user_ids=[1, 2]), b'{"user_ids": [1, 2]}'),
+        ],
+    )
+    async def test_open(self, kwargs, data, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.conversation_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.conversations.open(user_ids=[1])
+        ret = await client.conversations.open(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations.open',
             method='POST',
             headers=client.headers,
-            data=b'{"user_id": 1}',
+            data=data,
         )
         assert ret.success is True
         assert ret.error is None
         assert ret.conversation == self.conversation_field
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_conversations_list(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,params',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    async def test_list(self, kwargs, params, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.conversation_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.conversations.list(limit=1)
+        ret = await client.conversations.list(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/conversations.list',
             method='GET',
             headers=client.headers,
-            params={'limit': '1'},
+            params=params,
         )
         assert ret.success is True
         assert ret.error is None
@@ -855,7 +1009,7 @@ class TestAsyncKakaoworkConversations:
         assert ret.conversations == [self.conversation_field]
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_conversations_users(self, mocker: MockerFixture):
+    async def test_users(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.user_list_json.encode('utf-8')
@@ -874,7 +1028,7 @@ class TestAsyncKakaoworkConversations:
         assert ret.users == [self.user_field]
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_conversations_invite(self, mocker: MockerFixture):
+    async def test_invite(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
@@ -893,7 +1047,7 @@ class TestAsyncKakaoworkConversations:
         assert ret.error is None
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_conversations_kick(self, mocker: MockerFixture):
+    async def test_kick(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.base_json.encode('utf-8')
@@ -928,60 +1082,95 @@ class TestAsyncKakaoworkMessages:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_messages_send(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.messages.client is client
+        assert client.messages.base_path == '/v1/messages'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        'kwargs,data',
+        [
+            (dict(conversation_id=1, text='msg'), b'{"conversation_id": 1, "text": "msg"}'),
+            (dict(conversation_id=1, text='msg', blocks=[]), b'{"conversation_id": 1, "text": "msg", "blocks": []}'),
+        ],
+    )
+    async def test_send(self, kwargs, data, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.message_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.messages.send(conversation_id=1, text='msg')
+        ret = await client.messages.send(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/messages.send',
             method='POST',
             headers=client.headers,
-            data=b'{"conversation_id": 1, "text": "msg", "blocks": []}',
+            data=data,
         )
         assert ret.success is True
         assert ret.error is None
         assert ret.message == self.message_field
 
     @pytest.mark.asyncio
-    async def test_kakaowork_messages_send_by(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,data,raises',
+        [
+            (dict(text='msg'), b'{"text": "msg"}', pytest.raises(ValueError)),
+            (dict(text='msg', email='nobody@email.com'), b'{"email": "nobody@email.com", "text": "msg"}', does_not_raise()),
+            (dict(text='msg', email='nobody@email.com', blocks=[]), b'{"email": "nobody@email.com", "text": "msg", "blocks": []}', does_not_raise()),
+            (dict(text='msg', key='mykey'), b'{"key": "mykey", "text": "msg"}', does_not_raise()),
+            (dict(text='msg', key='mykey', blocks=[]), b'{"key": "mykey", "text": "msg", "blocks": []}', does_not_raise()),
+        ],
+    )
+    async def test_send_by(self, kwargs, data, raises, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.message_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.messages.send_by(text='msg', email='nobody@email.com')
 
-        req.assert_called_once_with(
-            url='https://api.kakaowork.com/v1/messages.send_by',
-            method='POST',
-            headers=client.headers,
-            data=b'{"text": "msg", "blocks": [], "email": "nobody@email.com"}',
-        )
-        assert ret.success is True
-        assert ret.error is None
-        assert ret.message == self.message_field
+        with raises:
+            ret = await client.messages.send_by(**kwargs)
+
+        if isinstance(raises, does_not_raise):
+            req.assert_called_once_with(
+                url='https://api.kakaowork.com/v1/messages.send_by',
+                method='POST',
+                headers=client.headers,
+                data=data,
+            )
+            assert ret.success is True
+            assert ret.error is None
+            assert ret.message == self.message_field
+        else:
+            req.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_messages_send_by_email(self, mocker: MockerFixture):
+    @pytest.mark.parametrize(
+        'kwargs,data',
+        [
+            (dict(text='msg', email='nobody@email.com'), b'{"email": "nobody@email.com", "text": "msg"}'),
+            (dict(text='msg', email='nobody@email.com', blocks=[]), b'{"email": "nobody@email.com", "text": "msg", "blocks": []}'),
+        ],
+    )
+    async def test_send_by_email(self, kwargs, data, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.message_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.messages.send_by_email(email='nobody@email.com', text='msg')
+        ret = await client.messages.send_by_email(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/messages.send_by_email',
             method='POST',
             headers=client.headers,
-            data=b'{"email": "nobody@email.com", "text": "msg", "blocks": []}',
+            data=data,
         )
         assert ret.success is True
         assert ret.error is None
@@ -1009,20 +1198,40 @@ class TestAsyncKakaoworkDepartments:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_departments_list(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.departments.client is client
+        assert client.departments.base_path == '/v1/departments'
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        'kwargs,params',
+        [
+            (dict(), {
+                'limit': '10'
+            }),
+            (dict(limit=1), {
+                'limit': '1'
+            }),
+            (dict(cursor='curr'), {
+                'cursor': 'curr'
+            }),
+        ],
+    )
+    async def test_list(self, kwargs, params, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.department_list_json.encode('utf-8')
         resp.response_initial = {'version': 1.1, 'code': 200, 'reason': 'OK'}
         resp.headers.update(self.headers)
         req = mocker.patch('aiosonic.HTTPClient.request', return_value=_async_return(resp))
-        ret = await client.departments.list(limit=1)
+        ret = await client.departments.list(**kwargs)
 
         req.assert_called_once_with(
             url='https://api.kakaowork.com/v1/departments.list',
             method='GET',
             headers=client.headers,
-            params={'limit': '1'},
+            params=params,
         )
         assert ret.success is True
         assert ret.error is None
@@ -1048,7 +1257,13 @@ class TestAsyncKakaoworkSpaces:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_spaces_info(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.spaces.client is client
+        assert client.spaces.base_path == '/v1/spaces'
+
+    @pytest.mark.asyncio
+    async def test_info(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.space_json.encode('utf-8')
@@ -1077,7 +1292,13 @@ class TestAsyncKakaoworkBots:
     )
 
     @pytest.mark.asyncio
-    async def test_async_kakaowork_bots_info(self, mocker: MockerFixture):
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.bots.client is client
+        assert client.bots.base_path == '/v1/bots'
+
+    @pytest.mark.asyncio
+    async def test_info(self, mocker: MockerFixture):
         client = AsyncKakaowork(app_key='dummy')
         resp = aiosonic.HttpResponse()
         resp.body = self.bot_json.encode('utf-8')
@@ -1099,6 +1320,12 @@ class TestAsyncKakaoworkBots:
 class TestAsyncKakaoworkBatch:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true}'
+
+    @pytest.mark.asyncio
+    async def test_properties(self):
+        client = AsyncKakaowork(app_key='dummy')
+        assert client.batch.client is client
+        assert client.batch.base_path == '/v1/batch'
 
     @pytest.mark.asyncio
     async def test_users_set_work_time(self, mocker: MockerFixture):

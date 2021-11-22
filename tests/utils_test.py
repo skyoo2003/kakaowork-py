@@ -5,7 +5,7 @@ from pytz import utc
 
 from kakaowork.blockkit import DividerBlock
 from kakaowork.consts import KST
-from kakaowork.utils import (is_bool, is_int, is_float, text2bool, to_kst, normalize_token, parse_kv_pairs, json_default)
+from kakaowork.utils import (is_bool, is_int, is_float, text2bool, to_kst, normalize_token, parse_kv_pairs, json_default, drop_none)
 
 
 def test_is_bool():
@@ -85,3 +85,8 @@ def test_json_default():
         json_default(1234)
     with pytest.raises(TypeError):
         json_default('abc')
+
+
+def test_drop_none():
+    assert drop_none({}) == {}
+    assert drop_none({'key': 'value', 'nokey': None}) == {'key': 'value'}

@@ -194,3 +194,19 @@ def json_default(value: Any) -> Any:
     elif isinstance(value, datetime):
         return int(value.timestamp())
     raise TypeError('not JSON serializable')
+
+
+def drop_none(value: Dict) -> Dict:
+    """Drop none value in the dict.
+
+    Args:
+        value: A dict value
+
+    Returns:
+        A dict without none value
+
+    Examples:
+        >>> drop_none({'key': 'value', 'nokey': None})
+        {'key': 'value'}
+    """
+    return {k: v for k, v in value.items() if v is not None}

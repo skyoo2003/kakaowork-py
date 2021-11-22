@@ -133,7 +133,7 @@ def users_find(ctx: click.Context, user_id: Optional[int] = None, email: Optiona
     client = Kakaowork(app_key=opts.app_key)
 
     if user_id is not None:
-        r = client.users.info(user_id)
+        r = client.users.info(user_id=user_id)
     elif email:
         r = client.users.find_by_email(email)
     elif mobile:

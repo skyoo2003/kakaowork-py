@@ -15,6 +15,9 @@ class Limit(IntEnum):
     DEFAULT = 10
     MAX = 100
 
+    def __str__(self):
+        return str(self.value)
+
 
 BASE_URL = 'https://api.kakaowork.com'
 BASE_PATH_USERS = '/v1/users'
