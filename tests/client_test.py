@@ -757,7 +757,7 @@ class TestAsyncKakaoworkUsers:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.users.client is client
         assert client.users.base_path == '/v1/users'
@@ -941,7 +941,7 @@ class TestAsyncKakaoworkConversations:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.conversations.client is client
         assert client.conversations.base_path == '/v1/conversations'
@@ -1082,7 +1082,7 @@ class TestAsyncKakaoworkMessages:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.messages.client is client
         assert client.messages.base_path == '/v1/messages'
@@ -1198,7 +1198,7 @@ class TestAsyncKakaoworkDepartments:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.departments.client is client
         assert client.departments.base_path == '/v1/departments'
@@ -1257,7 +1257,7 @@ class TestAsyncKakaoworkSpaces:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.spaces.client is client
         assert client.spaces.base_path == '/v1/spaces'
@@ -1292,7 +1292,7 @@ class TestAsyncKakaoworkBots:
     )
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.bots.client is client
         assert client.bots.base_path == '/v1/bots'
@@ -1322,7 +1322,7 @@ class TestAsyncKakaoworkBatch:
     base_json = '{"success": true}'
 
     @pytest.mark.asyncio
-    def test_properties(self):
+    async def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.batch.client is client
         assert client.batch.base_path == '/v1/batch'
