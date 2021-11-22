@@ -32,7 +32,7 @@ from kakaowork.models import (
     BotResponse,
 )
 from kakaowork.blockkit import Block
-from kakaowork.utils import json_default
+from kakaowork.utils import json_default, drop_none
 from kakaowork.ratelimit import RateLimiter
 
 
@@ -42,7 +42,7 @@ class Kakaowork:
             self.client = client
             self.base_path = base_path
 
-        def info(self, user_id: int) -> UserResponse:
+        def info(self, *, user_id: int) -> UserResponse:
             with self.client.limiter:
                 r = self.client.http.request(
                     'GET',
@@ -177,11 +177,11 @@ class Kakaowork:
             self.base_path = base_path
 
         def send(self, *, conversation_id: int, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
-            payload = {
+            payload = drop_none({
                 'conversation_id': conversation_id,
                 'text': text,
-                'blocks': blocks or [],
-            }
+                'blocks': blocks,
+            })
             with self.client.limiter:
                 r = self.client.http.request(
                     'POST',
@@ -194,14 +194,12 @@ class Kakaowork:
         def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
             if not (email or key):
                 raise ValueError("Either 'email' or 'key' must exist.")
-            payload = {
+            payload = drop_none({
+                'email': email,
+                'key': key,
                 'text': text,
-                'blocks': blocks or [],
-            }
-            if email is not None:
-                payload['email'] = email
-            if key is not None:
-                payload['key'] = key
+                'blocks': blocks,
+            })
             with self.client.limiter:
                 r = self.client.http.request(
                     'POST',
@@ -211,12 +209,12 @@ class Kakaowork:
             self.client._respect_rate_limit(r)
             return MessageResponse.parse_raw(r.data)
 
-        def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
-            payload = {
+        def send_by_email(self, email: str, *, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
+            payload = drop_none({
                 'email': email,
                 'text': text,
-                'blocks': blocks or [],
-            }
+                'blocks': blocks,
+            })
             with self.client.limiter:
                 r = self.client.http.request(
                     'POST',
@@ -540,11 +538,11 @@ class AsyncKakaowork:
             self.base_path = base_path
 
         async def send(self, *, conversation_id: int, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
-            payload = {
+            payload = drop_none({
                 'conversation_id': conversation_id,
                 'text': text,
-                'blocks': blocks or [],
-            }
+                'blocks': blocks,
+            })
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.send',
@@ -558,14 +556,12 @@ class AsyncKakaowork:
         async def send_by(self, *, text: str, email: Optional[str] = None, key: Optional[str] = None, blocks: Optional[List[Block]] = None) -> MessageResponse:
             if not (email or key):
                 raise ValueError("Either 'email' or 'key' must exist.")
-            payload = {
+            payload = drop_none({
+                'email': email,
+                'key': key,
                 'text': text,
-                'blocks': blocks or [],
-            }
-            if email is not None:
-                payload['email'] = email
-            if key is not None:
-                payload['key'] = key
+                'blocks': blocks,
+            })
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.send_by',
@@ -577,11 +573,11 @@ class AsyncKakaowork:
             return MessageResponse.parse_raw(await r.content())
 
         async def send_by_email(self, *, email: str, text: str, blocks: Optional[List[Block]] = None) -> MessageResponse:
-            payload = {
+            payload = drop_none({
                 'email': email,
                 'text': text,
-                'blocks': blocks or [],
-            }
+                'blocks': blocks,
+            })
             async with self.client.limiter:
                 r = await self.client.http.request(
                     url=f'{self.client.base_url}{self.base_path}.send_by_email',
