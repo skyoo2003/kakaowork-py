@@ -756,6 +756,7 @@ class TestAsyncKakaoworkUsers:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.users.client is client
@@ -939,6 +940,7 @@ class TestAsyncKakaoworkConversations:
         vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.conversations.client is client
@@ -1079,6 +1081,7 @@ class TestAsyncKakaoworkMessages:
         blocks=[],
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.messages.client is client
@@ -1194,6 +1197,7 @@ class TestAsyncKakaoworkDepartments:
         ancestry='',
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.departments.client is client
@@ -1252,6 +1256,7 @@ class TestAsyncKakaoworkSpaces:
         logo_url='http://localhost/image.png',
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.spaces.client is client
@@ -1286,6 +1291,7 @@ class TestAsyncKakaoworkBots:
         status=BotStatus.ACTIVATED,
     )
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.bots.client is client
@@ -1315,6 +1321,7 @@ class TestAsyncKakaoworkBatch:
     headers = {'Content-Type': 'applicaion/json: chartset=utf-8'}
     base_json = '{"success": true}'
 
+    @pytest.mark.asyncio
     def test_properties(self):
         client = AsyncKakaowork(app_key='dummy')
         assert client.batch.client is client
