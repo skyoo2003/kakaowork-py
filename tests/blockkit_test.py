@@ -402,9 +402,14 @@ class TestActionBlock:
 
     def test_from_dict(self):
         with pytest.raises(ValidationError):
+            ActionBlock(**{})
+
+        with pytest.raises(ValidationError):
             ActionBlock(**{"type": "####", "elements": [{"type": "button", "text": "hello", "style": "default"}]})
 
-        assert ActionBlock(**{}) == ActionBlock()
+        with pytest.raises(ValidationError):
+            ActionBlock(**{'elements': []})
+
         assert ActionBlock(**{
             "elements": [{
                 "type": "button",
