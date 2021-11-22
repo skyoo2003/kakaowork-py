@@ -45,4 +45,4 @@ repos:
         name: pytest
         language: system
         entry: poetry run pytest
-        files: ".py$"
+        files: ".+_test.py$"
