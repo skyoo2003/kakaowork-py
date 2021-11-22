@@ -1,5 +1,6 @@
 import json
 from unittest.mock import mock_open
+from contextlib import ExitStack as does_not_raise
 
 import pytest
 from pytest_mock import MockerFixture
@@ -38,42 +39,74 @@ class TestTextInlineColor:
 
 
 class TestTextInline:
-    def test_validator(self):
-        TextInline(type=TextInlineType.STYLED, text='msg', bold=True)
+    def test_properties(self):
+        text = 'hello'
+        block = TextInline(
+            type=TextInlineType.STYLED,
+            text=text,
+        )
+        assert block.type == TextInlineType.STYLED
+        assert block.text == text
+        assert block.bold is None
+        assert block.italic is None
+        assert block.strike is None
+        assert block.color is None
+        assert block.url is None
 
-        with pytest.raises(ValidationError):
-            TextInline(type=TextInlineType.STYLED, text='msg', url='http://localhost')
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####', text='msg'), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.STYLED, text='msg', bold=True), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', bold=False), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', italic=True), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', italic=False), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', strike=True), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', strike=False), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', color=True), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', color=False), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', bold=True, italic=True, strike=True, color=True), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', bold=False, italic=False, strike=False, color=False), does_not_raise()),
+            (dict(type=TextInlineType.STYLED, text='msg', url='http://localhost'), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', url='http://localhost'), does_not_raise()),
+            (dict(type=TextInlineType.LINK, text='msg', bold=True), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', bold=False), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', italic=True), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', italic=False), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', strike=True), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', strike=False), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', color=True), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', color=False), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', bold=True, italic=True, strike=True, color=True), pytest.raises(ValidationError)),
+            (dict(type=TextInlineType.LINK, text='msg', bold=False, italic=False, strike=False, color=False), pytest.raises(ValidationError)),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            TextInline(**attributes)
 
-        TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
-
-        with pytest.raises(ValidationError):
-            TextInline(type=TextInlineType.LINK, text='msg', bold=True)
-
-        with pytest.raises(ValidationError):
-            TextInline(type=TextInlineType.LINK, text='msg', bold=True, italic=True, strike=True, color=False)
-
-        with pytest.raises(ValidationError):
-            TextInline(type='####', text='msg')
-
-    def test_to_dict(self):
-        inline = TextInline(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY)
-        assert inline.dict(exclude_none=True) == {'type': 'styled', 'text': 'msg', 'bold': True, 'color': 'grey'}
-
-        inline = TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
-        assert inline.dict(exclude_none=True) == {'type': 'link', 'text': 'msg', 'url': 'http://localhost'}
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            TextInline(**{})
-
-        with pytest.raises(ValidationError):
-            TextInline(**{'type': '####', 'text': 'msg'})
-
-        inline = TextInline(**{'type': 'styled', 'text': 'msg', 'bold': True, 'color': 'grey'})
-        assert inline == TextInline(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY)
-
-        inline = TextInline(**{'type': 'link', 'text': 'msg', 'url': 'http://localhost'})
-        assert inline == TextInline(type=TextInlineType.LINK, text='msg', url='http://localhost')
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(type=TextInlineType.STYLED, text='msg', bold=True, color=TextInlineColor.GREY), {
+                'type': 'styled',
+                'text': 'msg',
+                'bold': True,
+                'color': 'grey'
+            }),
+            (
+                dict(type=TextInlineType.LINK, text='msg', url='http://localhost'),
+                {
+                    'type': 'link',
+                    'text': 'msg',
+                    'url': 'http://localhost'
+                },
+            ),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert TextInline(**attributes).dict(exclude_none=True) == expectation
 
 
 class TestButtonStyle:
@@ -88,133 +121,100 @@ class TestHeaderStyle:
 
 class TestTextBlock:
     def test_properties(self):
-        text = '"hello"'
-        block = TextBlock(text=text, markdown=False)
+        text = 'hello'
+        block = TextBlock(text=text)
         assert block.type == BlockType.TEXT
         assert block.text == text
-        assert block.markdown is False
+        assert block.markdown is None
+        assert block.inlines is None
 
-        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
-        block = TextBlock(text=text, inlines=inlines)
-        assert block.type == BlockType.TEXT
-        assert block.text == text
-        assert block.inlines == inlines
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####', text='msg'), pytest.raises(ValidationError)),
+            (dict(text="hello"), does_not_raise()),
+            (dict(text="hello", markdown=True), does_not_raise()),
+            (dict(text="hello", markdown=False), does_not_raise()),
+            (dict(text=""), pytest.raises(ValidationError)),
+            (dict(text="a" * 501, markdown=False), pytest.raises(ValidationError)),
+            (dict(text='hello', inlines=[TextInline(type=TextInlineType.STYLED, text='msg')]), does_not_raise()),
+            (dict(text='hello', inlines=[TextInline(type=TextInlineType.STYLED, text='a' * 501)]), pytest.raises(ValidationError)),
+            (dict(text='hello', inlines=[TextInline(type=TextInlineType.STYLED, text='a' * 251)] * 2), pytest.raises(ValidationError)),
+            (dict(text='hello', markdown=True, inlines=[TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]), pytest.raises(ValidationError)),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            TextBlock(**attributes)
 
-    def test_validator(self):
-        TextBlock(text="hello", markdown=False)
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text="hello", markdown=False), {
+                'type': BlockType.TEXT,
+                'text': 'hello',
+                'markdown': False,
+            }),
+            (dict(text="hello", inlines=[TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]), {
+                'type': BlockType.TEXT,
+                'text': 'hello',
+                'inlines': [{
+                    'type': 'styled',
+                    'text': 'msg',
+                    'bold': True,
+                }]
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert TextBlock(**attributes).dict(exclude_none=True) == expectation
 
-        with pytest.raises(ValidationError):
-            TextBlock(text="", markdown=False)
-
-        with pytest.raises(ValidationError):
-            TextBlock(text="a" * 501, markdown=False)
-
-        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
-        TextBlock(text='hello', inlines=inlines)
-
-        with pytest.raises(ValidationError):
-            TextBlock(text='hello', markdown=True, inlines=inlines)
-
-    def test_to_dict(self):
-        block = TextBlock(text="hello", markdown=False)
-        assert block.dict(exclude_none=True) == {
-            'type': BlockType.TEXT,
-            'text': 'hello',
-            'markdown': False,
-        }
-
-        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
-        block = TextBlock(text="hello", inlines=inlines)
-        assert block.dict(exclude_none=True) == {
-            'type': BlockType.TEXT,
-            'text': 'hello',
-            'inlines': [{
-                'type': 'styled',
-                'text': 'msg',
-                'bold': True,
-            }]
-        }
-
-    def test_to_json(self):
-        block = TextBlock(text="hello", markdown=False)
-        assert block.json(exclude_none=True) == '{"type": "text", "text": "hello", "markdown": false}'
-
-        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
-        block = TextBlock(text="hello", inlines=inlines)
-        assert block.json(exclude_none=True) == ('{"type": "text", "text": "hello", "inlines": ' '[{"type": "styled", "text": "msg", "bold": true}]}')
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            TextBlock(**{})
-
-        with pytest.raises(ValidationError):
-            TextBlock(**{"type": "####", "text": "hello", "markdown": False})
-
-        assert TextBlock(**{"text": "hello", "markdown": False}) == TextBlock(text='hello', markdown=False)
-        assert TextBlock(**{"type": "text", "text": "hello", "markdown": False}) == TextBlock(text="hello", markdown=False)
-        assert TextBlock(**{"type": "text", "text": "# title", "markdown": True}) == TextBlock(text="# title", markdown=True)
-
-        inlines = [TextInline(type=TextInlineType.STYLED, text='msg', bold=True)]
-        assert TextBlock(**{
-            "type": "text",
-            "text": "hello",
-            "inlines": [{
-                "type": "styled",
-                "text": "msg",
-                "bold": True,
-            }]
-        }) == TextBlock(text='hello', inlines=inlines)
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text="hello", markdown=False), '{"type": "text", "text": "hello", "markdown": false}'),
+            (dict(text="hello", inlines=[
+                TextInline(type=TextInlineType.STYLED, text='msg', bold=True),
+            ]), '{"type": "text", "text": "hello", "inlines": [{"type": "styled", "text": "msg", "bold": true}]}'),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert TextBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestImageLinkBlock:
     def test_properties(self):
-        url = "http://localhost/image.png"
+        url = 'http://localhost/image.png'
         block = ImageLinkBlock(url=url)
         assert block.type == BlockType.IMAGE_LINK
         assert block.url == url
 
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            ImageLinkBlock(url="")
-
-        with pytest.raises(ValidationError):
-            ImageLinkBlock(url="$*(#Y$(")
-
-        ImageLinkBlock(url="http://localhost")
-        ImageLinkBlock(url="http://localhost/")
-        ImageLinkBlock(url="http://localhost/image.png")
+    @pytest.mark.parametrize('attributes,raises', [
+        (dict(), pytest.raises(ValidationError)),
+        (dict(type='####', url='http://localhost/image.png'), pytest.raises(ValidationError)),
+        (dict(url='$*(#Y$('), pytest.raises(ValidationError)),
+        (dict(url='http://localhost'), does_not_raise()),
+        (dict(url='http://localhost/image.png'), does_not_raise()),
+    ])
+    def test_validator(self, attributes, raises):
+        with raises:
+            ImageLinkBlock(**attributes)
 
     def test_to_dict(self):
-        url = "http://localhost/image.png"
-        block = ImageLinkBlock(url=url)
-        assert block.dict(exclude_none=True) == {
+        assert ImageLinkBlock(url='http://localhost/image.png').dict(exclude_none=True) == {
             "type": "image_link",
             "url": "http://localhost/image.png",
         }
 
     def test_to_json(self):
-        url = "http://localhost/image.png"
-        block = ImageLinkBlock(url=url)
-        assert block.json(exclude_none=True) == '{"type": "image_link", "url": "http://localhost/image.png"}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            assert ImageLinkBlock(**{})
-
-        with pytest.raises(ValidationError):
-            assert ImageLinkBlock(**{"type": "###", "url": "http://localhost/image.png"})
-
-        assert ImageLinkBlock(**{"url": "http://localhost/image.png"}) == ImageLinkBlock(url="http://localhost/image.png")
-        assert ImageLinkBlock(**{"type": "image_link", "url": "http://localhost/image.png"}) == ImageLinkBlock(url="http://localhost/image.png")
+        assert ImageLinkBlock(url='http://localhost/image.png').json(exclude_none=True) == '{"type": "image_link", "url": "http://localhost/image.png"}'
 
 
 class TestButtonBlock:
     def test_properties(self):
-        text = "hello"
-        block = ButtonBlock(
-            text=text,
-            style=ButtonStyle.DEFAULT,
-        )
+        text = 'hello'
+        block = ButtonBlock(text=text)
         assert block.type == BlockType.BUTTON
         assert block.text == text
         assert block.style == ButtonStyle.DEFAULT
@@ -222,88 +222,64 @@ class TestButtonBlock:
         assert block.action_name is None
         assert block.value is None
 
-        action_name = "action"
-        value = 'value'
-        block = ButtonBlock(
-            text=text,
-            style=ButtonStyle.PRIMARY,
-            action_type=ButtonActionType.OPEN_INAPP_BROWSER,
-            action_name=action_name,
-            value=value,
-        )
-        assert block.type == BlockType.BUTTON
-        assert block.text == text
-        assert block.style == ButtonStyle.PRIMARY
-        assert block.action_type == ButtonActionType.OPEN_INAPP_BROWSER
-        assert block.action_name == action_name
-        assert block.value == value
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(text=""), pytest.raises(ValidationError)),
+            (dict(type='####', text="msg"), pytest.raises(ValidationError)),
+            (dict(text="msg", style=ButtonStyle.PRIMARY), does_not_raise()),
+            (dict(text="msg", action_type=ButtonActionType.OPEN_INAPP_BROWSER, action_name='name', value='value'), does_not_raise()),
+            (dict(text="msg", style=ButtonStyle.PRIMARY, action_type=ButtonActionType.OPEN_INAPP_BROWSER, action_name='name', value='value'), does_not_raise()),
+            (dict(text="a" * 21), pytest.raises(ValidationError)),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            ButtonBlock(**attributes)
 
-    def test_validator(self):
-        ButtonBlock(text="hello", style=ButtonStyle.PRIMARY)
-
-        with pytest.raises(ValidationError):
-            ButtonBlock(text="", style=ButtonStyle.DEFAULT)
-
-        with pytest.raises(ValidationError):
-            ButtonBlock(text="a" * 21, style=ButtonStyle.PRIMARY)
-
-    def test_to_dict(self):
-        block = ButtonBlock(
-            text='hello',
-            style=ButtonStyle.PRIMARY,
-            action_type=ButtonActionType.OPEN_INAPP_BROWSER,
-            action_name='action',
-            value='value',
-        )
-        assert block.dict(exclude_none=True) == {
-            "type": "button",
-            "text": "hello",
-            "style": "primary",
-            "action_type": "open_inapp_browser",
-            "action_name": "action",
-            "value": "value",
-        }
-
-    def test_to_json(self):
-        block = ButtonBlock(
-            text='hello',
-            style=ButtonStyle.PRIMARY,
-            action_type=ButtonActionType.OPEN_INAPP_BROWSER,
-            action_name='action',
-            value='value',
-        )
-        assert block.json(exclude_none=True) == (
-            '{"type": "button", "text": "hello", "style": "primary", "action_type": "open_inapp_browser", "action_name": "action", "value": "value"}')
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            ButtonBlock(**{})
-
-        with pytest.raises(ValidationError):
-            ButtonBlock(**{
-                "type": "####",
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text='msg'), {
+                'type': 'button',
+                'text': 'msg',
+                'style': 'default'
+            }),
+            (dict(
+                text='hello',
+                style=ButtonStyle.PRIMARY,
+                action_type=ButtonActionType.OPEN_INAPP_BROWSER,
+                action_name='action',
+                value='value',
+            ), {
+                "type": "button",
                 "text": "hello",
                 "style": "primary",
                 "action_type": "open_inapp_browser",
                 "action_name": "action",
                 "value": "value",
-            })
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert ButtonBlock(**attributes).dict(exclude_none=True) == expectation
 
-        assert ButtonBlock(**{
-            "text": "hello",
-            "style": "primary",
-            "action_type": "open_inapp_browser",
-            "action_name": "action",
-            "value": "value",
-        }) == ButtonBlock(text='hello', style=ButtonStyle.PRIMARY, action_type=ButtonActionType.OPEN_INAPP_BROWSER, action_name='action', value='value')
-        assert ButtonBlock(**{
-            "type": "button",
-            "text": "hello",
-            "style": "primary",
-            "action_type": "open_inapp_browser",
-            "action_name": "action",
-            "value": "value",
-        }) == ButtonBlock(text='hello', style=ButtonStyle.PRIMARY, action_type=ButtonActionType.OPEN_INAPP_BROWSER, action_name='action', value='value')
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text='msg'), '{"type": "button", "text": "msg", "style": "default"}'),
+            (dict(
+                text='hello',
+                style=ButtonStyle.PRIMARY,
+                action_type=ButtonActionType.OPEN_INAPP_BROWSER,
+                action_name='action',
+                value='value',
+            ), '{"type": "button", "text": "hello", "style": "primary", "action_type": "open_inapp_browser", "action_name": "action", "value": "value"}'),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert ButtonBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestDividerBlock:
@@ -311,187 +287,185 @@ class TestDividerBlock:
         block = DividerBlock()
         assert block.type == BlockType.DIVIDER
 
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(), does_not_raise()),
+            (dict(type='divider'), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            DividerBlock(**attributes)
+
     def test_to_dict(self):
-        block = DividerBlock()
-        assert block.dict(exclude_none=True) == {"type": "divider"}
+        assert DividerBlock().dict(exclude_none=True) == {"type": "divider"}
 
     def test_to_json(self):
-        block = DividerBlock()
-        assert block.json(exclude_none=True) == '{"type": "divider"}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            DividerBlock(**{"type": "####"})
-
-        assert DividerBlock(**{}) == DividerBlock()
-        assert DividerBlock(**{"type": "divider"}) == DividerBlock()
+        assert DividerBlock().json(exclude_none=True) == '{"type": "divider"}'
 
 
 class TestHeaderBlock:
     def test_properties(self):
-        block = HeaderBlock(text="hello", style=HeaderStyle.YELLOW)
+        text = 'msg'
+        block = HeaderBlock(text=text)
         assert block.type == BlockType.HEADER
-        assert block.text == 'hello'
-        assert block.style == HeaderStyle.YELLOW
+        assert block.text == text
+        assert block.style == HeaderStyle.BLUE
 
-    def test_validator(self):
-        HeaderBlock(text="hello", style=HeaderStyle.RED)
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(text=''), pytest.raises(ValidationError)),
+            (dict(text="a" * 21), pytest.raises(ValidationError)),
+            (dict(text="hello", style=HeaderStyle.RED), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            HeaderBlock(**attributes)
 
-        with pytest.raises(ValidationError):
-            HeaderBlock(text="", style=HeaderStyle.BLUE)
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text='msg'), {
+                'type': 'header',
+                'text': 'msg',
+                'style': 'blue'
+            }),
+            (dict(text='msg', style=HeaderStyle.YELLOW), {
+                'type': 'header',
+                'text': 'msg',
+                'style': 'yellow'
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert HeaderBlock(**attributes).dict(exclude_none=True) == expectation
 
-        with pytest.raises(ValidationError):
-            HeaderBlock(text="a" * 21, style=HeaderStyle.YELLOW)
-
-    def test_to_dict(self):
-        block = HeaderBlock(text="hello", style=HeaderStyle.YELLOW)
-        assert block.dict(exclude_none=True) == {
-            "type": "header",
-            "text": "hello",
-            "style": "yellow",
-        }
-
-    def test_to_json(self):
-        block = HeaderBlock(text="hello", style=HeaderStyle.YELLOW)
-        assert block.json(exclude_none=True) == '{"type": "header", "text": "hello", "style": "yellow"}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            HeaderBlock(**{})
-
-        with pytest.raises(ValidationError):
-            HeaderBlock(**{"type": "####", "text": "hello", "style": "yellow"})
-
-        assert HeaderBlock(**{"text": "hello", "style": "yellow"}) == HeaderBlock(text="hello", style=HeaderStyle.YELLOW)
-        assert HeaderBlock(**{"type": "header", "text": "hello", "style": "yellow"}) == HeaderBlock(text="hello", style=HeaderStyle.YELLOW)
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(text='msg'), '{"type": "header", "text": "msg", "style": "blue"}'),
+            (dict(text='msg', style=HeaderStyle.YELLOW), '{"type": "header", "text": "msg", "style": "yellow"}'),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert HeaderBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestActionBlock:
     def test_properties(self):
-        button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-        block = ActionBlock(elements=[button])
+        elements = [ButtonBlock(text="hello")]
+        block = ActionBlock(elements=elements)
         assert block.type == BlockType.ACTION
-        assert block.elements == [button]
+        assert block.elements == elements
 
-    def test_validator(self):
-        button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-        ActionBlock(elements=[button])
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(elements=[]), pytest.raises(ValidationError)),
+            (dict(elements=[ButtonBlock(text='msg')] * 4), pytest.raises(ValidationError)),
+            (dict(elements=[ButtonBlock(text='msg')]), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            ActionBlock(**attributes)
 
-        with pytest.raises(ValidationError):
-            ActionBlock(elements=[])
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(elements=[ButtonBlock(text='msg')]), {
+                "type": "action",
+                "elements": [{
+                    "type": "button",
+                    "text": "msg",
+                    "style": "default"
+                }],
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert ActionBlock(**attributes).dict(exclude_none=True) == expectation
 
-        with pytest.raises(ValidationError):
-            ActionBlock(elements=[button] * 4)
-
-    def test_to_dict(self):
-        button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-        block = ActionBlock(elements=[button])
-        assert block.dict(exclude_none=True) == {
-            "type": "action",
-            "elements": [{
-                "type": "button",
-                "text": "hello",
-                "style": "default"
-            }],
-        }
-
-    def test_to_json(self):
-        button = ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)
-        block = ActionBlock(elements=[button])
-        assert block.json(exclude_none=True) == '{"type": "action", "elements": [{"type": "button", "text": "hello", "style": "default"}]}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            ActionBlock(**{})
-
-        with pytest.raises(ValidationError):
-            ActionBlock(**{"type": "####", "elements": [{"type": "button", "text": "hello", "style": "default"}]})
-
-        with pytest.raises(ValidationError):
-            ActionBlock(**{'elements': []})
-
-        assert ActionBlock(**{
-            "elements": [{
-                "type": "button",
-                "text": "hello",
-                "style": "default"
-            }],
-        }) == ActionBlock(elements=[ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)])
-        assert ActionBlock(**{
-            "type": "action",
-            "elements": [{
-                "type": "button",
-                "text": "hello",
-                "style": "default"
-            }],
-        }) == ActionBlock(elements=[ButtonBlock(text="hello", style=ButtonStyle.DEFAULT)])
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(elements=[ButtonBlock(text='msg')]), '{"type": "action", "elements": [{"type": "button", "text": "msg", "style": "default"}]}'),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert ActionBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestDescriptionBlock:
     def test_properties(self):
         content = TextBlock(text='content')
-        block = DescriptionBlock(term='hello', content=content, accent=True)
+        block = DescriptionBlock(term='hello', content=content)
         assert block.type == BlockType.DESCRIPTION
         assert block.term == 'hello'
         assert block.content == content
-        assert block.accent is True
+        assert block.accent is None
 
-    def test_validator(self):
-        content = TextBlock(text='content')
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(term="msg"), pytest.raises(ValidationError)),
+            (dict(content=TextBlock(text='msg')), pytest.raises(ValidationError)),
+            (dict(term="", content=TextBlock(text='msg')), pytest.raises(ValidationError)),
+            (dict(term="a" * 11, content=TextBlock(text='msg')), pytest.raises(ValidationError)),
+            (dict(term="msg", content=TextBlock(text='msg')), does_not_raise()),
+            (dict(term="msg", content=TextBlock(text='msg'), accent=True), does_not_raise()),
+            (dict(term="msg", content=TextBlock(text='msg'), accent=False), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            DescriptionBlock(**attributes)
 
-        with pytest.raises(ValidationError):
-            DescriptionBlock(term="", content=content, accent=False)
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(term='msg', content=TextBlock(text='msg')), {
+                "type": "description",
+                "term": "msg",
+                "content": {
+                    "type": "text",
+                    "text": "msg",
+                },
+            }),
+            (dict(term='msg', content=TextBlock(text='msg'), accent=True), {
+                "type": "description",
+                "term": "msg",
+                "content": {
+                    "type": "text",
+                    "text": "msg",
+                },
+                "accent": True,
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert DescriptionBlock(**attributes).dict(exclude_none=True) == expectation
 
-        with pytest.raises(ValidationError):
-            DescriptionBlock(term="a" * 11, content=content, accent=False)
-
-        DescriptionBlock(term="hello", content=content, accent=False)
-
-    def test_to_dict(self):
-        content = TextBlock(text='content')
-        block = DescriptionBlock(term='hello', content=content, accent=True)
-        assert block.dict(exclude_none=True) == {
-            "type": "description",
-            "term": "hello",
-            "content": {
-                "type": "text",
-                "text": "content",
-            },
-            "accent": True,
-        }
-
-    def test_to_json(self):
-        content = TextBlock(text='content')
-        block = DescriptionBlock(term='hello', content=content, accent=True)
-        expected_json = '{"type": "description", "term": "hello", "content": {"type": "text", "text": "content"}, "accent": true}'
-        assert block.json(exclude_none=True) == expected_json
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            DescriptionBlock(**{})
-
-        with pytest.raises(ValidationError):
-            DescriptionBlock(**{"type": "####", "term": "hello", "content": {"type": "text", "text": "content", "markdown": False}, "accent": True})
-
-        assert DescriptionBlock(**{
-            "term": "hello",
-            "content": {
-                "type": "text",
-                "text": "content",
-                "markdown": False
-            },
-            "accent": True,
-        }) == DescriptionBlock(term="hello", content=TextBlock(text='content', markdown=False), accent=True)
-        assert DescriptionBlock(**{
-            "type": "description",
-            "term": "hello",
-            "content": {
-                "type": "text",
-                "text": "content",
-                "markdown": False
-            },
-            "accent": True,
-        }) == DescriptionBlock(term="hello", content=TextBlock(text='content', markdown=False), accent=True)
+    @pytest.mark.parametrize('attributes,expectation', [
+        (dict(term='msg', content=TextBlock(text='msg')), '{"type": "description", "term": "msg", "content": {"type": "text", "text": "msg"}}'),
+        (dict(
+            term='msg',
+            content=TextBlock(text='msg'),
+            accent=True,
+        ), '{"type": "description", "term": "msg", "content": {"type": "text", "text": "msg"}, "accent": true}'),
+    ])
+    def test_to_json(self, attributes, expectation):
+        assert DescriptionBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestSectionBlock:
@@ -506,20 +480,19 @@ class TestSectionBlock:
         assert block.content == content
         assert block.accessory == accessory
 
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            SectionBlock()
-
-        content = TextBlock(text='hello')
-        accessory = ImageLinkBlock(url='http://localhost/image.png')
-
-        with pytest.raises(ValidationError):
-            SectionBlock(content=content)
-
-        with pytest.raises(ValidationError):
-            SectionBlock(accessory=accessory)
-
-        SectionBlock(content=content, accessory=accessory)
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(content=TextBlock(text='msg')), pytest.raises(ValidationError)),
+            (dict(accessory=ImageLinkBlock(url='http://localhost/image.png')), pytest.raises(ValidationError)),
+            (dict(content=TextBlock(text='msg'), accessory=ImageLinkBlock(url='http://localhost/image.png')), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            SectionBlock(**attributes)
 
     def test_to_dict(self):
         content = TextBlock(text='hello')
@@ -551,56 +524,6 @@ class TestSectionBlock:
                          ' "accessory": {"type": "image_link", "url": "http://localhost/image.png"}}')
         assert block.json(exclude_none=True) == expected_json
 
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            SectionBlock(**{})
-
-        with pytest.raises(ValidationError):
-            SectionBlock(
-                **{
-                    "type": "####",
-                    "content": {
-                        "type": "text",
-                        "text": "hello",
-                        "markdown": False
-                    },
-                    "accessory": {
-                        "type": "image_link",
-                        "url": "http://localhost/image.png"
-                    },
-                })
-
-        assert SectionBlock(**{
-            "content": {
-                "type": "text",
-                "text": "hello",
-                "markdown": False,
-            },
-            "accessory": {
-                "type": "image_link",
-                "url": "http://localhost/image.png"
-            },
-        }) == SectionBlock(
-            content=TextBlock(text='hello', markdown=False),
-            accessory=ImageLinkBlock(url='http://localhost/image.png'),
-        )
-        data = {
-            "type": "section",
-            "content": {
-                "type": "text",
-                "text": "hello",
-                "markdown": False,
-            },
-            "accessory": {
-                "type": "image_link",
-                "url": "http://localhost/image.png"
-            },
-        }
-        assert SectionBlock(**data) == SectionBlock(
-            content=TextBlock(text='hello', markdown=False),
-            accessory=ImageLinkBlock(url='http://localhost/image.png'),
-        )
-
 
 class TestContextBlock:
     def test_properties(self):
@@ -614,20 +537,19 @@ class TestContextBlock:
         assert block.content == content
         assert block.image == image
 
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            ContextBlock()
-
-        content = TextBlock(text='hello')
-        image = ImageLinkBlock(url='http://localhost/image.png')
-
-        with pytest.raises(ValidationError):
-            ContextBlock(content=content)
-
-        with pytest.raises(ValidationError):
-            ContextBlock(image=image)
-
-        ContextBlock(content=content, image=image)
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(content=TextBlock(text='msg')), pytest.raises(ValidationError)),
+            (dict(image=ImageLinkBlock(url='http://localhost/image.png')), pytest.raises(ValidationError)),
+            (dict(content=TextBlock(text='msg'), image=ImageLinkBlock(url='http://localhost/image.png')), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            ContextBlock(**attributes)
 
     def test_to_dict(self):
         content = TextBlock(text='hello')
@@ -659,297 +581,184 @@ class TestContextBlock:
                          ' "image": {"type": "image_link", "url": "http://localhost/image.png"}}')
         assert block.json(exclude_none=True) == expected_json
 
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            ContextBlock(**{})
-
-        with pytest.raises(ValidationError):
-            ContextBlock(
-                **{
-                    "type": "####",
-                    "content": {
-                        "type": "text",
-                        "text": "hello",
-                        "markdown": False
-                    },
-                    "image": {
-                        "type": "image_link",
-                        "url": "http://localhost/image.png"
-                    },
-                })
-
-        assert ContextBlock(**{
-            "content": {
-                "type": "text",
-                "text": "hello",
-                "markdown": False,
-            },
-            "image": {
-                "type": "image_link",
-                "url": "http://localhost/image.png"
-            },
-        }) == ContextBlock(
-            content=TextBlock(text='hello', markdown=False),
-            image=ImageLinkBlock(url='http://localhost/image.png'),
-        )
-        data = {
-            "type": "context",
-            "content": {
-                "type": "text",
-                "text": "hello",
-                "markdown": False,
-            },
-            "image": {
-                "type": "image_link",
-                "url": "http://localhost/image.png"
-            },
-        }
-        assert ContextBlock(**data) == ContextBlock(
-            content=TextBlock(
-                text='hello',
-                markdown=False,
-            ),
-            image=ImageLinkBlock(url='http://localhost/image.png'),
-        )
-
 
 class TestLabelBlock:
     def test_properties(self):
-        block = LabelBlock(text="hello", markdown=True)
+        block = LabelBlock(text="msg", markdown=True)
         assert block.type == BlockType.LABEL
-        assert block.text == 'hello'
+        assert block.text == 'msg'
         assert block.markdown is True
 
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            LabelBlock()
-
-        with pytest.raises(ValidationError):
-            LabelBlock(text="abc")
-
-        with pytest.raises(ValidationError):
-            LabelBlock(markdown=True)
-
-        with pytest.raises(ValidationError):
-            LabelBlock(text="", markdown=False)
-
-        with pytest.raises(ValidationError):
-            LabelBlock(text="a" * 201, markdown=False)
-
-        LabelBlock(text="hello", markdown=True)
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(text='msg'), pytest.raises(ValidationError)),
+            (dict(text=''), pytest.raises(ValidationError)),
+            (dict(text='a' * 201), pytest.raises(ValidationError)),
+            (dict(markdown=True), pytest.raises(ValidationError)),
+            (dict(text='msg', markdown=True), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            LabelBlock(**attributes)
 
     def test_to_dict(self):
-        block = LabelBlock(text="hello", markdown=True)
-        assert block.dict(exclude_none=True) == {
+        assert LabelBlock(text="msg", markdown=True).dict(exclude_none=True) == {
             "type": "label",
-            "text": "hello",
+            "text": "msg",
             "markdown": True,
         }
 
     def test_to_json(self):
-        block = LabelBlock(text="hello", markdown=True)
-        assert block.json(exclude_none=True) == '{"type": "label", "text": "hello", "markdown": true}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            LabelBlock(**{})
-
-        with pytest.raises(ValidationError):
-            LabelBlock(**{"type": "####", "text": "hello", "markdown": True})
-
-        assert LabelBlock(**{"text": "hello", "markdown": True}) == LabelBlock(text="hello", markdown=True)
-        assert LabelBlock(**{"type": "label", "text": "hello", "markdown": True}) == LabelBlock(text="hello", markdown=True)
+        assert LabelBlock(text="msg", markdown=True).json(exclude_none=True) == '{"type": "label", "text": "msg", "markdown": true}'
 
 
 class TestInputBlock:
     def test_properties(self):
-        block = InputBlock(name="name")
+        name = 'name'
+        block = InputBlock(name=name)
         assert block.type == BlockType.INPUT
-        assert block.name == 'name'
+        assert block.name == name
         assert block.required is None
         assert block.placeholder is None
 
-        block = InputBlock(name="name", required=True)
-        assert block.type == BlockType.INPUT
-        assert block.name == 'name'
-        assert block.required is True
-        assert block.placeholder is None
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(name=''), pytest.raises(ValidationError)),
+            (dict(name='name', placeholder='a' * 51), pytest.raises(ValidationError)),
+            (dict(required=True), pytest.raises(ValidationError)),
+            (dict(placeholder='ph'), pytest.raises(ValidationError)),
+            (dict(required=True, placeholder='ph'), pytest.raises(ValidationError)),
+            (dict(name='name'), does_not_raise()),
+            (dict(name='name', required=True), does_not_raise()),
+            (dict(name='name', placeholder='ph'), does_not_raise()),
+            (dict(name='name', required=True, placeholder='ph'), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            InputBlock(**attributes)
 
-        block = InputBlock(name="name", required=True, placeholder="placeholder")
-        assert block.type == BlockType.INPUT
-        assert block.name == 'name'
-        assert block.required is True
-        assert block.placeholder == 'placeholder'
-
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            InputBlock()
-
-        with pytest.raises(ValidationError):
-            InputBlock(required=True)
-
-        with pytest.raises(ValidationError):
-            InputBlock(placeholder="ph")
-
-        with pytest.raises(ValidationError):
-            InputBlock(required=True, placeholder="ph")
-
-        with pytest.raises(ValidationError):
-            InputBlock(name="", required=False)
-
-        with pytest.raises(ValidationError):
-            InputBlock(name="name", required=False, placeholder='a' * 51)
-
-        InputBlock(name="abc")
-        InputBlock(name="name", required=True, placeholder='placeholder')
-
-    def test_to_dict(self):
-        block = InputBlock(name="name", required=True, placeholder="placeholder")
-        assert block.dict(exclude_none=True) == {
-            "type": "input",
-            "name": "name",
-            "required": True,
-            "placeholder": "placeholder",
-        }
-
-    def test_to_json(self):
-        block = InputBlock(name="name", required=True, placeholder="placeholder")
-        assert block.json(exclude_none=True) == '{"type": "input", "name": "name", "required": true, "placeholder": "placeholder"}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            InputBlock(**{})
-
-        with pytest.raises(ValidationError):
-            InputBlock(**{
-                "type": "####",
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(name='name'), {
+                'type': 'input',
+                'name': 'name'
+            }),
+            (dict(name='name', required=True, placeholder='placeholder'), {
+                "type": "input",
                 "name": "name",
                 "required": True,
                 "placeholder": "placeholder",
-            })
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert InputBlock(**attributes).dict(exclude_none=True) == expectation
 
-        assert InputBlock(**{
-            "name": "name",
-            "required": True,
-            "placeholder": "placeholder",
-        }) == InputBlock(name="name", required=True, placeholder="placeholder")
-        assert InputBlock(**{
-            "type": "input",
-            "name": "name",
-            "required": True,
-            "placeholder": "placeholder",
-        }) == InputBlock(name="name", required=True, placeholder="placeholder")
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(name='name'), '{"type": "input", "name": "name"}'),
+            (dict(name='name', required=True, placeholder='placeholder'), '{"type": "input", "name": "name", "required": true, "placeholder": "placeholder"}'),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert InputBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestSelectBlock:
     def test_properties(self):
+        name = 'name'
         options = [SelectBlockOption(text='text', value='text')]
-
         block = SelectBlock(
-            name='name',
+            name=name,
             options=options,
         )
         assert block.type == BlockType.SELECT
+        assert block.name == name
         assert block.options == options
         assert block.required is None
         assert block.placeholder is None
 
-        block = SelectBlock(name='name', options=options, required=True, placeholder="placeholder")
-        assert block.type == BlockType.SELECT
-        assert block.options == options
-        assert block.required is True
-        assert block.placeholder == 'placeholder'
+    @pytest.mark.parametrize(
+        'attributes,raises',
+        [
+            (dict(), pytest.raises(ValidationError)),
+            (dict(type='####'), pytest.raises(ValidationError)),
+            (dict(name=''), pytest.raises(ValidationError)),
+            (dict(name='name', options=[]), pytest.raises(ValidationError)),
+            (dict(options=[SelectBlockOption(text='msg', value='val')]), pytest.raises(ValidationError)),
+            (dict(required=True), pytest.raises(ValidationError)),
+            (dict(placeholder='ph'), pytest.raises(ValidationError)),
+            (dict(required=True, placeholder='ph'), pytest.raises(ValidationError)),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')] * 31), pytest.raises(ValidationError)),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], placeholder='a' * 51), pytest.raises(ValidationError)),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')]), does_not_raise()),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], required=True), does_not_raise()),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], required=False), does_not_raise()),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], placeholder='ph'), does_not_raise()),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], required=True, placeholder='ph'), does_not_raise()),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], required=False, placeholder='ph'), does_not_raise()),
+        ],
+    )
+    def test_validator(self, attributes, raises):
+        with raises:
+            SelectBlock(**attributes)
 
-    def test_validator(self):
-        with pytest.raises(ValidationError):
-            SelectBlock()
-
-        with pytest.raises(ValidationError):
-            SelectBlock(required=True)
-
-        with pytest.raises(ValidationError):
-            SelectBlock(placeholder='ph')
-
-        with pytest.raises(ValidationError):
-            SelectBlock(required=True, placeholder='ph')
-
-        options = [SelectBlockOption(text='text', value='text')]
-
-        with pytest.raises(ValidationError):
-            SelectBlock(name="", options=options)
-
-        with pytest.raises(ValidationError):
-            SelectBlock(name="name", options=[])
-
-        with pytest.raises(ValidationError):
-            SelectBlock(name="name", options=options * 31)
-
-        with pytest.raises(ValidationError):
-            SelectBlock(name="name", options=options, placeholder="a" * 51)
-
-        SelectBlock(name="name", options=options)
-        SelectBlock(
-            name="name",
-            options=options,
-            placeholder="placeholder",
-            required=True,
-        )
-
-    def test_to_dict(self):
-        options = [SelectBlockOption(text='text', value='text')]
-        block = SelectBlock(name='name', options=options, required=True, placeholder="placeholder")
-        assert block.dict(exclude_none=True) == {
-            "type": "select",
-            "name": "name",
-            "options": [{
-                "text": "text",
-                "value": "text"
-            }],
-            "required": True,
-            "placeholder": "placeholder",
-        }
-
-    def test_to_json(self):
-        options = [SelectBlockOption(text='text', value='text')]
-        block = SelectBlock(name='name', options=options, required=True, placeholder="placeholder")
-        assert block.json(exclude_none=True) == \
-            '{"type": "select", "name": "name", "options": [{"text": "text", "value": "text"}], "required": true, "placeholder": "placeholder"}'
-
-    def test_from_dict(self):
-        with pytest.raises(ValidationError):
-            SelectBlock(**{})
-
-        with pytest.raises(ValidationError):
-            SelectBlock(**{
-                "type": "####",
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')]), {
+                'type': 'select',
+                'name': 'name',
+                'options': [{
+                    'text': 'msg',
+                    'value': 'val'
+                }]
+            }),
+            (dict(name='name', options=[SelectBlockOption(text='msg', value='val')], required=True, placeholder='ph'), {
+                "type": "select",
                 "name": "name",
                 "options": [{
-                    "text": "text",
-                    "value": "text"
+                    "text": "msg",
+                    "value": "val"
                 }],
                 "required": True,
-                "placeholder": "placeholder",
-            })
+                "placeholder": "ph",
+            }),
+        ],
+    )
+    def test_to_dict(self, attributes, expectation):
+        assert SelectBlock(**attributes).dict(exclude_none=True) == expectation
 
-        assert SelectBlock(**{
-            "name": "name",
-            "options": [{
-                "text": "text",
-                "value": "text"
-            }],
-            "required": True,
-            "placeholder": "placeholder",
-        }) == SelectBlock(name='name', options=[SelectBlockOption(text='text', value='text')], required=True, placeholder="placeholder")
-        assert SelectBlock(**{
-            "type": "select",
-            "name": "name",
-            "options": [{
-                "text": "text",
-                "value": "text"
-            }],
-            "required": True,
-            "placeholder": "placeholder",
-        }) == SelectBlock(name='name', options=[SelectBlockOption(text='text', value='text')], required=True, placeholder="placeholder")
+    @pytest.mark.parametrize(
+        'attributes,expectation',
+        [
+            (dict(
+                name='name',
+                options=[SelectBlockOption(text='msg', value='val')],
+            ), '{"type": "select", "name": "name", "options": [{"text": "msg", "value": "val"}]}'),
+            (
+                dict(
+                    name='name',
+                    options=[SelectBlockOption(text='msg', value='val')],
+                    required=True,
+                    placeholder='ph',
+                ),
+                '{"type": "select", "name": "name", "options": [{"text": "msg", "value": "val"}], "required": true, "placeholder": "ph"}',
+            ),
+        ],
+    )
+    def test_to_json(self, attributes, expectation):
+        assert SelectBlock(**attributes).json(exclude_none=True) == expectation
 
 
 class TestBlockKitBuilder:
