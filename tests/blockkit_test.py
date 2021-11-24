@@ -854,8 +854,7 @@ class TestBlockKitBuilder:
         })
         mocker.patch('builtins.open', mock_open(read_data=json_str))
 
-        builder = BlockKitBuilder(type=BlockKitType.MESSAGE)
-        builder.load('/path/to/jsonfile')
+        builder = BlockKitBuilder.load('/path/to/jsonfile')
 
         assert builder.type == BlockKitType.MESSAGE
         assert builder.text == 'hello'

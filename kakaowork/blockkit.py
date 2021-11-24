@@ -457,9 +457,11 @@ class BlockKitBuilder(BaseModel):
             block = BlockType.block_cls(block['type'])(**block)
         self.blocks.append(block)
 
-    def load(self, path: str) -> None:
+    @classmethod
+    def load(cls, path: str) -> 'BlockKitBuilder':
         with open(path, 'r') as f:
             data = json.load(f)
+        self = cls(type=data['type'])
         for key, value in data.items():
             if key == 'blocks' and isinstance(value, Iterable):
                 self.blocks = []
@@ -467,3 +469,4 @@ class BlockKitBuilder(BaseModel):
                     self.add_block(block)
             else:
                 setattr(self, key, value)
+        return self
