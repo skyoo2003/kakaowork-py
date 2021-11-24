@@ -1,14 +1,11 @@
-import json
 from abc import ABC
 from datetime import datetime
 from typing import Optional, Union, Any, Dict, List
 
-from pytz import utc, timezone
 from pydantic import BaseModel, validator
 
 from kakaowork.consts import StrEnum
-from kakaowork.blockkit import Block, BlockType
-from kakaowork.exceptions import InvalidReactiveBody
+from kakaowork.blockkit import Block
 from kakaowork.utils import to_kst
 
 

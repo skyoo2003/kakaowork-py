@@ -8,7 +8,3 @@ class InvalidBlockType(KakaoworkError):
 
 class InvalidBlock(KakaoworkError):
     """Invalid block."""
-
-
-class InvalidReactiveBody(KakaoworkError):
-    """Invalid reactive body."""
