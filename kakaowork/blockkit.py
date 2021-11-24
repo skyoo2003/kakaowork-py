@@ -1,4 +1,3 @@
-import os
 import json
 from enum import unique
 from functools import reduce
