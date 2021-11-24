@@ -277,7 +277,7 @@ class Kakaowork:
     def _respect_rate_limit(self, response: urllib3.HTTPResponse) -> None:
         if 200 <= response.status < 300 and self.limiter.capacity <= 0:
             capacity = int(response.headers.get('ratelimit-limit', 0))
-            self.limiter.capacity = capacity
+            self.limiter.reset(capacity=capacity)
         elif response.status == 429:
             capacity = int(response.headers.get('ratelimit-limit', 0))
             wait_time = int(response.headers.get('retry-after', 0))
@@ -714,7 +714,7 @@ class AsyncKakaowork:
     async def _respect_rate_limit(self, response: aiosonic.HttpResponse) -> None:
         if 200 <= response.status_code < 300 and self.limiter.capacity <= 0:
             capacity = int(response.headers.get('ratelimit-limit', 0))
-            self.limiter.capacity = capacity
+            self.limiter.reset(capacity=capacity)
         elif response.status_code == 429:
             capacity = int(response.headers.get('ratelimit-limit', 0))
             wait_time = int(response.headers.get('retry-after', 0))
