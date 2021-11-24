@@ -181,10 +181,11 @@ def conversations(ctx: click.Context):  # noqa: D103
 
 @conversations.command(name='open', help='Creates a conversation')
 @click.pass_context
-@click.argument('user_ids', nargs=-1, type=int)
+@click.argument('user_ids', nargs=-1, type=int, required=True)
 def conversations_open(ctx: click.Context, user_ids: Tuple[int, ...]):  # noqa: D103
     opts: _CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).conversations.open(user_ids=list(user_ids))
+    client = Kakaowork(app_key=opts.app_key)
+    r = client.conversations.open(user_ids=list(user_ids))
     _echo(ctx, r)
 
 
@@ -220,7 +221,7 @@ def conversations_users(ctx: click.Context, conversation_id: int):  # noqa: D103
 @conversations.command(name='invite', help='Invites one or many users to a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
-@click.argument('user_ids', nargs=-1, type=int)
+@click.argument('user_ids', nargs=-1, type=int, required=True)
 def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):  # noqa: D103
     opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
@@ -231,7 +232,7 @@ def conversations_invite(ctx: click.Context, conversation_id: int, user_ids: Tup
 @conversations.command(name='kick', help='Kicks one or many users from a conversation')
 @click.pass_context
 @click.argument('conversation_id', type=int)
-@click.argument('user_ids', nargs=-1, type=int)
+@click.argument('user_ids', nargs=-1, type=int, required=True)
 def conversations_kick(ctx: click.Context, conversation_id: int, user_ids: Tuple[int, ...]):  # noqa: D103
     opts: _CLIOptions = ctx.obj
     client = Kakaowork(app_key=opts.app_key)
