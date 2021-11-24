@@ -101,19 +101,19 @@ class UserField(BaseModel):
 
     def __init__(self,
                  *,
-                 work_start_time: Optional[Union[datetime, int]] = None,
-                 work_end_time: Optional[Union[datetime, int]] = None,
-                 vacation_start_time: Optional[Union[datetime, int]] = None,
-                 vacation_end_time: Optional[Union[datetime, int]] = None,
+                 work_start_time: Optional[Union[datetime, int, str]] = None,
+                 work_end_time: Optional[Union[datetime, int, str]] = None,
+                 vacation_start_time: Optional[Union[datetime, int, str]] = None,
+                 vacation_end_time: Optional[Union[datetime, int, str]] = None,
                  **data) -> None:
         if work_start_time:
-            data['work_start_time'] = to_kst(work_start_time)
+            data['work_start_time'] = to_kst(work_start_time) if isinstance(work_start_time, (datetime, int)) else work_start_time
         if work_end_time:
-            data['work_end_time'] = to_kst(work_end_time)
+            data['work_end_time'] = to_kst(work_end_time) if isinstance(work_end_time, (datetime, int)) else work_end_time
         if vacation_start_time:
-            data['vacation_start_time'] = to_kst(vacation_start_time)
+            data['vacation_start_time'] = to_kst(vacation_start_time) if isinstance(vacation_start_time, (datetime, int)) else vacation_start_time
         if vacation_end_time:
-            data['vacation_end_time'] = to_kst(vacation_end_time)
+            data['vacation_end_time'] = to_kst(vacation_end_time) if isinstance(vacation_end_time, (datetime, int)) else vacation_end_time
         super().__init__(**data)
 
 
@@ -141,14 +141,14 @@ class MessageField(BaseModel):
 
     def __init__(self,
                  *,
-                 send_time: Optional[Union[datetime, int]] = None,
-                 update_time: Optional[Union[datetime, int]] = None,
+                 send_time: Optional[Union[datetime, int, str]] = None,
+                 update_time: Optional[Union[datetime, int, str]] = None,
                  blocks: Optional[List[Union[Block, Dict]]] = None,
                  **data) -> None:
         if send_time:
-            data['send_time'] = to_kst(send_time)
+            data['send_time'] = to_kst(send_time) if isinstance(send_time, (datetime, int)) else send_time
         if update_time:
-            data['update_time'] = to_kst(update_time)
+            data['update_time'] = to_kst(update_time) if isinstance(update_time, (datetime, int)) else update_time
         if blocks is not None:
             data['blocks'] = [Block.new(block) for block in blocks]
         super().__init__(**data)
@@ -197,11 +197,17 @@ class WorkTimeField(BaseModel):
             datetime: lambda dt: int(dt.timestamp()),
         }
 
-    def __init__(self, *, work_start_time: Optional[Union[datetime, int]] = None, work_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+    def __init__(
+        self,
+        *,
+        work_start_time: Optional[Union[datetime, int, str]] = None,
+        work_end_time: Optional[Union[datetime, int, str]] = None,
+        **data,
+    ) -> None:
         if work_start_time:
-            data['work_start_time'] = to_kst(work_start_time)
+            data['work_start_time'] = to_kst(work_start_time) if isinstance(work_start_time, (datetime, int)) else work_start_time
         if work_end_time:
-            data['work_end_time'] = to_kst(work_end_time)
+            data['work_end_time'] = to_kst(work_end_time) if isinstance(work_end_time, (datetime, int)) else work_end_time
         super().__init__(**data)
 
 
@@ -215,11 +221,17 @@ class VacationTimeField(BaseModel):
             datetime: lambda dt: int(dt.timestamp()),
         }
 
-    def __init__(self, *, vacation_start_time: Optional[Union[datetime, int]] = None, vacation_end_time: Optional[Union[datetime, int]] = None, **data) -> None:
+    def __init__(
+        self,
+        *,
+        vacation_start_time: Optional[Union[datetime, int, str]] = None,
+        vacation_end_time: Optional[Union[datetime, int, str]] = None,
+        **data,
+    ) -> None:
         if vacation_start_time:
-            data['vacation_start_time'] = to_kst(vacation_start_time)
+            data['vacation_start_time'] = to_kst(vacation_start_time) if isinstance(vacation_start_time, (datetime, int)) else vacation_start_time
         if vacation_end_time:
-            data['vacation_end_time'] = to_kst(vacation_end_time)
+            data['vacation_end_time'] = to_kst(vacation_end_time) if isinstance(vacation_end_time, (datetime, int)) else vacation_end_time
         super().__init__(**data)
 
 

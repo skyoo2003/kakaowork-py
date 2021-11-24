@@ -180,6 +180,44 @@ class TestUserField:
             work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
         )
 
+        data = {
+            'avatar_url': None,
+            'department': 'test',
+            'id': '1234',
+            'identifications': [{
+                'type': 'email',
+                'value': 'user@localhost'
+            }],
+            'mobiles': [],
+            'name': 'noname',
+            'nickname': None,
+            'position': None,
+            'responsibility': 'leader',
+            'space_id': '123',
+            'tels': [],
+            'vacation_end_time': '2021-04-08T22:39:30+09:00',
+            'vacation_start_time': '2021-04-08T22:39:30+09:00',
+            'work_end_time': '2021-04-08T22:39:30+09:00',
+            'work_start_time': '2021-04-08T22:39:30+09:00',
+        }
+        assert UserField(**data) == UserField(
+            avatar_url=None,
+            department='test',
+            id='1234',
+            identifications=[UserIdentificationField(type='email', value='user@localhost')],
+            mobiles=[],
+            name='noname',
+            nickname=None,
+            position=None,
+            responsibility='leader',
+            space_id='123',
+            tels=[],
+            vacation_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            vacation_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_end_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            work_start_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+        )
+
 
 class TestConversationField:
     def test_to_dict(self):
@@ -253,6 +291,29 @@ class TestMessageField:
             'conversation_id': 1,
             'send_time': 1617889170,
             'update_time': 1617889170,
+            'blocks': [{
+                'type': 'text',
+                'text': 'block',
+                'markdown': False,
+            }],
+        }
+        assert MessageField(**data) == MessageField(
+            id='123',
+            text='msg',
+            user_id='1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=[TextBlock(text='block', markdown=False)],
+        )
+
+        data = {
+            'id': '123',
+            'text': 'msg',
+            'user_id': '1',
+            'conversation_id': 1,
+            'send_time': '2021-04-08T22:39:30+09:00',
+            'update_time': '2021-04-08T22:39:30+09:00',
             'blocks': [{
                 'type': 'text',
                 'text': 'block',
