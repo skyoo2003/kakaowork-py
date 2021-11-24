@@ -1,3 +1,22 @@
+Kakaowork 0.7.0 (2021-11-25)
+============================
+
+Breaking Changes
+----------------
+
+- Changed to specifications for blockkit properties (`#157 <https://github.com/skyoo2003/kakaowork-py/issues/157>`_)
+- Changed BlockKitBuilder.load to class method (`#166 <https://github.com/skyoo2003/kakaowork-py/issues/166>`_)
+
+
+Bug Fixes
+---------
+
+- Removed validator whether URL has file extension in ImageLinkBlock. (`#151 <https://github.com/skyoo2003/kakaowork-py/issues/151>`_)
+- Fixed typo in blockkit.TextInline (`#156 <https://github.com/skyoo2003/kakaowork-py/issues/156>`_)
+- Fixed errors for datetime format of str type in models (`#163 <https://github.com/skyoo2003/kakaowork-py/issues/163>`_)
+- Fixed ratelimiter capacity reset not working (`#164 <https://github.com/skyoo2003/kakaowork-py/issues/164>`_)
+
+
 Kakaowork 0.6.0 (2021-11-15)
 ============================
 
