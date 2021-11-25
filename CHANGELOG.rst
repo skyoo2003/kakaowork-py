@@ -1,3 +1,12 @@
+Kakaowork 0.7.1 (2021-11-25)
+============================
+
+Bug Fixes
+---------
+
+- Added content-type header in async client (`#168 <https://github.com/skyoo2003/kakaowork-py/issues/168>`_)
+
+
 Kakaowork 0.7.0 (2021-11-25)
 ============================
 
