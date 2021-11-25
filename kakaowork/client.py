@@ -725,7 +725,7 @@ class AsyncKakaowork:
     def headers(self) -> Dict[str, Any]:
         return {
             'Authorization': f'Bearer {self.app_key}',
-            'Content-Type': 'application/json; charset=utf-8',
+            'content-type': 'application/json; charset=utf-8',  # WORKAROUND: aiosonic does not support case insensitive for header key.
         }
 
     @property
