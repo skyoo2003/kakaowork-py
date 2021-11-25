@@ -726,6 +726,7 @@ class AsyncKakaowork:
         return {
             'Authorization': f'Bearer {self.app_key}',
             'Content-Type': 'application/json; charset=utf-8',
+            'content-type': 'application/json; charset=utf-8',  # WORKAROUND: aiosonic does not support the Content-Type header camelcase format.
         }
 
     @property
