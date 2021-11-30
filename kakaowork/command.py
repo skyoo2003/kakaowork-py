@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Any, Dict
 
 import click
 
-from kakaowork.consts import StrEnum, Limit
+from kakaowork.consts import Limit
 from kakaowork.client import Kakaowork
 from kakaowork.models import (
     BaseResponse,

@@ -1,5 +1,4 @@
 from enum import Enum, IntEnum
-from datetime import timedelta
 
 from pytz import timezone
 

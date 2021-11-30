@@ -717,6 +717,7 @@ class TestAsyncKakaowork:
         assert c.headers == {
             'Authorization': 'Bearer dummy',
             'Content-Type': 'application/json; charset=utf-8',
+            'content-type': 'application/json; charset=utf-8',
         }
         assert isinstance(c.users, AsyncKakaowork.Users)
         assert isinstance(c.conversations, AsyncKakaowork.Conversations)
