@@ -253,7 +253,8 @@ def messages(ctx: click.Context):  # noqa: D103
 @click.option('-b', '--block', 'blocks', type=BLOCKKIT, multiple=True, help='One or many blocks to send in a message')
 def messages_send(ctx: click.Context, conversation_id: int, text: str, blocks: Tuple[Block, ...]):  # noqa: D103
     opts: _CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
+    client = Kakaowork(app_key=opts.app_key)
+    r = client.messages.send(conversation_id=conversation_id, text=text, blocks=list(blocks))
     _echo(ctx, r)
 
 
@@ -292,7 +293,8 @@ def spaces(ctx: click.Context):  # noqa: D103
 @click.pass_context
 def spaces_info(ctx: click.Context):  # noqa: D103
     opts: _CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).spaces.info()
+    client = Kakaowork(app_key=opts.app_key)
+    r = client.spaces.info()
     _echo(ctx, r)
 
 
@@ -306,5 +308,6 @@ def bots(ctx: click.Context):  # noqa: D103
 @click.pass_context
 def bots_info(ctx: click.Context):  # noqa: D103
     opts: _CLIOptions = ctx.obj
-    r = Kakaowork(app_key=opts.app_key).bots.info()
+    client = Kakaowork(app_key=opts.app_key)
+    r = client.bots.info()
     _echo(ctx, r)

@@ -1,8 +1,13 @@
+from datetime import datetime
+
 import pytest
+from pytz import utc
 from pytest_mock import MockerFixture
 from click.testing import Result, CliRunner
 
 from kakaowork.consts import Limit
+from kakaowork.blockkit import TextBlock, DividerBlock
+
 from kakaowork.models import (
     BaseResponse,
     ErrorCode,
@@ -14,6 +19,7 @@ from kakaowork.models import (
     UserField,
     ConversationType,
     ConversationField,
+    MessageField,
     DepartmentField,
     SpaceField,
     BotField,
@@ -21,6 +27,7 @@ from kakaowork.models import (
     UserListResponse,
     ConversationResponse,
     ConversationListResponse,
+    MessageResponse,
     DepartmentListResponse,
     SpaceResponse,
     BotResponse,
@@ -30,10 +37,12 @@ from kakaowork.command import (
     cli,
     users,
     conversations,
+    messages,
     departments,
     spaces,
     bots,
 )
+from kakaowork.utils import to_kst
 
 
 def test__command_aliases():
@@ -73,7 +82,7 @@ class TestUsersCommand:
             (['list'], 0),
             (['list', '--limit', '5'], 0),
             (['list', '--limit', '0'], 2),
-            (['list', '--limit', '1000'], 2),
+            (['list', '--limit', '101'], 2),
         ]
     )
     def test_list(self, args, exit_code, user_list_response, mocker: MockerFixture, cli_runner: CliRunner):
@@ -169,7 +178,7 @@ class TestConversationsCommand:
             (['list'], 0),
             (['list', '--limit', '5'], 0),
             (['list', '--limit', '0'], 2),
-            (['list', '--limit', '1000'], 2),
+            (['list', '--limit', '101'], 2),
         ]
     )
     def test_list(self, args, exit_code, conversation_list_response, mocker: MockerFixture, cli_runner: CliRunner):
@@ -219,6 +228,47 @@ class TestConversationsCommand:
         assert res.exit_code == exit_code
 
 
+class TestMessagesCommand:
+    @pytest.fixture(scope='class')
+    def blocks(self):
+        return [
+            TextBlock(text='msg'),
+            DividerBlock(),
+        ]
+
+    @pytest.fixture(scope='class')
+    def message_field(self, blocks):
+        return MessageField(
+            id='1',
+            text='msg',
+            user_id='uid1',
+            conversation_id=1,
+            send_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            update_time=to_kst(datetime(2021, 4, 8, 13, 39, 30, tzinfo=utc)),
+            blocks=blocks,
+        )
+
+    @pytest.fixture(scope='class')
+    def message_response(self, message_field):
+        return MessageResponse(message=message_field)
+
+    @pytest.mark.parametrize(
+        'args,exit_code',
+        [
+            (['send'], 2),
+            (['send', '1'], 2),
+            (['send', '1', 'hello'], 0),
+            (['send', '1', 'hello', '--block', 'type=text text=msg'], 0),
+            (['send', '1', 'hello', '-b', 'type=text text=msg'], 0),
+            (['send', '1', 'hello', '-b', 'type=text text=msg', '-b', 'type=divider'], 0),
+        ],
+    )
+    def test_send(self, args, exit_code, message_response, mocker: MockerFixture, cli_runner: CliRunner):
+        mocker.patch('kakaowork.client.Kakaowork.Messages.send', return_value=message_response)
+        res = cli_runner.invoke(messages, args)
+        assert res.exit_code == exit_code
+
+
 class TestDepartmentsCommand:
     @pytest.fixture(scope='class')
     def department_field(self):
@@ -244,109 +294,74 @@ class TestDepartmentsCommand:
             departments=[department_field],
         )
 
-    def test_list(self, department_list_response, mocker: MockerFixture, cli_runner: CliRunner):
+    @pytest.mark.parametrize(
+        'args,exit_code',
+        [
+            (['list'], 0),
+            (['list', '--limit', '5'], 0),
+            (['list', '--limit', '0'], 2),
+            (['list', '--limit', '101'], 2),
+        ]
+    )
+    def test_list(self, args, exit_code, department_list_response, mocker: MockerFixture, cli_runner: CliRunner):
         mocker.patch('kakaowork.client.Kakaowork.Departments.list', return_value=department_list_response)
-
-        expected_output = 'ID:\t\t1\nName:\t\tname\nCode:\t\tcode\nUser count:\t1\n'
-
-        res = cli_runner.invoke(departments, ['list'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'department', 'list'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'dept', 'list'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-    def test_departments_list_error(self, mocker: MockerFixture, cli_runner: CliRunner):
-        resp = DepartmentListResponse(
-            success=False,
-            error=ErrorField(code=ErrorCode.UNAUTHORIZED, message='message'),
-        )
-        mocker.patch('kakaowork.client.Kakaowork.Departments.list', return_value=resp)
-
-        res = cli_runner.invoke(departments, ['list'])
-        assert res.exit_code == 1
-        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
-
-        res = cli_runner.invoke(departments, ['list', '--limit', '0'])
-        assert res.exit_code == 2
-        assert "Error: Invalid value for '-l' / '--limit': 0 is not in the range" in res.output
-
-        res = cli_runner.invoke(departments, ['list', '--limit', '101'])
-        assert res.exit_code == 2
-        assert "Error: Invalid value for '-l' / '--limit': 101 is not in the range" in res.output
+        res = cli_runner.invoke(departments, args)
+        assert res.exit_code == exit_code
 
 
 class TestSpacesCommand:
-    def test_spaces_info_success(self, mocker: MockerFixture, cli_runner: CliRunner):
-        resp = SpaceResponse(
+    @pytest.fixture(scope='class')
+    def space_field(self):
+        return SpaceField(
+            id=1,
+            kakaoi_org_id=1,
+            name='name',
+            color_code='default',
+            color_tone=ColorTone.LIGHT,
+            permitted_ext=['*'],
+            profile_name_format=ProfileNameFormat.NAME_NICKNAME,
+            profile_position_format=ProfilePositionFormat.POSITION,
+            logo_url='http://localhost/image.png',
+        )
+
+    @pytest.fixture(scope='class')
+    def space_response(self, space_field):
+        return SpaceResponse(
             success=True,
-            space=SpaceField(
-                id=1,
-                kakaoi_org_id=1,
-                name='name',
-                color_code='default',
-                color_tone=ColorTone.LIGHT,
-                permitted_ext=['*'],
-                profile_name_format=ProfileNameFormat.NAME_NICKNAME,
-                profile_position_format=ProfilePositionFormat.POSITION,
-                logo_url='http://localhost/image.png',
-            ),
+            space=space_field,
         )
-        mocker.patch('kakaowork.client.Kakaowork.Spaces.info', return_value=resp)
 
-        expected_output = ("ID:\t1\nOrgID:\t1\nName:\tname\nColor code:\tdefault\nColor tone:\tlight\nPermitted ext:\t['*']\n"
-                           "Profile name format:\tname_nickname\nProfile position format:\tposition\nLogo URL:\thttp://localhost/image.png\n")
-
-        res = cli_runner.invoke(spaces, ['info'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'space', 'info'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-    def test_spaces_info_error(self, mocker: MockerFixture, cli_runner: CliRunner):
-        resp = SpaceResponse(
-            success=False,
-            error=ErrorField(code=ErrorCode.UNAUTHORIZED, message='message'),
-        )
-        mocker.patch('kakaowork.client.Kakaowork.Spaces.info', return_value=resp)
-
-        res = cli_runner.invoke(spaces, ['info'])
-        assert res.exit_code == 1
-        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
+    @pytest.mark.parametrize(
+        'args,exit_code',
+        [
+            (['info'], 0),
+        ],
+    )
+    def test_info(self, args, exit_code, space_response, mocker: MockerFixture, cli_runner: CliRunner):
+        mocker.patch('kakaowork.client.Kakaowork.Spaces.info', return_value=space_response)
+        res = cli_runner.invoke(spaces, args)
+        assert res.exit_code == exit_code
 
 
 class TestBotsCommand:
-    def test_bots_info_success(self, mocker: MockerFixture, cli_runner: CliRunner):
-        resp = BotResponse(
+    @pytest.fixture(scope='class')
+    def bot_field(self):
+        return BotField(bot_id=1, title='name', status=BotStatus.ACTIVATED)
+
+    @pytest.fixture(scope='class')
+    def bot_response(self, bot_field):
+        return BotResponse(
             success=True,
-            info=BotField(bot_id=1, title='name', status=BotStatus.ACTIVATED),
+            info=bot_field,
         )
-        mocker.patch('kakaowork.client.Kakaowork.Bots.info', return_value=resp)
 
-        expected_output = 'ID:\t1\nName:\tname\nStatus:\tactivated\n'
-
-        res = cli_runner.invoke(bots, ['info'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-        res = cli_runner.invoke(cli, ['--app-key', 'dummy', 'bot', 'info'])
-        assert res.exit_code == 0
-        assert res.output == expected_output
-
-    def test_bots_info_error(self, mocker: MockerFixture, cli_runner: CliRunner):
-        response = BotResponse(
-            success=False,
-            error=ErrorField(code=ErrorCode.UNAUTHORIZED, message='message'),
-        )
-        mocker.patch('kakaowork.client.Kakaowork.Bots.info', return_value=response)
-
-        res = cli_runner.invoke(bots, ['info'])
-        assert res.exit_code == 1
-        assert res.output == 'Error code:\tunauthorized\nMessage:\tmessage\n'
+    @pytest.mark.parametrize(
+        'args,exit_code',
+        [
+            (['info'], 0),
+        ],
+    )
+    def test_info(self, args, exit_code, bot_response, mocker: MockerFixture, cli_runner: CliRunner):
+        mocker.patch('kakaowork.client.Kakaowork.Bots.info', return_value=bot_response)
+        res = cli_runner.invoke(bots, args)
+        assert res.exit_code == exit_code
