@@ -20,7 +20,7 @@ __Table of Contents__
 
 ## Prerequisites
 
-- Python >= 3.6.1
+- Python >= 3.7
 
 ## Installation
 
