@@ -1,3 +1,12 @@
+Kakaowork 0.8.0 (2021-12-28)
+============================
+
+Breaking Changes
+----------------
+
+- Drop Python 3.6 support due to EOL (`#136 <https://github.com/skyoo2003/kakaowork-py/issues/136>`_)
+
+
 Kakaowork 0.7.1 (2021-11-25)
 ============================
 

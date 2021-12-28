@@ -81,4 +81,4 @@ from kakaowork.reactive import (
     BaseReactiveModalHandler,
 )
 
-__version__ = '0.7.1'
+__version__ = '0.8.0'
