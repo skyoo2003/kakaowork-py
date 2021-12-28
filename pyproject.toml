@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kakaowork"
-version = "0.7.1"
+version = "0.8.0"
 description = "Kakaowork Python client"
 authors = ["Sung-Kyu Yoo <skyoo2003@gmail.com>"]
 license = "MIT"
@@ -14,7 +14,6 @@ keywords = ["kakaowork"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -22,7 +21,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7"
 urllib3 = ">=1.14,<2"
 pytz = ">=2015.7"
 aiosonic = ">=0.10,<1"
