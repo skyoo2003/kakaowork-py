@@ -39,7 +39,7 @@ yapf = "^0.32.0"
 flake8 = "^4.0.1"
 mypy = "^0.930"
 coverage = { version = "^6.2", extras = ["toml"] }
-tox = "^3.24.4"
+tox = "^3.24.5"
 sphinx = "^4.3.2"
 types-pytz = "^2021.3.3"
 pydocstyle = { version = "^6.1.1", extras = ["toml"] }
