@@ -41,7 +41,7 @@ mypy = "^0.950"
 coverage = { version = "^6.3", extras = ["toml"] }
 tox = "^3.24.5"
 sphinx = "^4.3.2"
-types-pytz = "^2021.3.5"
+types-pytz = "^2021.3.8"
 pydocstyle = { version = "^6.1.1", extras = ["toml"] }
 
 [tool.poetry.extras]
